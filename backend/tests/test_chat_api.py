@@ -1,6 +1,8 @@
 """Chat API tests for single-meeting and organization Q&A."""
 import pytest
 from httpx import AsyncClient
+from app.services.pipeline_service import PipelineService
+from tests.conftest import TestAsyncSessionLocal
 
 
 @pytest.mark.asyncio
@@ -23,6 +25,10 @@ async def test_chat_api_with_grounded_answer(client: AsyncClient):
         }
     )
     meeting_id = meet_resp.json()["id"]
+
+    # Run pipeline so the meeting has transcript segments and indexed knowledge
+    pipeline = PipelineService(session_factory=TestAsyncSessionLocal)
+    await pipeline.run_pipeline(meeting_id)
 
     # 2. Chat with meeting about postgres migration
     chat_resp = await client.post(
@@ -55,4 +61,3 @@ async def test_chat_api_without_evidence(client: AsyncClient):
     assert chat_data["found_evidence"] is False
     assert "not contain sufficient evidence" in chat_data["answer"]
     assert len(chat_data["citations"]) == 0
-

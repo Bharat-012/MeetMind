@@ -45,7 +45,8 @@ async def create_organization(payload: OrganizationCreate, db: AsyncSession = De
         description="Default organization workspace"
     )
     db.add(default_ws)
-    await db.flush()
+    await db.commit()
+    await db.refresh(org)
 
     return org
 

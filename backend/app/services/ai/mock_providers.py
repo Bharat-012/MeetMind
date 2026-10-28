@@ -166,6 +166,12 @@ class MockLLMProvider:
         ]
 
     async def answer_question(self, query: str, context: List[Dict[str, Any]]) -> GroundedAnswerDTO:
+        if not context:
+            return GroundedAnswerDTO(
+                answer="The meeting records do not contain sufficient evidence to answer this question.",
+                citations=[],
+                found_evidence=False
+            )
         query_lower = query.lower()
         if "postgres" in query_lower or "database" in query_lower or "migration" in query_lower or "benchmark" in query_lower:
             return GroundedAnswerDTO(

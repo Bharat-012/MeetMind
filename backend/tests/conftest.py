@@ -1,11 +1,14 @@
 """Test fixtures and database configuration."""
+import os
 import pytest
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from app.core import database
 from app.core.database import Base, get_db
+import app.models  # noqa: F401
 from app.main import app
 
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+TEST_DATABASE_URL = "sqlite+aiosqlite:///./test_meetmind.db"
 
 test_engine = create_async_engine(
     TEST_DATABASE_URL,
@@ -18,6 +21,10 @@ TestAsyncSessionLocal = async_sessionmaker(
     expire_on_commit=False,
     autoflush=False
 )
+
+# Patch global database engine and sessionmaker for tests so background tasks share test DB
+database.engine = test_engine
+database.AsyncSessionLocal = TestAsyncSessionLocal
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -33,6 +40,12 @@ async def setup_test_database():
     yield
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
+    # Remove SQLite file if created
+    if os.path.exists("./test_meetmind.db"):
+        try:
+            os.remove("./test_meetmind.db")
+        except OSError:
+            pass
 
 
 @pytest.fixture
@@ -53,4 +66,3 @@ async def client(db_session):
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
     app.dependency_overrides.clear()
-

@@ -49,7 +49,7 @@ async def create_meeting(payload: MeetingCreate, db: AsyncSession = Depends(get_
         status=ProcessingStatus.UPLOADED
     )
     db.add(meeting)
-    await db.flush()
+    await db.commit()
     await db.refresh(meeting)
     return meeting
 
@@ -181,7 +181,7 @@ async def update_speaker(
     if payload.participant_id:
         speaker.participant_id = payload.participant_id
 
-    await db.flush()
+    await db.commit()
     await db.refresh(speaker)
     return speaker
 
@@ -201,7 +201,7 @@ async def update_action_item_status(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Action item not found")
 
     action_item.status = payload.status
-    await db.flush()
+    await db.commit()
     await db.refresh(action_item)
     return action_item
 
