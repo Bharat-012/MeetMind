@@ -182,7 +182,8 @@ class PipelineService:
                 spk = Speaker(
                     meeting_id=meeting_id,
                     speaker_label=label,
-                    confirmed_name=None
+                    confirmed_name=None,
+                    is_confirmed=False
                 )
                 db.add(spk)
                 await db.flush()
@@ -198,6 +199,16 @@ class PipelineService:
                     break
 
             if not matched_speaker_id and seg.speaker_label:
+                if seg.speaker_label not in speaker_map:
+                    spk = Speaker(
+                        meeting_id=meeting_id,
+                        speaker_label=seg.speaker_label,
+                        confirmed_name=None,
+                        is_confirmed=False
+                    )
+                    db.add(spk)
+                    await db.flush()
+                    speaker_map[seg.speaker_label] = spk.id
                 matched_speaker_id = speaker_map.get(seg.speaker_label)
 
             words_data = [

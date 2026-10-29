@@ -19,7 +19,14 @@ from app.schemas.transcript import (
     TranscriptSegmentRead,
     SpeakerRead,
     SpeakerUpdateRequest,
+    SpeakerStatsRead,
+    SpeakerAssignmentAuditRead,
     FullTranscriptResponse,
+    ParticipantCreate,
+    ParticipantUpdate,
+    ParticipantRead,
+    MeetingAppearanceRead,
+    ParticipantHistoryRead,
 )
 from app.schemas.intelligence import (
     MeetingSummaryRead,

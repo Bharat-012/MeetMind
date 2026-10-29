@@ -21,7 +21,13 @@ import {
   AlertTriangle,
   ArrowRight,
   Edit2,
-  Check
+  Check,
+  X,
+  History,
+  UserCheck,
+  UserX,
+  BarChart3,
+  ShieldCheck
 } from 'lucide-react';
 
 export default function MeetingDetailPage() {
@@ -35,6 +41,8 @@ export default function MeetingDetailPage() {
   const [shortTranscript, setShortTranscript] = useState<any>(null);
   const [decisions, setDecisions] = useState<any[]>([]);
   const [actionItems, setActionItems] = useState<any[]>([]);
+  const [speakerStats, setSpeakerStats] = useState<any[]>([]);
+  const [orgParticipants, setOrgParticipants] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
   // Playback state
@@ -43,9 +51,18 @@ export default function MeetingDetailPage() {
   const [duration, setDuration] = useState<number>(75);
   const playbackTimerRef = useRef<any>(null);
 
-  // Speaker editing state
-  const [editingSpeakerId, setEditingSpeakerId] = useState<string | null>(null);
-  const [speakerNewName, setSpeakerNewName] = useState<string>('');
+  // Speaker assignment modal state
+  const [assignModalOpen, setAssignModalOpen] = useState<boolean>(false);
+  const [selectedSpeaker, setSelectedSpeaker] = useState<any>(null);
+  const [selectedParticipantId, setSelectedParticipantId] = useState<string>('');
+  const [customConfirmedName, setCustomConfirmedName] = useState<string>('');
+  const [assignNotes, setAssignNotes] = useState<string>('');
+  const [assignError, setAssignError] = useState<string>('');
+
+  // Speaker audit modal state
+  const [auditModalOpen, setAuditModalOpen] = useState<boolean>(false);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [auditSpeakerLabel, setAuditSpeakerLabel] = useState<string>('');
 
   // Chat state
   const [chatMessages, setChatMessages] = useState<any[]>([
@@ -62,34 +79,49 @@ export default function MeetingDetailPage() {
   const [transcriptSearch, setTranscriptSearch] = useState<string>('');
   const [speakerFilter, setSpeakerFilter] = useState<string>('ALL');
 
+  const fetchMeetingData = async () => {
+    try {
+      const [mRes, tRes, sRes, stRes, dRes, aRes, statRes] = await Promise.all([
+        fetch(`http://localhost:8000/api/meetings/${meetingId}`).catch(() => null),
+        fetch(`http://localhost:8000/api/meetings/${meetingId}/transcript`).catch(() => null),
+        fetch(`http://localhost:8000/api/meetings/${meetingId}/summary`).catch(() => null),
+        fetch(`http://localhost:8000/api/meetings/${meetingId}/short-transcript`).catch(() => null),
+        fetch(`http://localhost:8000/api/meetings/${meetingId}/decisions`).catch(() => null),
+        fetch(`http://localhost:8000/api/meetings/${meetingId}/action-items`).catch(() => null),
+        fetch(`http://localhost:8000/api/meetings/${meetingId}/speakers/stats`).catch(() => null),
+      ]);
+
+      let meetingObj = null;
+      if (mRes && mRes.ok) {
+        meetingObj = await mRes.json();
+        setMeeting(meetingObj);
+        if (meetingObj.duration_seconds) setDuration(Math.round(meetingObj.duration_seconds));
+      }
+
+      if (tRes && tRes.ok) setTranscriptData(await tRes.json());
+      if (sRes && sRes.ok) setSummaryData(await sRes.json());
+      if (stRes && stRes.ok) setShortTranscript(await stRes.json());
+      if (dRes && dRes.ok) setDecisions(await dRes.json());
+      if (aRes && aRes.ok) setActionItems(await aRes.json());
+      if (statRes && statRes.ok) setSpeakerStats(await statRes.json());
+
+      // Fetch organization speaker directory profiles
+      if (meetingObj?.organization_id) {
+        fetch(`http://localhost:8000/api/organizations/${meetingObj.organization_id}/speakers`)
+          .then((res) => (res.ok ? res.json() : []))
+          .then((data) => setOrgParticipants(data))
+          .catch(() => {});
+      }
+    } catch (err) {
+      console.error('Failed fetching meeting details:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!meetingId) return;
-
-    const fetchAllData = async () => {
-      try {
-        const [mRes, tRes, sRes, stRes, dRes, aRes] = await Promise.all([
-          fetch(`http://localhost:8000/api/meetings/${meetingId}`).catch(() => null),
-          fetch(`http://localhost:8000/api/meetings/${meetingId}/transcript`).catch(() => null),
-          fetch(`http://localhost:8000/api/meetings/${meetingId}/summary`).catch(() => null),
-          fetch(`http://localhost:8000/api/meetings/${meetingId}/short-transcript`).catch(() => null),
-          fetch(`http://localhost:8000/api/meetings/${meetingId}/decisions`).catch(() => null),
-          fetch(`http://localhost:8000/api/meetings/${meetingId}/action-items`).catch(() => null),
-        ]);
-
-        if (mRes && mRes.ok) setMeeting(await mRes.json());
-        if (tRes && tRes.ok) setTranscriptData(await tRes.json());
-        if (sRes && sRes.ok) setSummaryData(await sRes.json());
-        if (stRes && stRes.ok) setShortTranscript(await stRes.json());
-        if (dRes && dRes.ok) setDecisions(await dRes.json());
-        if (aRes && aRes.ok) setActionItems(await aRes.json());
-      } catch (err) {
-        console.error('Failed fetching meeting details:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAllData();
+    fetchMeetingData();
   }, [meetingId]);
 
   // Synchronized playback timer simulator
@@ -117,21 +149,77 @@ export default function MeetingDetailPage() {
     setIsPlaying(true);
   };
 
-  const handleSpeakerRename = async (speakerId: string) => {
-    if (!speakerNewName.trim()) return;
+  const openAssignModal = (speaker: any) => {
+    setSelectedSpeaker(speaker);
+    setSelectedParticipantId(speaker.participant_id || '');
+    setCustomConfirmedName(speaker.confirmed_name || '');
+    setAssignNotes('');
+    setAssignError('');
+    setAssignModalOpen(true);
+  };
+
+  const handleSaveAssignment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedSpeaker) return;
+    setAssignError('');
+
+    let nameToSave = customConfirmedName.trim();
+    if (selectedParticipantId) {
+      const match = orgParticipants.find((p) => p.id === selectedParticipantId);
+      if (match && !nameToSave) nameToSave = match.name;
+    }
+
+    if (!nameToSave) {
+      setAssignError('Please select a profile or enter a confirmed display name.');
+      return;
+    }
+
     try {
-      const res = await fetch(`http://localhost:8000/api/meetings/${meetingId}/speakers/${speakerId}`, {
+      const res = await fetch(`http://localhost:8000/api/meetings/${meetingId}/speakers/${selectedSpeaker.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ confirmed_name: speakerNewName }),
+        body: JSON.stringify({
+          confirmed_name: nameToSave,
+          participant_id: selectedParticipantId || null,
+          notes: assignNotes.trim() || null
+        })
+      });
+
+      if (res.ok) {
+        setAssignModalOpen(false);
+        fetchMeetingData();
+      } else {
+        const data = await res.json();
+        setAssignError(data.detail || 'Failed to update assignment');
+      }
+    } catch (err: any) {
+      setAssignError(err.message || 'Error saving assignment');
+    }
+  };
+
+  const handleUnassignSpeaker = async (speakerId: string) => {
+    if (!confirm('Revert this speaker to an unassigned anonymous state?')) return;
+    try {
+      const res = await fetch(`http://localhost:8000/api/meetings/${meetingId}/speakers/${speakerId}/unassign`, {
+        method: 'POST'
       });
       if (res.ok) {
-        const updated = await res.json();
-        setTranscriptData((prev: any) => ({
-          ...prev,
-          speakers: prev.speakers.map((s: any) => s.id === speakerId ? updated : s)
-        }));
-        setEditingSpeakerId(null);
+        fetchMeetingData();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleOpenAuditHistory = async (speaker: any) => {
+    setAuditSpeakerLabel(speaker.speaker_label);
+    setAuditModalOpen(true);
+    setAuditLogs([]);
+    try {
+      const res = await fetch(`http://localhost:8000/api/meetings/${meetingId}/speakers/${speaker.id}/audit-history`);
+      if (res.ok) {
+        const data = await res.json();
+        setAuditLogs(data);
       }
     } catch (err) {
       console.error(err);
@@ -185,7 +273,7 @@ export default function MeetingDetailPage() {
     } catch (err) {
       setChatMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: 'Failed to retrieve response.', citations: [] }
+        { role: 'assistant', content: 'Could not connect to meeting intelligence engine.', citations: [] }
       ]);
     } finally {
       setChatLoading(false);
@@ -195,37 +283,51 @@ export default function MeetingDetailPage() {
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60);
     const s = Math.floor(secs % 60);
-    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
+  // Filtered segments
   const filteredSegments = (transcriptData?.segments || []).filter((seg: any) => {
-    const matchesSearch = seg.text.toLowerCase().includes(transcriptSearch.toLowerCase());
-    const matchesSpeaker = speakerFilter === 'ALL' || seg.speaker_id === speakerFilter;
+    const matchesSearch = !transcriptSearch || seg.text.toLowerCase().includes(transcriptSearch.toLowerCase());
+    const matchesSpeaker =
+      speakerFilter === 'ALL' ||
+      seg.speaker_id === speakerFilter ||
+      seg.speaker_label === speakerFilter;
     return matchesSearch && matchesSpeaker;
   });
 
   return (
-    <div className="flex h-screen bg-slate-900 text-slate-100 overflow-hidden">
-      {/* Main Container */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Navbar */}
-        <header className="h-14 border-b border-slate-800 bg-slate-950/70 px-6 flex items-center justify-between">
+    <div className="flex h-screen bg-slate-900 text-slate-100 overflow-hidden font-sans">
+      {/* Main Workspace Layout */}
+      <div className="flex-1 flex flex-col min-w-0 bg-slate-950">
+        {/* Top Header */}
+        <header className="h-14 border-b border-slate-800 bg-slate-900/60 px-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/" className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition">
-              <ChevronLeft className="h-5 w-5" />
+            <Link
+              href="/workspace"
+              className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition flex items-center gap-1 text-xs"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span>Workspace</span>
             </Link>
-            <div>
-              <h1 className="text-sm font-semibold text-white">
-                {meeting?.title || 'Meeting Details'}
-              </h1>
-              <span className="text-[11px] text-slate-400">
-                Duration: {formatTime(meeting?.duration_seconds || duration)} • Status: {meeting?.status || 'COMPLETED'}
-              </span>
-            </div>
+            <div className="h-4 w-[1px] bg-slate-800" />
+            <h1 className="font-semibold text-sm text-white truncate max-w-md">
+              {meeting?.title || 'Meeting Details'}
+            </h1>
+            <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-indigo-950/60 text-indigo-400 border border-indigo-800/40">
+              {meeting?.status}
+            </span>
           </div>
-          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-            {meeting?.status || 'COMPLETED'}
-          </span>
+
+          <div className="flex items-center gap-3">
+            <Link
+              href="/speakers"
+              className="flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 font-medium px-2.5 py-1.5 rounded-lg border border-indigo-900/40 bg-indigo-950/30 hover:bg-indigo-950/50 transition"
+            >
+              <Users className="h-3.5 w-3.5" />
+              <span>Speaker Directory</span>
+            </Link>
+          </div>
         </header>
 
         {/* Media Player Sync Bar */}
@@ -265,7 +367,7 @@ export default function MeetingDetailPage() {
             { id: 'summary', label: '3. Structured Summary', icon: Sparkles },
             { id: 'decisions', label: 'Decisions', icon: CheckCircle2, badge: decisions.length },
             { id: 'actions', label: 'Action Items', icon: ListTodo, badge: actionItems.length },
-            { id: 'speakers', label: 'Speakers', icon: Users },
+            { id: 'speakers', label: 'Speakers & Attribution', icon: Users, badge: transcriptData?.speakers?.length },
             { id: 'chat', label: 'Meeting Chat', icon: MessageSquare },
             { id: 'voice_emotion', label: 'Voice Analysis', icon: Activity },
           ].map((tab) => {
@@ -298,6 +400,7 @@ export default function MeetingDetailPage() {
           {/* TAB 1: FULL TRANSCRIPT */}
           {activeTab === 'transcript' && (
             <div className="space-y-4 max-w-4xl mx-auto">
+              {/* Filter controls */}
               <div className="flex items-center justify-between gap-4 mb-4">
                 <div className="relative flex-1 max-w-md">
                   <Search className="h-4 w-4 absolute left-3 top-2.5 text-slate-500" />
@@ -305,15 +408,29 @@ export default function MeetingDetailPage() {
                     type="text"
                     value={transcriptSearch}
                     onChange={(e) => setTranscriptSearch(e.target.value)}
-                    placeholder="Search words in transcript..."
+                    placeholder="Search spoken words in transcript..."
                     className="w-full pl-9 pr-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
                   />
                 </div>
-                <span className="text-xs text-slate-400">
-                  Click any segment to seek audio playback
-                </span>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-400">Speaker:</span>
+                  <select
+                    value={speakerFilter}
+                    onChange={(e) => setSpeakerFilter(e.target.value)}
+                    className="bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-300 px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="ALL">All Speakers</option>
+                    {(transcriptData?.speakers || []).map((spk: any) => (
+                      <option key={spk.id} value={spk.id}>
+                        {spk.confirmed_name ? `${spk.confirmed_name} (${spk.speaker_label})` : `Unassigned · ${spk.speaker_label}`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
+              {/* Segments List */}
               <div className="space-y-3">
                 {filteredSegments.map((seg: any) => {
                   const isCurrent = currentTime >= seg.start_time && currentTime <= seg.end_time;
@@ -328,9 +445,23 @@ export default function MeetingDetailPage() {
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1.5">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-800 text-indigo-300">
-                          {seg.speaker_label || 'Speaker'}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold ${
+                            seg.is_confirmed
+                              ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/40'
+                              : 'bg-slate-800 text-indigo-300 border border-slate-700'
+                          }`}>
+                            {seg.is_confirmed ? <ShieldCheck className="h-3 w-3 text-emerald-400" /> : null}
+                            <span>{seg.speaker_name || seg.speaker_label || 'Speaker'}</span>
+                          </span>
+
+                          {seg.speaker_label && seg.speaker_name !== seg.speaker_label && (
+                            <span className="text-[10px] font-mono text-slate-500">
+                              ({seg.speaker_label})
+                            </span>
+                          )}
+                        </div>
+
                         <span className="text-xs font-mono text-slate-500">
                           {formatTime(seg.start_time)} - {formatTime(seg.end_time)}
                         </span>
@@ -368,7 +499,7 @@ export default function MeetingDetailPage() {
                         </span>
                         <span className="text-xs font-semibold text-white">{ev.speaker}</span>
                       </div>
-                      <p className="text-sm text-slate-300">{ev.description}</p>
+                      <p className="text-xs text-slate-300 leading-relaxed">{ev.description}</p>
                     </div>
                   ))}
                 </div>
@@ -379,20 +510,20 @@ export default function MeetingDetailPage() {
           {/* TAB 3: STRUCTURED SUMMARY */}
           {activeTab === 'summary' && (
             <div className="max-w-4xl mx-auto space-y-6">
-              <div className="p-6 rounded-2xl bg-slate-950/50 border border-slate-800 space-y-3">
-                <h3 className="text-sm font-semibold text-indigo-400 uppercase tracking-wider">Executive Summary</h3>
+              <div className="p-6 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-3">
+                <h3 className="text-xs uppercase tracking-wider text-indigo-400 font-bold">Executive Summary</h3>
                 <p className="text-sm text-slate-200 leading-relaxed">
-                  {summaryData?.executive_summary || 'Executive summary will appear here.'}
+                  {summaryData?.executive_summary || 'Summary is being computed...'}
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="p-5 rounded-xl bg-slate-950/40 border border-slate-800 space-y-3">
-                  <h4 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Key Discussion Points</h4>
-                  <ul className="space-y-2 text-xs text-slate-300">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300">Key Takeaways</h4>
+                  <ul className="space-y-2">
                     {(summaryData?.key_points || []).map((pt: string, i: number) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <span className="text-emerald-400">•</span>
+                      <li key={i} className="text-xs text-slate-300 flex items-start gap-2">
+                        <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 mt-1.5 flex-shrink-0" />
                         <span>{pt}</span>
                       </li>
                     ))}
@@ -400,12 +531,12 @@ export default function MeetingDetailPage() {
                 </div>
 
                 <div className="p-5 rounded-xl bg-slate-950/40 border border-slate-800 space-y-3">
-                  <h4 className="text-xs font-semibold text-amber-400 uppercase tracking-wider">Risks & Blockers</h4>
-                  <ul className="space-y-2 text-xs text-slate-300">
-                    {(summaryData?.risks || []).map((rk: string, i: number) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <AlertTriangle className="h-3.5 w-3.5 text-amber-400 flex-shrink-0 mt-0.5" />
-                        <span>{rk}</span>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300">Risks & Considerations</h4>
+                  <ul className="space-y-2">
+                    {(summaryData?.risks || []).map((risk: string, i: number) => (
+                      <li key={i} className="text-xs text-slate-300 flex items-start gap-2">
+                        <AlertTriangle className="h-3.5 w-3.5 text-amber-500 mt-0.5 flex-shrink-0" />
+                        <span>{risk}</span>
                       </li>
                     ))}
                   </ul>
@@ -417,16 +548,12 @@ export default function MeetingDetailPage() {
           {/* TAB 4: DECISIONS */}
           {activeTab === 'decisions' && (
             <div className="max-w-4xl mx-auto space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-white">Confirmed Decisions</h3>
-                <span className="text-xs text-slate-500">Linked to timestamp evidence</span>
-              </div>
-
+              <h3 className="text-sm font-semibold text-white">Extracted Decisions</h3>
               <div className="space-y-3">
                 {decisions.map((dec: any) => (
-                  <div key={dec.id} className="p-5 rounded-xl bg-slate-950/50 border border-slate-800 space-y-2">
+                  <div key={dec.id} className="p-4 rounded-xl bg-slate-950/50 border border-slate-800 space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="font-semibold text-sm text-white">{dec.title}</span>
+                      <span className="text-xs font-semibold text-indigo-400">{dec.category || 'General'}</span>
                       <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/20 text-emerald-400">
                         {dec.status}
                       </span>
@@ -494,81 +621,168 @@ export default function MeetingDetailPage() {
             </div>
           )}
 
-          {/* TAB 6: SPEAKERS */}
+          {/* TAB 6: SPEAKERS & ATTRIBUTION */}
           {activeTab === 'speakers' && (
-            <div className="max-w-3xl mx-auto space-y-4">
-              <h3 className="text-sm font-semibold text-white">Speaker Attribution & Identity Mapping</h3>
+            <div className="max-w-4xl mx-auto space-y-6">
+              {/* Speaker Contribution Stats */}
+              {speakerStats.length > 0 && (
+                <div className="p-5 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-4">
+                  <h3 className="text-xs uppercase tracking-wider text-slate-400 font-bold flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4 text-indigo-400" />
+                    <span>Meeting Talk-Time Distribution</span>
+                  </h3>
+
+                  {/* Distribution Bar */}
+                  <div className="h-3 w-full bg-slate-800 rounded-full overflow-hidden flex">
+                    {speakerStats.map((s, idx) => {
+                      const colors = ['bg-indigo-500', 'bg-violet-500', 'bg-cyan-500', 'bg-emerald-500', 'bg-amber-500', 'bg-rose-500'];
+                      return (
+                        <div
+                          key={s.speaker_id}
+                          style={{ width: `${s.percentage}%` }}
+                          className={`${colors[idx % colors.length]} transition-all`}
+                          title={`${s.display_name}: ${s.percentage}%`}
+                        />
+                      );
+                    })}
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
+                    {speakerStats.map((s, idx) => (
+                      <div key={s.speaker_id} className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 text-xs">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-semibold text-slate-200 truncate">{s.display_name}</span>
+                          <span className="font-mono text-indigo-400 font-bold">{s.percentage}%</span>
+                        </div>
+                        <div className="text-[11px] text-slate-500 flex justify-between">
+                          <span>{s.segment_count} segments</span>
+                          <span>{formatTime(s.total_seconds)}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Speaker List & Assignment Cards */}
               <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-white">Diarized Speaker Turns & Confirmations</h3>
+                  <span className="text-xs text-slate-500">
+                    Diarization IDs remain meeting-scoped until linked to an organization profile.
+                  </span>
+                </div>
+
                 {(transcriptData?.speakers || []).map((spk: any) => (
-                  <div key={spk.id} className="p-4 rounded-xl bg-slate-950/50 border border-slate-800 flex items-center justify-between">
-                    <div>
-                      <span className="text-xs font-mono text-indigo-400 block">{spk.speaker_label}</span>
-                      <span className="text-sm font-semibold text-white">
-                        {spk.confirmed_name || 'Anonymous Speaker'}
-                      </span>
+                  <div
+                    key={spk.id}
+                    className="p-4 rounded-xl bg-slate-950/50 border border-slate-800 flex items-center justify-between gap-4"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm ${
+                        spk.is_confirmed
+                          ? 'bg-emerald-950/60 border border-emerald-700/50 text-emerald-300'
+                          : 'bg-slate-800 border border-slate-700 text-slate-300'
+                      }`}>
+                        {(spk.confirmed_name || spk.speaker_label).charAt(0).toUpperCase()}
+                      </div>
+
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-semibold text-sm text-white">
+                            {spk.confirmed_name || 'Unassigned Speaker'}
+                          </h4>
+                          <span className="text-xs font-mono text-slate-500">
+                            ({spk.speaker_label})
+                          </span>
+                          <span className={`px-2 py-0.2 rounded text-[10px] font-semibold ${
+                            spk.is_confirmed
+                              ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/40'
+                              : 'bg-amber-950/60 text-amber-400 border border-amber-800/40'
+                          }`}>
+                            {spk.is_confirmed ? 'Confirmed' : 'Unassigned'}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-3 text-xs text-slate-400 mt-1">
+                          <span>{spk.segment_count || 0} segments</span>
+                          <span>•</span>
+                          <span>{formatTime(spk.total_talk_time_seconds || 0)}</span>
+                          <span>•</span>
+                          <span>{spk.talk_time_percentage || 0}% of speech</span>
+                        </div>
+                      </div>
                     </div>
 
-                    {editingSpeakerId === spk.id ? (
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          value={speakerNewName}
-                          onChange={(e) => setSpeakerNewName(e.target.value)}
-                          placeholder="e.g. Dr. Sarah Chen"
-                          className="px-2.5 py-1 bg-slate-900 border border-slate-700 rounded text-xs text-white focus:outline-none focus:border-indigo-500"
-                        />
-                        <button
-                          onClick={() => handleSpeakerRename(spk.id)}
-                          className="p-1 rounded bg-indigo-600 text-white hover:bg-indigo-500"
-                        >
-                          <Check className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    ) : (
+                    <div className="flex items-center gap-2">
                       <button
-                        onClick={() => { setEditingSpeakerId(spk.id); setSpeakerNewName(spk.confirmed_name || ''); }}
-                        className="px-3 py-1.5 rounded-lg border border-slate-800 hover:bg-slate-800 text-xs text-slate-300 flex items-center gap-1.5 transition"
+                        onClick={() => handleOpenAuditHistory(spk)}
+                        className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                        title="View Attribution Audit Trail"
                       >
-                        <Edit2 className="h-3 w-3" />
-                        <span>Rename</span>
+                        <History className="h-4 w-4" />
                       </button>
-                    )}
+
+                      <button
+                        onClick={() => openAssignModal(spk)}
+                        className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 border border-indigo-700/40 transition"
+                      >
+                        <UserCheck className="h-3.5 w-3.5" />
+                        <span>{spk.is_confirmed ? 'Change' : 'Assign'}</span>
+                      </button>
+
+                      {spk.is_confirmed && (
+                        <button
+                          onClick={() => handleUnassignSpeaker(spk.id)}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-slate-800 transition"
+                          title="Revert to Anonymous Speaker"
+                        >
+                          <UserX className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* TAB 7: MEETING CHAT */}
+          {/* TAB 7: CHAT */}
           {activeTab === 'chat' && (
-            <div className="max-w-3xl mx-auto flex flex-col h-[550px] bg-slate-950/60 border border-slate-800 rounded-2xl overflow-hidden">
-              <div className="p-4 border-b border-slate-800 bg-slate-950">
-                <h3 className="text-xs font-semibold text-white flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-indigo-400" />
-                  <span>Ask Questions About This Meeting</span>
-                </h3>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="max-w-3xl mx-auto flex flex-col h-[600px] bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden">
+              <div className="flex-1 p-4 overflow-y-auto space-y-4">
                 {chatMessages.map((msg, i) => (
-                  <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-lg p-3.5 rounded-2xl text-xs leading-relaxed ${
-                      msg.role === 'user'
-                        ? 'bg-indigo-600 text-white rounded-br-none'
-                        : 'bg-slate-900 text-slate-200 border border-slate-800 rounded-bl-none'
-                    }`}>
+                  <div
+                    key={i}
+                    className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
+                  >
+                    <div
+                      className={`max-w-[80%] rounded-2xl p-4 text-xs leading-relaxed ${
+                        msg.role === 'user'
+                          ? 'bg-indigo-600 text-white rounded-br-none'
+                          : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-bl-none'
+                      }`}
+                    >
                       <p>{msg.content}</p>
+
                       {msg.citations && msg.citations.length > 0 && (
-                        <div className="mt-2 pt-2 border-t border-slate-800 space-y-1">
-                          <span className="text-[10px] text-slate-400 uppercase font-semibold">Evidence Citations:</span>
+                        <div className="mt-3 pt-3 border-t border-slate-800 space-y-1.5">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400 block">
+                            Evidence Citations
+                          </span>
                           {msg.citations.map((c: any, ci: number) => (
-                            <button
+                            <div
                               key={ci}
-                              onClick={() => c.timestamp_start !== undefined && seekTo(c.timestamp_start)}
-                              className="block text-[11px] text-indigo-400 hover:underline text-left"
+                              onClick={() => c.timestamp !== null && seekTo(c.timestamp)}
+                              className="text-[11px] text-slate-400 bg-slate-950 p-2 rounded border border-slate-800/80 cursor-pointer hover:border-indigo-500/50 transition flex items-center justify-between"
                             >
-                              [{formatTime(c.timestamp_start || 0)}] {c.quote ? `"${c.quote.slice(0, 80)}..."` : ''}
-                            </button>
+                              <span>{c.speaker_name || c.speaker_label}: "{c.quote}"</span>
+                              {c.timestamp !== null && (
+                                <span className="font-mono text-indigo-400 ml-2">
+                                  [{formatTime(c.timestamp)}]
+                                </span>
+                              )}
+                            </div>
                           ))}
                         </div>
                       )}
@@ -576,60 +790,205 @@ export default function MeetingDetailPage() {
                   </div>
                 ))}
                 {chatLoading && (
-                  <div className="flex justify-start">
-                    <div className="p-3 bg-slate-900 text-slate-400 rounded-xl text-xs animate-pulse">
-                      Searching meeting memory...
-                    </div>
-                  </div>
+                  <div className="text-xs text-slate-500 italic">Synthesizing grounded answer...</div>
                 )}
               </div>
 
-              <form onSubmit={handleChatSubmit} className="p-3 border-t border-slate-800 bg-slate-950 flex gap-2">
+              <form onSubmit={handleChatSubmit} className="p-3 border-t border-slate-800 bg-slate-900 flex gap-2">
                 <input
                   type="text"
+                  placeholder="Ask a question about this meeting..."
                   value={chatQuery}
                   onChange={(e) => setChatQuery(e.target.value)}
-                  placeholder="Ask a question (e.g., What did we decide about the migration?)..."
-                  className="flex-1 px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                  className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
                 />
                 <button
                   type="submit"
-                  disabled={chatLoading || !chatQuery.trim()}
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-lg text-xs font-medium transition"
+                  disabled={chatLoading}
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-4 py-2 rounded-xl font-medium transition"
                 >
-                  Send
+                  Ask
                 </button>
               </form>
             </div>
           )}
 
-          {/* TAB 8: VOICE ANALYSIS */}
+          {/* TAB 8: VOICE EMOTION */}
           {activeTab === 'voice_emotion' && (
-            <div className="max-w-3xl mx-auto space-y-4">
-              <div className="p-6 rounded-2xl bg-slate-950/50 border border-slate-800 space-y-3">
-                <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-                  <Activity className="h-4 w-4 text-indigo-400" />
-                  <span>Vocal Acoustic Emotion Analysis</span>
-                </h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  Voice emotion analyzes acoustic features directly from speech audio (pitch, acoustic energy, vocal resonance). These predictions reflect acoustic expressions, not internal psychological truth.
-                </p>
-                <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center justify-between">
-                  <div>
-                    <span className="text-xs text-slate-400">Predominant Acoustic State</span>
-                    <span className="block text-sm font-semibold text-emerald-400">Engaged (Confidence: 88%)</span>
-                  </div>
-                  <div>
-                    <span className="text-xs text-slate-400">Mean Vocal Pitch</span>
-                    <span className="block text-sm font-semibold text-slate-200">182 Hz</span>
-                  </div>
-                </div>
-              </div>
+            <div className="max-w-2xl mx-auto p-8 rounded-2xl bg-slate-950 border border-slate-800 text-center space-y-3">
+              <Activity className="h-8 w-8 text-indigo-400 mx-auto" />
+              <h3 className="text-sm font-semibold text-white">Voice Emotion Analysis (Modular Option)</h3>
+              <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+                Acoustic pitch, tempo, and tone energy analysis are optional features per ADR-005. Standard local meeting summarization and transcript search remain fully operational without requiring affective inference.
+              </p>
             </div>
           )}
         </div>
       </div>
+
+      {/* ASSIGN PARTICIPANT MODAL */}
+      {assignModalOpen && selectedSpeaker && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <UserCheck className="h-4 w-4 text-indigo-400" />
+                  <span>Assign Speaker Identity</span>
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Mapping diarized turn <span className="font-mono text-indigo-300 font-bold">[{selectedSpeaker.speaker_label}]</span>
+                </p>
+              </div>
+              <button onClick={() => setAssignModalOpen(false)} className="text-slate-400 hover:text-white">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveAssignment} className="space-y-4">
+              {assignError && (
+                <div className="p-2.5 rounded-lg bg-red-950/50 border border-red-800/50 text-red-300 text-xs">
+                  {assignError}
+                </div>
+              )}
+
+              {/* Option 1: Select from Organization Speaker Directory */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  Select from Organization Speaker Directory
+                </label>
+                <select
+                  value={selectedParticipantId}
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    setSelectedParticipantId(id);
+                    if (id) {
+                      const match = orgParticipants.find((p) => p.id === id);
+                      if (match) setCustomConfirmedName(match.name);
+                    }
+                  }}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                >
+                  <option value="">-- Choose Profile or Enter Custom Name Below --</option>
+                  {orgParticipants.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} {p.email ? `(${p.email})` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Option 2: Custom Confirmed Name */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  Confirmed Display Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Dr. Sarah Chen"
+                  value={customConfirmedName}
+                  onChange={(e) => setCustomConfirmedName(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              {/* Notes */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  Assignment Note / Reason (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Verified by project lead from agenda"
+                  value={assignNotes}
+                  onChange={(e) => setAssignNotes(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setAssignModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white transition shadow-md shadow-indigo-600/30"
+                >
+                  Confirm Assignment
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* AUDIT TRAIL MODAL */}
+      {auditModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <History className="h-4 w-4 text-indigo-400" />
+                  <span>Attribution Audit History</span>
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Audit changes for speaker <span className="font-mono text-indigo-300">[{auditSpeakerLabel}]</span>
+                </p>
+              </div>
+              <button onClick={() => setAuditModalOpen(false)} className="text-slate-400 hover:text-white">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="max-h-80 overflow-y-auto space-y-3 pr-1">
+              {auditLogs.length === 0 ? (
+                <p className="text-xs text-slate-500 italic text-center py-6">
+                  No attribution modifications recorded for this speaker yet.
+                </p>
+              ) : (
+                auditLogs.map((log) => (
+                  <div key={log.id} className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-indigo-400 uppercase text-[10px] tracking-wider">
+                        {log.action}
+                      </span>
+                      <span className="text-[11px] text-slate-500 font-mono">
+                        {new Date(log.created_at).toLocaleString()}
+                      </span>
+                    </div>
+
+                    {log.previous_name || log.new_name ? (
+                      <div className="text-slate-300">
+                        {log.previous_name && <span className="line-through text-slate-500 mr-2">{log.previous_name}</span>}
+                        {log.new_name && <span className="text-emerald-400 font-semibold">{log.new_name}</span>}
+                      </div>
+                    ) : null}
+
+                    {log.notes && (
+                      <p className="text-[11px] text-slate-400 italic">"{log.notes}"</p>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <button
+                onClick={() => setAuditModalOpen(false)}
+                className="px-4 py-2 rounded-xl text-xs font-medium bg-slate-800 hover:bg-slate-700 text-white transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-

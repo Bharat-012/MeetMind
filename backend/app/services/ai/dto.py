@@ -50,15 +50,17 @@ class ChronologicalEventDTO:
 class ShortTranscriptDTO:
     narrative_text: str
     chronological_events: List[ChronologicalEventDTO]
+    model_name: str = "mock-short-transcript-v1"
 
 
 @dataclass
 class DecisionDTO:
-    title: str
-    decision_text: str
-    responsible_person: Optional[str]
-    evidence_timestamp: Optional[float]
-    evidence_quote: Optional[str]
+    title: str = "Decision"
+    decision_text: str = ""
+    category: str = "General"
+    responsible_person: Optional[str] = None
+    evidence_timestamp: Optional[float] = None
+    evidence_quote: Optional[str] = None
 
 
 @dataclass

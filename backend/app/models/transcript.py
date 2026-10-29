@@ -1,6 +1,6 @@
 """Transcript segment, speaker, and participant attribution models."""
 from typing import List, Optional
-from sqlalchemy import String, Float, ForeignKey, JSON
+from sqlalchemy import String, Float, Boolean, ForeignKey, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 from app.models.base import TimestampMixin, generate_uuid
@@ -13,10 +13,12 @@ class MeetingParticipant(Base, TimestampMixin):
     organization_id: Mapped[str] = mapped_column(String(36), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False, index=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, index=True)
+    description: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
     avatar_url: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
 
     # Relationships
-    speaker_assignments: Mapped[List["SpeakerAssignment"]] = relationship("SpeakerAssignment", back_populates="participant")
+    organization: Mapped["Organization"] = relationship("Organization", back_populates="participants")  # noqa: F821
+    speaker_assignments: Mapped[List["SpeakerAssignment"]] = relationship("SpeakerAssignment", back_populates="participant", cascade="all, delete-orphan")
 
 
 class Speaker(Base, TimestampMixin):
@@ -27,12 +29,14 @@ class Speaker(Base, TimestampMixin):
 
     speaker_label: Mapped[str] = mapped_column(String(50), nullable=False)  # e.g., "SPEAKER_00", "Speaker 1"
     confirmed_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)  # User overridden name
+    is_confirmed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     participant_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("meeting_participants.id", ondelete="SET NULL"), nullable=True)
 
     # Relationships
     meeting: Mapped["Meeting"] = relationship("Meeting", back_populates="speakers")  # noqa: F821
+    participant: Mapped[Optional["MeetingParticipant"]] = relationship("MeetingParticipant")
     segments: Mapped[List["TranscriptSegment"]] = relationship("TranscriptSegment", back_populates="speaker")
-    assignment: Mapped[Optional["SpeakerAssignment"]] = relationship("SpeakerAssignment", back_populates="speaker", uselist=False)
+    assignment: Mapped[Optional["SpeakerAssignment"]] = relationship("SpeakerAssignment", back_populates="speaker", uselist=False, cascade="all, delete-orphan")
 
 
 class SpeakerAssignment(Base, TimestampMixin):
@@ -42,6 +46,8 @@ class SpeakerAssignment(Base, TimestampMixin):
     speaker_id: Mapped[str] = mapped_column(String(36), ForeignKey("speakers.id", ondelete="CASCADE"), unique=True, nullable=False)
     participant_id: Mapped[str] = mapped_column(String(36), ForeignKey("meeting_participants.id", ondelete="CASCADE"), nullable=False)
     assigned_by_user_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    assignment_source: Mapped[str] = mapped_column(String(50), default="MANUAL_CONFIRMED", nullable=False)
+    notes: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
 
     # Relationships
     speaker: Mapped["Speaker"] = relationship("Speaker", back_populates="assignment")

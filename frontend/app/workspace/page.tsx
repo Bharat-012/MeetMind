@@ -14,7 +14,8 @@ import {
   Building,
   Filter,
   Calendar,
-  Clock
+  Clock,
+  Users
 } from 'lucide-react';
 import IngestModal from '@/components/IngestModal';
 
@@ -157,6 +158,14 @@ export default function WorkspacePage() {
               <ListTodo className="h-4 w-4" />
               <span>All Action Items</span>
             </button>
+
+            <Link
+              href="/speakers"
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition text-slate-400 hover:text-white hover:bg-slate-900"
+            >
+              <Users className="h-4 w-4 text-indigo-400" />
+              <span>Speaker Directory</span>
+            </Link>
           </nav>
         </div>
 

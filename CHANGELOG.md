@@ -5,6 +5,36 @@ All notable changes to the MeetMind project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-10-29: Phase 3 Speaker Directory, Participant Management, and Attribution
+
+### Added
+- **Organization Speaker Directory (`MeetingParticipant`)**:
+  - Full CRUD and search API (`/api/organizations/{org_id}/speakers`) supporting display name, email, role, and description.
+  - Participation history endpoint (`/api/organizations/{org_id}/speakers/{participant_id}/history`) returning meeting count, total talk time, attended meetings, and spoken transcript segments.
+  - Dedicated Next.js frontend page (`frontend/app/speakers/page.tsx`) with search, metrics cards, creation/editing modals, and a slide-over participation history drawer.
+- **Meeting-Level Speaker Attribution Workflow**:
+  - Assignment endpoint (`PATCH /api/meetings/{id}/speakers/{speaker_id}`) linking anonymous diarized labels (`SPEAKER_00`) to organization participant profiles or setting confirmed display names.
+  - Unassign endpoint (`POST /api/meetings/{id}/speakers/{speaker_id}/unassign`) resetting attribution status.
+  - Audit trail endpoint (`GET /api/meetings/{id}/speakers/{speaker_id}/audit-history`) returning chronological attribution changes.
+  - Speaker contribution stats endpoint (`GET /api/meetings/{id}/speakers/stats`) returning per-speaker duration, segment count, and talk-time percentage.
+- **Strict Identity Governance & Biometric Prohibition**:
+  - Enforced ADR-008: absolute prohibition on automatic speaker identification using voice similarity or acoustic biometrics alone.
+  - Diarizer outputs remain immutable: `Speaker.speaker_label` is preserved across all assignments and renames.
+  - Cross-meeting isolation: identical anonymous labels (`SPEAKER_00`) across meetings remain strictly independent database entities.
+- **Attribution Audit Logging**:
+  - Integrated `AuditLog` events (`ASSIGN_SPEAKER`, `UNASSIGN_SPEAKER`, `UPDATE_SPEAKER_PROFILE`, `DELETE_SPEAKER_PROFILE`) recording actor, timestamp, previous vs new name/participant ID, and notes.
+- **Enhanced Meeting Detail Frontend**:
+  - Transcript lines display confirmed display name prominently with original label fallback and `Confirmed` vs `Unassigned` visual badges.
+  - Speaker filter dropdown allowing instant filtering of transcript by speaker.
+  - Speaker assignment modal supporting profile selection or custom name entry.
+  - Attribution audit history modal displaying full provenance of identity changes.
+  - Speaker contribution distribution bar showing talk-time percentages across participants.
+- **Transparent Local AI Fallback**:
+  - Enhanced `OllamaProvider` with deterministic local rule-based fallback when the local Ollama daemon is offline, explicitly labeled `[RULE-BASED FALLBACK · Ollama offline]` with `model_name = "local-rule-based-fallback (ollama offline)"`.
+- **Automated Test Suite Expansion**:
+  - Created `tests/test_phase3_speakers_and_attribution.py` covering directory CRUD, participant assignment, unassignment, audit logging, cross-meeting independence, speaker stats, and Ollama offline fallback.
+  - Expanded test suite from 24 to 30 tests (30/30 passing in 37.4s).
+
 ## [0.2.1] - 2026-10-29: Phase 2 End-to-End Validation & Audit Milestone
 
 ### Added

@@ -29,25 +29,35 @@ This roadmap outlines the systematic execution sequence for building MeetMind ac
 
 ---
 
-## Phase 3: Speaker Diarization & Participant Mapping
-- **Goal**: Detect speaker turns, assign anonymous speaker IDs, align with ASR timestamps, and provide speaker renaming tools.
-- **Deliverables**:
-  - Diarization interface with `PyannoteProvider` and acoustic energy/heuristic fallback.
-  - Timestamp alignment algorithm matching diarization turns with Whisper segments.
-  - Speaker directory and participant assignment endpoints with audit trails.
-  - Tests for speaker boundary detection, alignment accuracy, and manual label renaming.
+## Phase 3: Speaker Directory, Participant Management, and Attribution (Completed)
+- **Goal**: Build organization-level speaker directory, connect anonymous diarized labels to known participants, maintain an immutable attribution audit trail, preserve diarizer output, enforce the strict no-voice-biometrics identity rule, and provide rich speaker analytics.
+- **Completed Deliverables**:
+  - Organization-level Speaker Directory endpoints (`/api/organizations/{org_id}/speakers`): CRUD, search, participation stats, meeting appearances, and segment history.
+  - Meeting-level speaker assignment and correction endpoints (`PATCH /api/meetings/{id}/speakers/{speaker_id}` & `POST .../unassign`): Link anonymous diarizer labels (`SPEAKER_00`) to organization participant profiles or confirmed display names.
+  - Attribution Audit Logging (`AuditLog` and `SpeakerAssignment`): Full audit trail recording actor, timestamp, previous vs new name/participant ID, and notes.
+  - Immutability of Diarizer Output: `Speaker.speaker_label` preserved unmodified across all assignments and renames.
+  - Cross-Meeting Isolation: Identical anonymous labels across meetings remain completely independent.
+  - No Voice Biometrics Rule: Absolute prohibition of automatic speaker identification from acoustic features alone.
+  - Frontend UI:
+    - Organization Speaker Directory (`frontend/app/speakers/page.tsx`): Directory table, search, profile creation, and participation history drawer.
+    - Enhanced Meeting Detail (`frontend/app/meetings/[id]/page.tsx`): Confirmed display names with diarizer label fallback, Confirmed/Unassigned badges, speaker filter dropdown, assignment modal, audit history modal, and talk-time distribution bar.
+    - Workspace navigation link (`frontend/app/workspace/page.tsx`).
+  - Automated Testing: Comprehensive test suite in `tests/test_phase3_speakers_and_attribution.py` (30/30 total tests passing).
 
 ---
 
-## Phase 4: Meeting Intelligence Engine (Three Distinct Deliverables)
-- **Goal**: Generate Full Transcript, Short Transcript (chronological explanation), and Structured Summary with Decisions and Action Items.
+## Phase 4: Meeting Intelligence Engine (Three Distinct Deliverables) (Current Phase)
+- **Goal**: Generate Full Transcript, Short Transcript (chronological narrative), and Structured Summary with Decisions and Action Items using local LLM inference with transparent offline fallback.
 - **Deliverables**:
-  - Chronological explanation generator capturing speaker arguments, disagreements, and conclusions.
-  - Structured summary generator (executive summary, main topics, risks, open questions).
-  - Decision extraction engine with revision tracking.
-  - Action item extraction engine with owner, deadline, priority, and status.
-  - Evidence linkers associating every extracted claim to its exact transcript segment.
-  - Tests for structured output parsing, evidence validation, and regeneration safety.
+  - Deliverable 1: Full Transcript with confirmed speaker attribution, timestamp alignment, and search/filter.
+  - Deliverable 2: Short Transcript / Chronological Narrative capturing speaker-by-speaker flow, proposals, disagreements, alternatives discussed, and conclusions.
+  - Deliverable 3: Structured Meeting Intelligence:
+    - Executive summary, key discussion points, and next steps.
+    - Formal Decision Register with rationale, alternatives rejected, consensus status, and segment evidence links.
+    - Action Item Tracker with explicit assignees, due dates, priority levels, and completion status.
+  - Segment Provenance: Direct quotation and timestamp linkage connecting every decision and action item to source transcript segments.
+  - Deterministic Parsing & Regeneration Safety: Schema validation ensuring LLM outputs conform to typed contracts without duplicating existing database records on re-run.
+  - Verification & Regression Tests for structured intelligence generation.
 
 ---
 

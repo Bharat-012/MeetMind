@@ -11,6 +11,9 @@ htmlcov/
 
 # Local Database & Storage
 *.db
+*.db-journal
+*.db-wal
+*.db-shm
 *.sqlite3
 storage/media/
 storage/temp/

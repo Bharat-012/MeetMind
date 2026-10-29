@@ -18,6 +18,7 @@ class Organization(Base, TimestampMixin):
     workspaces: Mapped[List["Workspace"]] = relationship("Workspace", back_populates="organization", cascade="all, delete-orphan")
     memberships: Mapped[List["Membership"]] = relationship("Membership", back_populates="organization", cascade="all, delete-orphan")
     meetings: Mapped[List["Meeting"]] = relationship("Meeting", back_populates="organization", cascade="all, delete-orphan")  # noqa: F821
+    participants: Mapped[List["MeetingParticipant"]] = relationship("MeetingParticipant", back_populates="organization", cascade="all, delete-orphan")  # noqa: F821
     audit_logs: Mapped[List["AuditLog"]] = relationship("AuditLog", back_populates="organization", cascade="all, delete-orphan")
 
 

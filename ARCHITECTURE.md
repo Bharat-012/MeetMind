@@ -121,3 +121,50 @@ Processing jobs transition through an observable, idempotent state machine:
 
 - **Idempotency**: Retrying a failed stage replaces or updates target records without producing duplicate segments, tasks, or embeddings.
 - **Fault Tolerance**: If optional voice emotion analysis fails, the meeting completes with status `PARTIALLY_COMPLETED` rather than aborting.
+
+---
+
+## 5. Speaker Directory, Participant Management & Attribution Architecture (Phase 3)
+
+### 5.1 Entity Separation & Data Scoping
+To preserve data integrity, multi-tenancy, and auditability, speaker-related entities follow strict scoping boundaries:
+1. **`Speaker` (Meeting-Scoped Diarizer Turn)**:
+   - Belongs to exactly one `Meeting` (`meeting_id`).
+   - Represents an anonymous diarized entity (e.g. `speaker_label = "SPEAKER_00"`).
+   - Preserves ground-truth diarizer outputs immutably: `speaker_label` is never overwritten upon assignment or renaming.
+   - Holds attribution state (`is_confirmed: bool`, default `False`) and an optional foreign key link to `MeetingParticipant`.
+   - **Cross-Meeting Independence**: The identical anonymous label (e.g., `SPEAKER_00`) in two different meetings represents two completely independent database records. The system never merges, links, or assumes identical identity across meetings without explicit manual confirmation.
+
+2. **`MeetingParticipant` (Organization-Scoped Speaker Directory Profile)**:
+   - Belongs to an `Organization` (`organization_id`).
+   - Represents a persistent person/profile across the tenant's workspace.
+   - Tracks canonical identity (`name`, `email`, `role`, `description`).
+   - Enables organization-wide participation queries (all meetings attended, segment count, total talk-time duration).
+
+3. **`SpeakerAssignment` & `AuditLog` (Immutable Attribution Audit Trail)**:
+   - Every assignment, re-assignment, or un-assignment is recorded in `SpeakerAssignment` with `assignment_source = "MANUAL_CONFIRMED"`.
+   - Every mutation produces an event in `AuditLog` capturing:
+     - `actor_id` (the authenticated user making the attribution change)
+     - `action` (`ASSIGN_SPEAKER`, `UNASSIGN_SPEAKER`, `UPDATE_SPEAKER_PROFILE`, etc.)
+     - `details` (JSON payload detailing previous participant/display name vs new participant/display name, timestamp, and optional user notes).
+
+### 5.2 Strict Identity Policy: Prohibition of Voice Biometrics
+Per MeetMind core governance:
+- **No Automatic Biometric Identification**: The platform strictly prohibits automatic speaker identification inferred from voice similarity, acoustic embeddings, or voice biometrics alone.
+- **Explicit Confirmation Only**: Anonymous diarizer labels are only mapped to real identities through:
+  1. Explicit user assignment in the UI (`PATCH /api/meetings/{id}/speakers/{speaker_id}`).
+  2. Verified external meeting provider metadata (e.g., calendar invitees or Zoom attendee lists with explicit match criteria).
+- Any unassigned or uncertain speaker turn remains labeled as `Unassigned` (`is_confirmed = False`).
+
+### 5.3 Speaker Analytics & Contribution Metrics
+Meeting intelligence calculates contribution metrics on-the-fly or via cached aggregation:
+- `total_talk_time_seconds`: Sum of segment durations (`end_time - start_time`) attributed to the speaker.
+- `segment_count`: Number of distinct speech turns spoken by the speaker.
+- `talk_time_percentage`: Ratio of speaker's talk time relative to the total spoken speech duration across all meeting segments.
+
+### 5.4 Local LLM Fallback Transparency
+When local Ollama inference is offline or uninstalled:
+- `OllamaProvider` activates a deterministic, local rule-based extractor for meeting summaries, chronological narratives, decisions, and chat.
+- All fallback responses are explicitly labeled (e.g., `[RULE-BASED FALLBACK · Ollama offline]`) with `model_name = "local-rule-based-fallback (ollama offline)"`.
+- Cloud AI fallback remains strictly disabled (`cloud_fallback_enabled = False`).
+

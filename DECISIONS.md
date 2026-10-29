@@ -53,3 +53,16 @@
 - **Context**: Speaker diarization is critical for attributing decisions and action items to correct participants. NVIDIA's Nemotron-3-Diarization is an open-weight, 100M parameter Sortformer model delivering state-of-the-art low Diarization Error Rate (DER) across up to 8 concurrent speakers and overlapping speech with 10ms frame resolution.
 - **Decision**: Adopt `nvidia/Nemotron-3-Diarization` under OpenMDW 1.1 license as MeetMind's primary speaker diarization architecture. Interface it through `Nemotron3DiarizationProvider`, mapping its speaker dictionary outputs into MeetMind's internal `DiarizationTurnDTO` and aligning them with Whisper transcript segments.
 - **Consequences**: Handles multi-speaker overlap accurately while keeping memory consumption under ~1.5 GB VRAM.
+
+---
+
+## ADR-008: Organization-Level Speaker Directory and Explicit Attribution Audit Trail
+- **Status**: Accepted
+- **Context**: Diarization models output anonymous, meeting-scoped labels (`SPEAKER_00`, `SPEAKER_01`). Automatically inferring identity across meetings using voice biometrics introduces privacy violations, false positive misattributions, and legal liability. Furthermore, organizations need a centralized directory of participants with full auditability of who made or corrected speaker assignments.
+- **Decision**:
+  1. Implement an organization-scoped Speaker Directory (`MeetingParticipant`) storing reusable profiles (`name`, `email`, `description`, `avatar_url`) isolated per tenant.
+  2. Maintain strict meeting scoping for diarizer outputs (`Speaker`). Never assume `SPEAKER_00` in Meeting A is the same person as `SPEAKER_00` in Meeting B.
+  3. Prohibit automatic voice biometric identification. Speaker attribution requires explicit user confirmation or verified metadata.
+  4. Preserve original diarization labels permanently alongside user-confirmed display names.
+  5. Log every assignment, correction, and unassignment action in `AuditLog` recording the actor, timestamp, previous value, and new value.
+- **Consequences**: Complete transparency and auditability, zero biometric privacy liability, robust multi-tenant isolation, and flawless preservation of original diarization data.

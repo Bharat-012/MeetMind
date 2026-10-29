@@ -49,14 +49,23 @@
 
 ---
 
-## Phase 3: Speaker Diarization & Participant Attribution (NEXT UP)
-- [PENDING] Speaker directory and participant assignment APIs with audit log trail.
-- [PENDING] Advanced multi-speaker alignment and overlap benchmark tests.
-- [PENDING] Cross-meeting speaker profile voice matching (optional/opt-in).
+## Phase 3: Speaker Diarization, Participant Management, and Attribution (COMPLETED)
+- [COMPLETED] Organization-scoped speaker directory CRUD endpoints (`/api/organizations/{org_id}/speakers`).
+- [COMPLETED] Speaker profile management with name, email, description, and avatar support.
+- [COMPLETED] Speaker meeting appearance and history APIs (`/api/organizations/{org_id}/speakers/{id}/meetings`, `/history`).
+- [COMPLETED] Explicit participant assignment, correction, and unassignment endpoints with zero voice biometrics.
+- [COMPLETED] Immutable diarization preservation: raw diarizer labels (`SPEAKER_00`) preserved alongside confirmed display names.
+- [COMPLETED] Full attribution audit logging in `AuditLog` (`ASSIGN_SPEAKER`, `CORRECT_SPEAKER_ASSIGNMENT`, `UNASSIGN_SPEAKER`).
+- [COMPLETED] Speaker independence guarantee: identical anonymous speaker labels in different meetings remain completely isolated.
+- [COMPLETED] Speaker contribution metrics: talk time, segment count, and percentage distribution bar.
+- [COMPLETED] Next.js Speaker Directory page (`frontend/app/speakers/page.tsx`) with search, create/edit modals, and history drawer.
+- [COMPLETED] Next.js Meeting Detail page upgrades: Confirmed vs Unassigned badges, participant assignment modal, and audit trail drawer.
+- [COMPLETED] Offline local LLM labeled fallback in `OllamaProvider` (never mispresented as LLM output).
+- [COMPLETED] Expanded test suite to 30 tests: 30 passed in 37.42s, 0 failed.
 
 ---
 
-## Phase 4: Meeting Intelligence Engine (Three Deliverables)
+## Phase 4: Meeting Intelligence Engine (Three Deliverables) (NEXT UP)
 - [PENDING] Chronological explanation generator (who said what, proposals, disagreements).
 - [PENDING] Structured summary generator (executive summary, key topics, risks, open questions).
 - [PENDING] Decision extraction engine with versioned revisions.

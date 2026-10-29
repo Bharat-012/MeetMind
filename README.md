@@ -8,7 +8,9 @@ MeetMind is an enterprise-grade AI meeting intelligence platform that transforms
 
 - **Multi-Source Ingestion**: Upload MP4, WebM, MOV, MKV, MP3, WAV, M4A, or submit online video URLs.
 - **Accurate Speech-to-Text**: Timestamped segment transcription powered by modular ASR engines (e.g. `faster-whisper`).
-- **Speaker Diarization & Identity Mapping**: Detect speaker turns and map anonymous speaker labels to organization members.
+- **Speaker Diarization & Identity Mapping**: Detect speaker turns with NVIDIA Nemotron-3-Diarization and connect anonymous speaker labels (`SPEAKER_00`) to organization participant profiles with immutable audit trails.
+- **Organization Speaker Directory**: Organization-wide directory of participants with participation statistics, meeting history, and spoken segments.
+- **Strict Attribution Governance**: Complete prohibition on voice biometrics; attribution requires explicit user confirmation or verified metadata.
 - **Three Core Deliverables**:
   1. *Full Transcript*: Timestamped, searchable dialogue.
   2. *Short Transcript / Chronological Explanation*: Narrative sequence of who said what, arguments, and conclusions.
