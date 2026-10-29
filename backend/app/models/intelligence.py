@@ -8,14 +8,19 @@ from app.models.base import TimestampMixin, generate_uuid
 
 
 class DecisionStatus(str, enum.Enum):
-    ACTIVE = "ACTIVE"
+    PROPOSED = "PROPOSED"
+    CONFIRMED = "CONFIRMED"
+    ACTIVE = "ACTIVE"  # Retained for backward compatibility
     REVISED = "REVISED"
     SUPERSEDED = "SUPERSEDED"
+    REJECTED = "REJECTED"
     CANCELLED = "CANCELLED"
 
 
 class ActionItemStatus(str, enum.Enum):
-    OPEN = "OPEN"
+    PROPOSED = "PROPOSED"
+    ACCEPTED = "ACCEPTED"
+    OPEN = "OPEN"  # Retained for backward compatibility
     IN_PROGRESS = "IN_PROGRESS"
     COMPLETED = "COMPLETED"
     BLOCKED = "BLOCKED"
@@ -53,7 +58,8 @@ class ShortTranscript(Base, TimestampMixin):
     meeting_id: Mapped[str] = mapped_column(String(36), ForeignKey("meetings.id", ondelete="CASCADE"), unique=True, nullable=False)
 
     narrative_text: Mapped[str] = mapped_column(String(10000), nullable=False)
-    chronological_events: Mapped[list] = mapped_column(JSON, default=list, nullable=False)  # List of event dicts with timestamp, speaker, description
+    chronological_events: Mapped[list] = mapped_column(JSON, default=list, nullable=False)  # List of event dicts with timestamp, speaker, description, event_type, source_segment_id, quote
+    model_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
 
     # Relationships
     meeting: Mapped["Meeting"] = relationship("Meeting", back_populates="short_transcript")  # noqa: F821
@@ -80,10 +86,12 @@ class Decision(Base, TimestampMixin):
     title: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     decision_text: Mapped[str] = mapped_column(String(3000), nullable=False)
     responsible_person: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    status: Mapped[DecisionStatus] = mapped_column(Enum(DecisionStatus), default=DecisionStatus.ACTIVE, nullable=False)
+    status: Mapped[DecisionStatus] = mapped_column(Enum(DecisionStatus), default=DecisionStatus.CONFIRMED, nullable=False)
 
+    source_segment_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("transcript_segments.id", ondelete="SET NULL"), nullable=True, index=True)
     evidence_timestamp: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     evidence_quote: Mapped[Optional[str]] = mapped_column(String(2000), nullable=True)
+    model_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
 
     # Relationships
     meeting: Mapped["Meeting"] = relationship("Meeting", back_populates="decisions")  # noqa: F821
@@ -117,8 +125,10 @@ class ActionItem(Base, TimestampMixin):
     priority: Mapped[Priority] = mapped_column(Enum(Priority), default=Priority.MEDIUM, nullable=False)
     status: Mapped[ActionItemStatus] = mapped_column(Enum(ActionItemStatus), default=ActionItemStatus.OPEN, nullable=False, index=True)
 
+    source_segment_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("transcript_segments.id", ondelete="SET NULL"), nullable=True, index=True)
     evidence_timestamp: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     evidence_quote: Mapped[Optional[str]] = mapped_column(String(2000), nullable=True)
+    model_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
 
     # Relationships
     meeting: Mapped["Meeting"] = relationship("Meeting", back_populates="action_items")  # noqa: F821

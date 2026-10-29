@@ -66,3 +66,17 @@
   4. Preserve original diarization labels permanently alongside user-confirmed display names.
   5. Log every assignment, correction, and unassignment action in `AuditLog` recording the actor, timestamp, previous value, and new value.
 - **Consequences**: Complete transparency and auditability, zero biometric privacy liability, robust multi-tenant isolation, and flawless preservation of original diarization data.
+
+---
+
+## ADR-009: Meeting Intelligence Engine, Evidence Provenance, and Hallucination Prevention
+- **Status**: Accepted
+- **Context**: In Phase 4, MeetMind generates three distinct meeting deliverables (Deliverable A: Full Transcript, Deliverable B: Chronological Narrative Explanation, Deliverable C: Structured Meeting Intelligence covering Executive Summary, Decision Register, and Action Item Tracker). Generative AI models are prone to hallucinating facts, inventing non-existent owners/deadlines, creating fabricated timestamps, or confusing informal suggestions with approved decisions.
+- **Decision**:
+  1. Implement a dedicated `EvidenceValidator` service that validates all extracted decisions, action items, and chronological events against authentic database `TranscriptSegment`s belonging strictly to the target `meeting_id`.
+  2. Mandate foreign key provenance linking: every Decision and Action Item stores `source_segment_id`, `evidence_timestamp`, and `evidence_quote`. Every chronological event links to `source_segment_id`.
+  3. Strictly enforce decision status classification: informal suggestions and tentative proposals must be classified as `PROPOSED`, never `CONFIRMED`.
+  4. Strictly prohibit hallucination of action item owners and deadlines: if an owner or due date is not grounded in the meeting text or confirmed participants, the fields are explicitly assigned `None` (rendered as "Unassigned" / "No deadline").
+  5. Enforce transparent model provenance: every intelligence artifact stores `model_name` (e.g. `ollama:llama3.2` or clearly labeled `local-rule-based-fallback (ollama offline)`).
+  6. Ground single-meeting and organization chat with verifiable timestamp citations (`[mm:ss]`). If the transcript or memory does not answer a query, return an explicit "insufficient evidence" response (`found_evidence = False`) rather than guessing.
+- **Consequences**: Guaranteed factual grounding, complete traceability from summary/decision to exact spoken audio turn, zero ungrounded owner/deadline hallucinations, and transparent offline fallback behavior.

@@ -28,6 +28,9 @@ from app.schemas.transcript import (
     SpeakerAssignmentAuditRead,
     FullTranscriptResponse
 )
+from app.services.pipeline_service import PipelineService
+from app.services.evidence_validator import EvidenceValidator
+from app.services.ai.dto import TranscriptSegmentDTO
 from app.schemas.intelligence import (
     MeetingSummaryRead,
     ShortTranscriptRead,
@@ -222,6 +225,71 @@ async def list_meeting_action_items(meeting_id: str, db: AsyncSession = Depends(
     stmt = select(ActionItem).where(ActionItem.meeting_id == meeting_id).order_by(ActionItem.created_at.asc())
     result = await db.execute(stmt)
     return list(result.scalars().all())
+
+
+
+@router.post("/{meeting_id}/regenerate-intelligence")
+async def regenerate_meeting_intelligence(meeting_id: str, db: AsyncSession = Depends(get_db)):
+    """Regenerate meeting summary, short transcript, decisions, and action items from transcript segments."""
+    m_stmt = select(Meeting).where(Meeting.id == meeting_id)
+    m_res = await db.execute(m_stmt)
+    meeting = m_res.scalar_one_or_none()
+    if not meeting:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Meeting not found")
+
+    seg_stmt = select(TranscriptSegment).where(TranscriptSegment.meeting_id == meeting_id).order_by(TranscriptSegment.start_time.asc())
+    seg_res = await db.execute(seg_stmt)
+    segments = list(seg_res.scalars().all())
+    if not segments:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot generate intelligence for meeting without transcript segments")
+
+    pipeline = PipelineService()
+    segments_dto = [
+        TranscriptSegmentDTO(
+            start_time=s.start_time,
+            end_time=s.end_time,
+            text=s.text,
+            speaker_label=None
+        )
+        for s in segments
+    ]
+    transcript_text = " ".join([s.text for s in segments])
+
+    spk_stmt = select(Speaker).where(Speaker.meeting_id == meeting_id)
+    spk_res = await db.execute(spk_stmt)
+    persisted_speakers = list(spk_res.scalars().all())
+    confirmed_speakers = [s.confirmed_name or s.speaker_label for s in persisted_speakers if (s.confirmed_name or s.speaker_label)]
+
+    summary_dto = await pipeline.llm.generate_summary(transcript_text)
+    short_transcript_dto = await pipeline.llm.generate_short_transcript(segments_dto)
+    decisions_dto = await pipeline.llm.extract_decisions(transcript_text)
+    action_items_dto = await pipeline.llm.extract_action_items(transcript_text)
+
+    # Validate and link evidence
+    short_transcript_dto.chronological_events = EvidenceValidator.validate_and_link_events(
+        segments=segments,
+        events=short_transcript_dto.chronological_events
+    )
+    decisions_dto = EvidenceValidator.validate_and_link_decisions(
+        segments=segments,
+        decisions=decisions_dto
+    )
+    action_items_dto = EvidenceValidator.validate_and_link_action_items(
+        segments=segments,
+        action_items=action_items_dto,
+        confirmed_speaker_names=confirmed_speakers
+    )
+
+    await pipeline._persist_intelligence(
+        db,
+        meeting_id,
+        summary_dto,
+        short_transcript_dto,
+        decisions_dto,
+        action_items_dto
+    )
+    await pipeline.rag_service.index_meeting(db, meeting_id)
+    return {"status": "SUCCESS", "message": "Meeting intelligence regenerated successfully"}
 
 
 @router.patch("/{meeting_id}/speakers/{speaker_id}", response_model=SpeakerRead)

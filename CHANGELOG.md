@@ -5,6 +5,41 @@ All notable changes to the MeetMind project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-10-29: Phase 4 Meeting Intelligence Engine
+
+### Added
+- **Three Core Meeting Deliverables**:
+  - **Deliverable A — Full Transcript**: Verbatim ASR preservation, confirmed participant names with diarizer fallback, `Confirmed` vs `Unassigned` visual badges, search, speaker filter, and synchronized seeking.
+  - **Deliverable B — Chronological Meeting Explanation**: Sequential narrative flow persisted in `ShortTranscript` capturing proposals, agreements, disagreements, questions, clarifications, and conclusions with typed badges, timestamps, and `source_segment_id`.
+  - **Deliverable C — Structured Meeting Intelligence**:
+    - **Executive Summary (`MeetingSummary`)**: Meeting purpose, executive narrative, key discussion points, risks/blockers, unresolved questions, and next steps.
+    - **Decision Register (`Decision`)**: Strict status classification (`CONFIRMED`, `PROPOSED`, `REJECTED`, `SUPERSEDED`), responsible participant, quotes, and timestamp link to seek player.
+    - **Action Item Tracker (`ActionItem`)**: Explicit owner and due date validation (unsupported values stored as `None`), priority, status, and quote seeking.
+- **EvidenceValidator & Hallucination Prevention (`EvidenceValidator`)**:
+  - Segment existence validation: every Decision, Action Item, and Event is strictly linked to an authentic database `TranscriptSegment`.
+  - Timestamp verification and bounding within meeting duration.
+  - Status safety: tentative suggestions and proposals are automatically downgraded from `CONFIRMED` to `PROPOSED`.
+  - Non-hallucination guarantee: ungrounded owners and deadlines are stripped to `None` rather than invented.
+  - Meeting segment ownership verification (`verify_segment_ownership`).
+- **Meeting Intelligence Regeneration API (`POST /api/meetings/{id}/regenerate-intelligence`)**:
+  - Re-runs Stage 6 using existing transcript segments without requiring re-ingestion or re-ASR.
+  - Guarantees complete database idempotency with zero duplicate records.
+- **Enhanced Meeting Chat**:
+  - Verifiable timestamp citations (`[mm:ss]`) that seek the media player to the exact audio turn.
+  - Truthful fallback handling: queries about unsupported facts return `found_evidence = False` and `"The meeting records do not contain sufficient evidence to answer this question."`.
+  - Multi-tenant organization isolation: cross-tenant meeting queries are blocked with HTTP 403 Forbidden.
+- **Meeting Detail Interface Upgrades**:
+  - Added "Regenerate Intelligence" action button with live progress indicator.
+  - Chronological explanation tab with model attribution pill, typed event sequence badges, and seeking.
+  - Executive summary tab with 4-quadrant layout (Takeaways, Risks, Questions, Next Steps).
+  - Decision register cards with color-coded status badges and quote playback seeking.
+  - Action item tracker with priority pills, unassigned fallback badges, and completion toggles.
+  - Chat citations with clickable `[mm:ss]` buttons that seek the synchronized media player.
+- **Automated Regression Suite**:
+  - Authored `backend/tests/test_phase4_meeting_intelligence.py` covering provenance validation, hallucination defense, Ollama offline fallback, idempotent regeneration, and tenant security.
+  - Expanded test suite from 30 to 34 tests (34/34 passing in 85.2s).
+  - Verified clean Next.js TypeScript compilation (0 errors).
+
 ## [0.3.0] - 2026-10-29: Phase 3 Speaker Directory, Participant Management, and Attribution
 
 ### Added

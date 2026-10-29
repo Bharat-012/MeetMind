@@ -12,11 +12,13 @@ from app.models.intelligence import (
     Decision,
     ActionItem,
     Priority,
+    DecisionStatus,
     ActionItemStatus
 )
 from app.models.knowledge import VoiceEmotionAnnotation
 from app.services.media_service import MediaService
 from app.services.rag_service import RAGService
+from app.services.evidence_validator import EvidenceValidator
 from app.services.ai.factory import (
     get_asr_provider,
     get_diarization_provider,
@@ -98,10 +100,35 @@ class PipelineService:
             await self._update_status(db, meeting, ProcessingStatus.GENERATING_SUMMARY, 85)
             transcript_text = " ".join([s.text for s in transcript_segments_dto])
 
+            # Query persisted segments and speakers with genuine DB IDs
+            seg_stmt = select(TranscriptSegment).where(TranscriptSegment.meeting_id == meeting_id).order_by(TranscriptSegment.start_time.asc())
+            seg_res = await db.execute(seg_stmt)
+            persisted_segments = list(seg_res.scalars().all())
+
+            spk_stmt = select(Speaker).where(Speaker.meeting_id == meeting_id)
+            spk_res = await db.execute(spk_stmt)
+            persisted_speakers = list(spk_res.scalars().all())
+            confirmed_speakers = [s.confirmed_name or s.speaker_label for s in persisted_speakers if (s.confirmed_name or s.speaker_label)]
+
             summary_dto = await self.llm.generate_summary(transcript_text)
             short_transcript_dto = await self.llm.generate_short_transcript(transcript_segments_dto)
             decisions_dto = await self.llm.extract_decisions(transcript_text)
             action_items_dto = await self.llm.extract_action_items(transcript_text)
+
+            # Evidence validation and provenance linking
+            short_transcript_dto.chronological_events = EvidenceValidator.validate_and_link_events(
+                segments=persisted_segments,
+                events=short_transcript_dto.chronological_events
+            )
+            decisions_dto = EvidenceValidator.validate_and_link_decisions(
+                segments=persisted_segments,
+                decisions=decisions_dto
+            )
+            action_items_dto = EvidenceValidator.validate_and_link_action_items(
+                segments=persisted_segments,
+                action_items=action_items_dto,
+                confirmed_speaker_names=confirmed_speakers
+            )
 
             await self._persist_intelligence(
                 db,
@@ -257,36 +284,67 @@ class PipelineService:
         db.add(summary)
 
         events_json = [
-            {"timestamp": ev.timestamp, "speaker": ev.speaker, "description": ev.description}
+            {
+                "timestamp": ev.timestamp,
+                "speaker": ev.speaker,
+                "description": ev.description,
+                "event_type": getattr(ev, "event_type", "contribution"),
+                "source_segment_id": getattr(ev, "source_segment_id", None),
+                "evidence_quote": getattr(ev, "evidence_quote", None)
+            }
             for ev in short_transcript_dto.chronological_events
         ]
         short_transcript = ShortTranscript(
             meeting_id=meeting_id,
             narrative_text=short_transcript_dto.narrative_text,
-            chronological_events=events_json
+            chronological_events=events_json,
+            model_name=getattr(short_transcript_dto, "model_name", None)
         )
         db.add(short_transcript)
 
         for dec in decisions_dto:
+            status_val = DecisionStatus.CONFIRMED
+            if getattr(dec, "status", None):
+                raw_st = str(dec.status).upper()
+                if raw_st in DecisionStatus.__members__:
+                    status_val = DecisionStatus[raw_st]
+
             db.add(Decision(
                 meeting_id=meeting_id,
                 title=dec.title,
                 decision_text=dec.decision_text,
                 responsible_person=dec.responsible_person,
+                status=status_val,
+                source_segment_id=getattr(dec, "source_segment_id", None),
                 evidence_timestamp=dec.evidence_timestamp,
-                evidence_quote=dec.evidence_quote
+                evidence_quote=dec.evidence_quote,
+                model_name=getattr(dec, "model_name", None)
             ))
 
         for act in action_items_dto:
+            status_val = ActionItemStatus.OPEN
+            if getattr(act, "status", None):
+                raw_st = str(act.status).upper()
+                if raw_st in ActionItemStatus.__members__:
+                    status_val = ActionItemStatus[raw_st]
+
+            priority_val = Priority.MEDIUM
+            if getattr(act, "priority", None):
+                raw_pr = str(act.priority).upper()
+                if raw_pr in Priority.__members__:
+                    priority_val = Priority[raw_pr]
+
             db.add(ActionItem(
                 meeting_id=meeting_id,
                 task_description=act.task_description,
                 owner_name=act.owner_name,
                 due_date=act.due_date,
-                priority=Priority.HIGH if act.priority == "HIGH" else Priority.MEDIUM,
-                status=ActionItemStatus.OPEN,
+                priority=priority_val,
+                status=status_val,
+                source_segment_id=getattr(act, "source_segment_id", None),
                 evidence_timestamp=act.evidence_timestamp,
-                evidence_quote=act.evidence_quote
+                evidence_quote=act.evidence_quote,
+                model_name=getattr(act, "model_name", None)
             ))
 
         await db.commit()

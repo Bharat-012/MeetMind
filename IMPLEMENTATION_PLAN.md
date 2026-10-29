@@ -46,30 +46,31 @@ This roadmap outlines the systematic execution sequence for building MeetMind ac
 
 ---
 
-## Phase 4: Meeting Intelligence Engine (Three Distinct Deliverables) (Current Phase)
-- **Goal**: Generate Full Transcript, Short Transcript (chronological narrative), and Structured Summary with Decisions and Action Items using local LLM inference with transparent offline fallback.
-- **Deliverables**:
-  - Deliverable 1: Full Transcript with confirmed speaker attribution, timestamp alignment, and search/filter.
-  - Deliverable 2: Short Transcript / Chronological Narrative capturing speaker-by-speaker flow, proposals, disagreements, alternatives discussed, and conclusions.
-  - Deliverable 3: Structured Meeting Intelligence:
-    - Executive summary, key discussion points, and next steps.
-    - Formal Decision Register with rationale, alternatives rejected, consensus status, and segment evidence links.
-    - Action Item Tracker with explicit assignees, due dates, priority levels, and completion status.
-  - Segment Provenance: Direct quotation and timestamp linkage connecting every decision and action item to source transcript segments.
-  - Deterministic Parsing & Regeneration Safety: Schema validation ensuring LLM outputs conform to typed contracts without duplicating existing database records on re-run.
-  - Verification & Regression Tests for structured intelligence generation.
+## Phase 4: Meeting Intelligence Engine (Three Distinct Deliverables) (Completed)
+- **Goal**: Generate Full Transcript, Short Transcript (chronological narrative), and Structured Meeting Intelligence (Executive Summary, Decision Register, Action Item Tracker) with verified transcript evidence provenance and anti-hallucination controls.
+- **Completed Deliverables**:
+  - Deliverable A — Full Transcript: Timestamped segments, confirmed participant attribution with original diarizer fallback (`Confirmed` vs `Unassigned` badges), verbatim ASR preservation, search, speaker filter, and synchronized playback seeking.
+  - Deliverable B — Chronological Meeting Explanation: Structured narrative capturing speaker contributions, proposals, alternatives, disagreements, agreements, questions, and conclusions. Events typed with pills and linked to `source_segment_id`.
+  - Deliverable C — Structured Meeting Intelligence:
+    - Executive summary with key points, risks, open questions, and next steps.
+    - Decision Register with strict status classification (`CONFIRMED`, `PROPOSED`, `REJECTED`, `SUPERSEDED`), responsible person, quote, and timestamp link to seek player.
+    - Action Item Tracker with priority, status (`OPEN`, `PROPOSED`, `ACCEPTED`, `IN_PROGRESS`, `COMPLETED`), ungrounded owner/deadline prevention (`None`), and quote seeking.
+  - EvidenceValidator Service: Segment existence validation, timestamp clamping, suggestion status downgrade, and ungrounded claim defense.
+  - Idempotent Regeneration: `POST /api/meetings/{id}/regenerate-intelligence` re-generates intelligence idempotently with zero duplicate records.
+  - Enhanced Meeting Detail UI: Model attribution badges, typed event timeline cards, executive summary layout, decision cards, action item tracker, and clickable citation buttons that seek the media player.
+  - Automated Regression Suite: 34 tests passing across 12 test modules (100% passing in 85s); clean TypeScript compilation.
 
 ---
 
-## Phase 5: Single-Meeting Grounded RAG Chat
-- **Goal**: Enable conversational Q&A grounded strictly in the meeting transcript with clickable timestamp citations.
+## Phase 5: Single-Meeting Grounded RAG Chat (Current Phase)
+- **Goal**: Enable rich conversational Q&A grounded strictly in the meeting transcript and intelligence deliverables with clickable timestamp citations and streaming support.
 - **Deliverables**:
-  - Chunking and embedding service for transcript segments and summaries.
-  - Vector similarity retriever filtered by meeting ID.
-  - Grounded answer generation enforcing citation references (`[mm:ss]`).
-  - Uncertainty enforcement (saying "Information not found" when evidence is missing).
-  - Interactive chat endpoints and WebSocket streaming.
-  - Tests for citation accuracy and hallucination defense.
+  - Hybrid retrieval service indexing transcript segments, executive summaries, decisions, action items, and chronological timeline events.
+  - Exact citation formatting with clickable `[mm:ss]` buttons synchronized with the media player.
+  - Explicit insufficient-evidence response when user queries ask for unsupported facts.
+  - Organization and workspace isolation enforcement on all chat queries.
+  - WebSocket or SSE streaming support for responsive chat responses.
+  - Comprehensive automated tests covering single-meeting grounding, citation accuracy, and hallucination prevention.
 
 ---
 

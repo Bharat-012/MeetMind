@@ -17,6 +17,8 @@ class CitationRead(BaseModel):
 class ChatQuestionRequest(BaseModel):
     query: str
     meeting_id: Optional[str] = None  # None indicates organization-wide search
+    organization_id: Optional[str] = None
+    workspace_id: Optional[str] = None
     scope: ChatScope = ChatScope.SINGLE_MEETING
     top_k: int = 5
 

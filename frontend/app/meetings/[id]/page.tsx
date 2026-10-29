@@ -4,6 +4,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
+  HelpCircle,
+  Calendar,
+  User,
   FileText,
   Clock,
   CheckCircle2,
@@ -44,6 +47,7 @@ export default function MeetingDetailPage() {
   const [speakerStats, setSpeakerStats] = useState<any[]>([]);
   const [orgParticipants, setOrgParticipants] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [isRegenerating, setIsRegenerating] = useState<boolean>(false);
 
   // Playback state
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -243,6 +247,22 @@ export default function MeetingDetailPage() {
     }
   };
 
+  const handleRegenerateIntelligence = async () => {
+    setIsRegenerating(true);
+    try {
+      const res = await fetch(`http://localhost:8000/api/meetings/${meetingId}/regenerate-intelligence`, {
+        method: 'POST'
+      });
+      if (res.ok) {
+        await fetchMeetingData();
+      }
+    } catch (err) {
+      console.error('Failed to regenerate intelligence:', err);
+    } finally {
+      setIsRegenerating(false);
+    }
+  };
+
   const handleChatSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!chatQuery.trim()) return;
@@ -320,6 +340,14 @@ export default function MeetingDetailPage() {
           </div>
 
           <div className="flex items-center gap-3">
+            <button
+              onClick={handleRegenerateIntelligence}
+              disabled={isRegenerating}
+              className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white font-medium px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-900 hover:bg-slate-800 transition disabled:opacity-50"
+            >
+              <Sparkles className={`h-3.5 w-3.5 text-indigo-400 ${isRegenerating ? 'animate-spin' : ''}`} />
+              <span>{isRegenerating ? 'Regenerating...' : 'Regenerate Intelligence'}</span>
+            </button>
             <Link
               href="/speakers"
               className="flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 font-medium px-2.5 py-1.5 rounded-lg border border-indigo-900/40 bg-indigo-950/30 hover:bg-indigo-950/50 transition"
@@ -478,31 +506,69 @@ export default function MeetingDetailPage() {
           {activeTab === 'short_transcript' && (
             <div className="max-w-3xl mx-auto space-y-6">
               <div className="p-6 rounded-2xl bg-indigo-950/30 border border-indigo-900/40 space-y-3">
-                <div className="flex items-center gap-2 text-indigo-400 font-semibold text-sm">
-                  <Clock className="h-4 w-4" />
-                  <span>Chronological Meeting Explanation</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-indigo-400 font-semibold text-sm">
+                    <Clock className="h-4 w-4" />
+                    <span>Chronological Meeting Explanation</span>
+                  </div>
+                  {shortTranscript?.model_name && (
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-900/40 text-indigo-300 border border-indigo-700/50">
+                      {shortTranscript.model_name}
+                    </span>
+                  )}
                 </div>
-                <p className="text-sm text-slate-300 leading-relaxed">
+                <p className="text-sm text-slate-200 leading-relaxed font-sans">
                   {shortTranscript?.narrative_text || 'Chronological explanation will appear here once processed.'}
                 </p>
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-white">Event Sequence</h3>
-                <div className="border-l-2 border-slate-800 pl-4 space-y-6">
-                  {(shortTranscript?.chronological_events || []).map((ev: any, idx: number) => (
-                    <div key={idx} className="relative group cursor-pointer" onClick={() => seekTo(ev.timestamp)}>
-                      <div className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-indigo-500 group-hover:scale-125 transition" />
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-mono text-indigo-400 hover:underline">
-                          [{formatTime(ev.timestamp)}]
-                        </span>
-                        <span className="text-xs font-semibold text-white">{ev.speaker}</span>
-                      </div>
-                      <p className="text-xs text-slate-300 leading-relaxed">{ev.description}</p>
-                    </div>
-                  ))}
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-white">Event Sequence & Speaker Flow</h3>
+                  <span className="text-xs text-slate-400">{(shortTranscript?.chronological_events || []).length} events recorded</span>
                 </div>
+
+                {(!shortTranscript?.chronological_events || shortTranscript.chronological_events.length === 0) ? (
+                  <div className="p-8 text-center rounded-xl bg-slate-950/40 border border-slate-800 text-slate-400 text-xs">
+                    No chronological events extracted yet.
+                  </div>
+                ) : (
+                  <div className="border-l-2 border-slate-800 pl-4 space-y-6">
+                    {shortTranscript.chronological_events.map((ev: any, idx: number) => {
+                      const typeColors: Record<string, string> = {
+                        proposal: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
+                        agreement: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+                        disagreement: 'bg-rose-500/15 text-rose-400 border-rose-500/30',
+                        question: 'bg-purple-500/15 text-purple-400 border-purple-500/30',
+                        clarification: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30',
+                        conclusion: 'bg-teal-500/15 text-teal-400 border-teal-500/30',
+                        contribution: 'bg-slate-800 text-slate-300 border-slate-700'
+                      };
+                      const badgeClass = typeColors[ev.event_type] || typeColors.contribution;
+
+                      return (
+                        <div key={idx} className="relative group cursor-pointer" onClick={() => seekTo(ev.timestamp)}>
+                          <div className="absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full bg-indigo-500 group-hover:scale-125 transition shadow-sm shadow-indigo-500/50" />
+                          <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                            <span className="text-xs font-mono text-indigo-400 hover:underline">
+                              [{formatTime(ev.timestamp)}]
+                            </span>
+                            <span className="text-xs font-semibold text-white">{ev.speaker}</span>
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider border ${badgeClass}`}>
+                              {ev.event_type || 'contribution'}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-300 leading-relaxed">{ev.description}</p>
+                          {ev.evidence_quote && (
+                            <div className="mt-1.5 text-[11px] text-slate-400 italic bg-slate-900/60 p-2 rounded border border-slate-800/80">
+                              "{ev.evidence_quote}"
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -511,35 +577,98 @@ export default function MeetingDetailPage() {
           {activeTab === 'summary' && (
             <div className="max-w-4xl mx-auto space-y-6">
               <div className="p-6 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-3">
-                <h3 className="text-xs uppercase tracking-wider text-indigo-400 font-bold">Executive Summary</h3>
-                <p className="text-sm text-slate-200 leading-relaxed">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs uppercase tracking-wider text-indigo-400 font-bold">Executive Summary</h3>
+                  {summaryData?.model_name && (
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-800/50">
+                      {summaryData.model_name}
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm text-slate-200 leading-relaxed font-sans">
                   {summaryData?.executive_summary || 'Summary is being computed...'}
                 </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Key Points */}
                 <div className="p-5 rounded-xl bg-slate-950/40 border border-slate-800 space-y-3">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300">Key Takeaways</h4>
-                  <ul className="space-y-2">
-                    {(summaryData?.key_points || []).map((pt: string, i: number) => (
-                      <li key={i} className="text-xs text-slate-300 flex items-start gap-2">
-                        <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 mt-1.5 flex-shrink-0" />
-                        <span>{pt}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-indigo-400" />
+                    <span>Key Takeaways</span>
+                  </h4>
+                  {(!summaryData?.key_points || summaryData.key_points.length === 0) ? (
+                    <p className="text-xs text-slate-500 italic">No key points extracted.</p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {summaryData.key_points.map((pt: string, i: number) => (
+                        <li key={i} className="text-xs text-slate-300 flex items-start gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 mt-1.5 flex-shrink-0" />
+                          <span>{pt}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
 
+                {/* Risks & Considerations */}
                 <div className="p-5 rounded-xl bg-slate-950/40 border border-slate-800 space-y-3">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300">Risks & Considerations</h4>
-                  <ul className="space-y-2">
-                    {(summaryData?.risks || []).map((risk: string, i: number) => (
-                      <li key={i} className="text-xs text-slate-300 flex items-start gap-2">
-                        <AlertTriangle className="h-3.5 w-3.5 text-amber-500 mt-0.5 flex-shrink-0" />
-                        <span>{risk}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                    <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+                    <span>Risks & Blockers</span>
+                  </h4>
+                  {(!summaryData?.risks || summaryData.risks.length === 0) ? (
+                    <p className="text-xs text-slate-500 italic">No specific risks flagged.</p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {summaryData.risks.map((risk: string, i: number) => (
+                        <li key={i} className="text-xs text-slate-300 flex items-start gap-2">
+                          <AlertTriangle className="h-3.5 w-3.5 text-amber-500 mt-0.5 flex-shrink-0" />
+                          <span>{risk}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                {/* Open Questions */}
+                <div className="p-5 rounded-xl bg-slate-950/40 border border-slate-800 space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                    <HelpCircle className="h-3.5 w-3.5 text-purple-400" />
+                    <span>Open Questions & Unresolved Issues</span>
+                  </h4>
+                  {(!summaryData?.open_questions || summaryData.open_questions.length === 0) ? (
+                    <p className="text-xs text-slate-500 italic">No unresolved questions detected.</p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {summaryData.open_questions.map((q: string, i: number) => (
+                        <li key={i} className="text-xs text-slate-300 flex items-start gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-purple-500 mt-1.5 flex-shrink-0" />
+                          <span>{q}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                {/* Next Steps */}
+                <div className="p-5 rounded-xl bg-slate-950/40 border border-slate-800 space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                    <ArrowRight className="h-3.5 w-3.5 text-emerald-400" />
+                    <span>Next Steps</span>
+                  </h4>
+                  {(!summaryData?.next_steps || summaryData.next_steps.length === 0) ? (
+                    <p className="text-xs text-slate-500 italic">No next steps defined.</p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {summaryData.next_steps.map((step: string, i: number) => (
+                        <li key={i} className="text-xs text-slate-300 flex items-start gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0" />
+                          <span>{step}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               </div>
             </div>
@@ -548,76 +677,153 @@ export default function MeetingDetailPage() {
           {/* TAB 4: DECISIONS */}
           {activeTab === 'decisions' && (
             <div className="max-w-4xl mx-auto space-y-4">
-              <h3 className="text-sm font-semibold text-white">Extracted Decisions</h3>
-              <div className="space-y-3">
-                {decisions.map((dec: any) => (
-                  <div key={dec.id} className="p-4 rounded-xl bg-slate-950/50 border border-slate-800 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold text-indigo-400">{dec.category || 'General'}</span>
-                      <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/20 text-emerald-400">
-                        {dec.status}
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-300">{dec.decision_text}</p>
-                    {dec.evidence_quote && (
-                      <div
-                        onClick={() => dec.evidence_timestamp && seekTo(dec.evidence_timestamp)}
-                        className="mt-2 p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-400 flex items-center justify-between cursor-pointer hover:border-slate-700 transition"
-                      >
-                        <span className="italic">"{dec.evidence_quote}"</span>
-                        {dec.evidence_timestamp !== null && (
-                          <span className="font-mono text-indigo-400 text-[11px] ml-2">
-                            [{formatTime(dec.evidence_timestamp)}]
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))}
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-white">Decision Register</h3>
+                <span className="text-xs text-slate-400">{decisions.length} recorded</span>
               </div>
+
+              {decisions.length === 0 ? (
+                <div className="p-8 text-center rounded-xl bg-slate-950/40 border border-slate-800 text-slate-400 text-xs">
+                  No decisions extracted from this meeting yet.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {decisions.map((dec: any) => {
+                    const statusStyles: Record<string, string> = {
+                      CONFIRMED: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+                      ACTIVE: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+                      PROPOSED: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
+                      REJECTED: 'bg-red-500/15 text-red-400 border-red-500/30',
+                      SUPERSEDED: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
+                      CANCELLED: 'bg-slate-700 text-slate-400 border-slate-600'
+                    };
+                    const statusClass = statusStyles[dec.status] || statusStyles.CONFIRMED;
+
+                    return (
+                      <div key={dec.id} className="p-4 rounded-xl bg-slate-950/50 border border-slate-800 space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-semibold text-indigo-400">{dec.title || dec.category || 'General'}</span>
+                          <div className="flex items-center gap-2">
+                            {dec.model_name && (
+                              <span className="text-[10px] font-mono text-slate-500">
+                                {dec.model_name}
+                              </span>
+                            )}
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${statusClass}`}>
+                              {dec.status}
+                            </span>
+                          </div>
+                        </div>
+                        <p className="text-xs text-slate-200 leading-relaxed">{dec.decision_text}</p>
+                        
+                        <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-900 text-xs text-slate-400">
+                          <div className="flex items-center gap-1.5">
+                            <User className="h-3 w-3 text-slate-500" />
+                            <span>Responsible: <strong className="text-slate-300 font-normal">{dec.responsible_person || 'Unassigned'}</strong></span>
+                          </div>
+                          {dec.evidence_quote && (
+                            <button
+                              onClick={() => dec.evidence_timestamp !== null && seekTo(dec.evidence_timestamp)}
+                              className="text-[11px] text-indigo-400 hover:text-indigo-300 flex items-center gap-1 font-mono"
+                            >
+                              <span>Evidence: "{dec.evidence_quote.substring(0, 45)}..."</span>
+                              {dec.evidence_timestamp !== null && (
+                                <span>[{formatTime(dec.evidence_timestamp)}]</span>
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 
           {/* TAB 5: ACTION ITEMS */}
           {activeTab === 'actions' && (
             <div className="max-w-4xl mx-auto space-y-4">
-              <h3 className="text-sm font-semibold text-white">Extracted Action Items</h3>
-              <div className="space-y-3">
-                {actionItems.map((item: any) => {
-                  const isDone = item.status === 'COMPLETED';
-                  return (
-                    <div
-                      key={item.id}
-                      className={`p-4 rounded-xl border flex items-center justify-between gap-4 transition ${
-                        isDone ? 'bg-slate-950/20 border-slate-900 opacity-60' : 'bg-slate-950/50 border-slate-800'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => handleActionItemToggle(item.id, item.status)}
-                          className={`h-5 w-5 rounded border flex items-center justify-center transition ${
-                            isDone ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-700 hover:border-indigo-500'
-                          }`}
-                        >
-                          {isDone && <Check className="h-3 w-3" />}
-                        </button>
-                        <div>
-                          <p className={`text-sm font-medium ${isDone ? 'line-through text-slate-500' : 'text-slate-200'}`}>
-                            {item.task_description}
-                          </p>
-                          <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
-                            <span>Owner: {item.owner_name || 'Unassigned'}</span>
-                            {item.due_date && <span>Due: {item.due_date}</span>}
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-white">Action Item Tracker</h3>
+                <span className="text-xs text-slate-400">{actionItems.length} items</span>
+              </div>
+
+              {actionItems.length === 0 ? (
+                <div className="p-8 text-center rounded-xl bg-slate-950/40 border border-slate-800 text-slate-400 text-xs">
+                  No action items extracted from this meeting yet.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {actionItems.map((item: any) => {
+                    const isDone = item.status === 'COMPLETED';
+                    const priorityStyles: Record<string, string> = {
+                      URGENT: 'bg-rose-500/20 text-rose-400 border-rose-500/30',
+                      HIGH: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+                      MEDIUM: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+                      LOW: 'bg-slate-800 text-slate-400 border-slate-700'
+                    };
+                    const priorityClass = priorityStyles[item.priority] || priorityStyles.MEDIUM;
+
+                    return (
+                      <div
+                        key={item.id}
+                        className={`p-4 rounded-xl border flex flex-col gap-3 transition ${
+                          isDone ? 'bg-slate-950/20 border-slate-900 opacity-60' : 'bg-slate-950/50 border-slate-800'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={() => handleActionItemToggle(item.id, item.status)}
+                              className={`h-5 w-5 rounded border flex items-center justify-center transition ${
+                                isDone ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-700 hover:border-indigo-500'
+                              }`}
+                            >
+                              {isDone && <Check className="h-3 w-3" />}
+                            </button>
+                            <p className={`text-sm font-medium ${isDone ? 'line-through text-slate-500' : 'text-slate-200'}`}>
+                              {item.task_description}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-900 text-slate-300 border border-slate-800">
+                              {item.status}
+                            </span>
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${priorityClass}`}>
+                              {item.priority}
+                            </span>
                           </div>
                         </div>
+
+                        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-900 text-xs text-slate-400">
+                          <div className="flex items-center gap-4">
+                            <span className="flex items-center gap-1.5">
+                              <User className="h-3 w-3 text-slate-500" />
+                              <span>Owner: <strong className="text-slate-300 font-normal">{item.owner_name || 'Unassigned'}</strong></span>
+                            </span>
+                            <span className="flex items-center gap-1.5">
+                              <Calendar className="h-3 w-3 text-slate-500" />
+                              <span>Due: <strong className="text-slate-300 font-normal">{item.due_date || 'No deadline'}</strong></span>
+                            </span>
+                          </div>
+                          {item.evidence_quote && (
+                            <button
+                              onClick={() => item.evidence_timestamp !== null && seekTo(item.evidence_timestamp)}
+                              className="text-[11px] text-indigo-400 hover:text-indigo-300 flex items-center gap-1 font-mono"
+                            >
+                              <span>Evidence: "{item.evidence_quote.substring(0, 45)}..."</span>
+                              {item.evidence_timestamp !== null && (
+                                <span>[{formatTime(item.evidence_timestamp)}]</span>
+                              )}
+                            </button>
+                          )}
+                        </div>
                       </div>
-                      <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/20 text-amber-400">
-                        {item.priority}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 
@@ -773,15 +979,22 @@ export default function MeetingDetailPage() {
                           {msg.citations.map((c: any, ci: number) => (
                             <div
                               key={ci}
-                              onClick={() => c.timestamp !== null && seekTo(c.timestamp)}
+                              onClick={() => {
+                                const ts = c.timestamp_start !== undefined && c.timestamp_start !== null ? c.timestamp_start : c.timestamp;
+                                if (ts !== undefined && ts !== null) seekTo(ts);
+                              }}
                               className="text-[11px] text-slate-400 bg-slate-950 p-2 rounded border border-slate-800/80 cursor-pointer hover:border-indigo-500/50 transition flex items-center justify-between"
                             >
-                              <span>{c.speaker_name || c.speaker_label}: "{c.quote}"</span>
-                              {c.timestamp !== null && (
+                              <span>{c.speaker_name || c.speaker_label || 'Evidence'}: "{c.quote}"</span>
+                              {(c.timestamp_start !== null && c.timestamp_start !== undefined) ? (
+                                <span className="font-mono text-indigo-400 ml-2">
+                                  [{formatTime(c.timestamp_start)}]
+                                </span>
+                              ) : (c.timestamp !== null && c.timestamp !== undefined ? (
                                 <span className="font-mono text-indigo-400 ml-2">
                                   [{formatTime(c.timestamp)}]
                                 </span>
-                              )}
+                              ) : null)}
                             </div>
                           ))}
                         </div>

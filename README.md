@@ -12,9 +12,10 @@ MeetMind is an enterprise-grade AI meeting intelligence platform that transforms
 - **Organization Speaker Directory**: Organization-wide directory of participants with participation statistics, meeting history, and spoken segments.
 - **Strict Attribution Governance**: Complete prohibition on voice biometrics; attribution requires explicit user confirmation or verified metadata.
 - **Three Core Deliverables**:
-  1. *Full Transcript*: Timestamped, searchable dialogue.
-  2. *Short Transcript / Chronological Explanation*: Narrative sequence of who said what, arguments, and conclusions.
-  3. *Structured Summary*: Executive summary, formal decisions, and action items with owners and deadlines.
+  1. *Full Transcript*: Timestamped, searchable dialogue with verbatim ASR preservation and confirmed speaker attribution.
+  2. *Short Transcript / Chronological Explanation*: Narrative sequence of who said what, proposals, disagreements, alternatives, and conclusions.
+  3. *Structured Meeting Intelligence*: Executive summary, formal decision register with status classification (`CONFIRMED`, `PROPOSED`, `REJECTED`), and action items with owners and deadlines.
+- **Evidence Provenance & Anti-Hallucination**: Every decision, action item, and narrative event is verified against authentic transcript segments with foreign key provenance and strict prevention of invented owners or deadlines.
 - **Playback Synchronization**: Synced media player that seeks directly to the audio/video timestamp when a transcript line or citation is clicked.
 - **Single-Meeting Grounded RAG Chat**: Conversational Q&A strictly grounded in the meeting transcript with clickable timestamp citations (`[mm:ss]`).
 - **Multi-Tenant Organizational Memory**: Search across the entire company meeting archive, compare decisions across time, and query multi-meeting topics while strictly enforcing tenant isolation.

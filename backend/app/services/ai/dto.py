@@ -44,6 +44,9 @@ class ChronologicalEventDTO:
     timestamp: float
     speaker: str
     description: str
+    event_type: str = "contribution"  # e.g., proposal, agreement, disagreement, question, clarification, conclusion
+    source_segment_id: Optional[str] = None
+    evidence_quote: Optional[str] = None
 
 
 @dataclass
@@ -58,19 +61,25 @@ class DecisionDTO:
     title: str = "Decision"
     decision_text: str = ""
     category: str = "General"
+    status: str = "CONFIRMED"  # PROPOSED, CONFIRMED, REJECTED, SUPERSEDED
     responsible_person: Optional[str] = None
     evidence_timestamp: Optional[float] = None
     evidence_quote: Optional[str] = None
+    source_segment_id: Optional[str] = None
+    model_name: Optional[str] = None
 
 
 @dataclass
 class ActionItemDTO:
     task_description: str
-    owner_name: Optional[str]
-    due_date: Optional[str]
-    priority: str
-    evidence_timestamp: Optional[float]
-    evidence_quote: Optional[str]
+    owner_name: Optional[str] = None
+    due_date: Optional[str] = None
+    priority: str = "MEDIUM"
+    status: str = "OPEN"  # PROPOSED, ACCEPTED, OPEN, IN_PROGRESS, COMPLETED, BLOCKED, CANCELLED
+    evidence_timestamp: Optional[float] = None
+    evidence_quote: Optional[str] = None
+    source_segment_id: Optional[str] = None
+    model_name: Optional[str] = None
 
 
 @dataclass

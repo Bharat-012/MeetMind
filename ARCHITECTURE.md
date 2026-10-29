@@ -168,3 +168,48 @@ When local Ollama inference is offline or uninstalled:
 - All fallback responses are explicitly labeled (e.g., `[RULE-BASED FALLBACK · Ollama offline]`) with `model_name = "local-rule-based-fallback (ollama offline)"`.
 - Cloud AI fallback remains strictly disabled (`cloud_fallback_enabled = False`).
 
+---
+
+## 6. Meeting Intelligence Engine & Evidence Provenance Architecture (Phase 4)
+
+### 6.1 Three Distinct Meeting Deliverables
+MeetMind transforms raw media recordings into three strictly differentiated, high-value intelligence deliverables:
+1. **Deliverable A — Full Transcript**:
+   - Complete verbatim speech segments with millisecond-accurate start/end timestamps.
+   - Preserves original ASR text immutably (never silently edited or paraphrased).
+   - Speaker turns labeled with confirmed participant names or diarizer labels with `Confirmed` vs `Unassigned` visual badges.
+   - Synchronized media playback seeking on timestamp click (`seekTo(start_time)`).
+   - Full text search and speaker-based segment filtering.
+
+2. **Deliverable B — Chronological Meeting Explanation**:
+   - Concise narrative recounting the meeting in chronological order.
+   - Structures the discussion flow: speaker contributions, proposals, alternatives considered, agreements, disagreements, clarifications, and conclusions.
+   - Persisted as `ShortTranscript` with `narrative_text`, `chronological_events` (storing `timestamp`, `speaker`, `description`, `event_type`, `source_segment_id`, `evidence_quote`), and `model_name`.
+   - Every key event links to its authentic `TranscriptSegment` in the database.
+
+3. **Deliverable C — Structured Meeting Intelligence**:
+   - **Executive Summary (`MeetingSummary`)**:
+     - High-level meeting purpose, discussion summary, key takeaways (`key_points`), risks & blockers (`risks`), unresolved open questions (`open_questions`), and concrete next steps (`next_steps`).
+   - **Decision Register (`Decision`)**:
+     - Strict status classification: `CONFIRMED` (approved consensus), `PROPOSED` (suggestions/tentative options), `REJECTED` (dismissed alternatives), `SUPERSEDED` (revised by subsequent decisions).
+     - Suggestions are strictly prevented from being tagged as confirmed decisions.
+     - Responsible participant explicitly identified where supported by transcript.
+     - Traceable evidence link: `source_segment_id`, `evidence_timestamp`, and `evidence_quote`.
+   - **Action Item Tracker (`ActionItem`)**:
+     - Task description, priority (`LOW`, `MEDIUM`, `HIGH`, `URGENT`), and status (`OPEN`, `PROPOSED`, `ACCEPTED`, `IN_PROGRESS`, `COMPLETED`, `BLOCKED`, `CANCELLED`).
+     - **Non-Hallucination Rule**: Explicit `owner_name` and `due_date` only when grounded in meeting records; otherwise stored as `None` (rendered as "Unassigned" / "No deadline").
+     - Direct evidence link: `source_segment_id`, `evidence_timestamp`, and `evidence_quote`.
+
+### 6.2 EvidenceValidator & Provenance Verification
+To eliminate generative hallucinations:
+- Every generated intelligence artifact passes through `EvidenceValidator` prior to persistence.
+- `EvidenceValidator` checks timestamps, quotes, and segment references against authentic `TranscriptSegment` records belonging strictly to `meeting_id`.
+- Rejects fabricated segment IDs, bounds timestamps within meeting durations, and downgrades tentative language from `CONFIRMED` to `PROPOSED`.
+- Verifies meeting and organization ownership on all chat queries and citation lookups.
+
+### 6.3 Grounded Chat & Unsupported Question Handling
+- Meeting chat uses hybrid retrieval (vector embeddings + keyword overlap) across transcript segments, summaries, decisions, and action items.
+- Answers are accompanied by verifiable `CitationRead` references containing exact timestamps (`[mm:ss]`), speaker attribution, and quote excerpts.
+- When query topics are unsupported or absent from meeting records, the system responds with an explicit insufficient-evidence declaration (`found_evidence = False`) rather than guessing.
+
+

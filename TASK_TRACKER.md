@@ -65,17 +65,23 @@
 
 ---
 
-## Phase 4: Meeting Intelligence Engine (Three Deliverables) (NEXT UP)
-- [PENDING] Chronological explanation generator (who said what, proposals, disagreements).
-- [PENDING] Structured summary generator (executive summary, key topics, risks, open questions).
-- [PENDING] Decision extraction engine with versioned revisions.
-- [PENDING] Action item extraction engine with owners, deadlines, priority, and status.
-- [PENDING] Segment evidence linking and citation anchoring.
-- [PENDING] Intelligence extraction tests and regeneration safety checks.
+## Phase 4: Meeting Intelligence Engine (Three Deliverables) (COMPLETED)
+- [COMPLETED] Deliverable A: Full Transcript with verbatim ASR preservation, confirmed/unassigned badges, search, speaker filter, and synchronized playback seeking.
+- [COMPLETED] Deliverable B: Chronological Meeting Explanation (`ShortTranscript`) with narrative text, typed events (`proposal`, `agreement`, `disagreement`, `question`, `clarification`, `conclusion`), timestamps, and `source_segment_id` provenance.
+- [COMPLETED] Deliverable C: Executive Summary (`MeetingSummary`) with meeting purpose, key takeaways, risks/blockers, open questions, next steps, and `model_name`.
+- [COMPLETED] Deliverable C: Decision Register (`Decision`) with status classification (`CONFIRMED`, `PROPOSED`, `REJECTED`, `SUPERSEDED`), responsible participant, quotes, and timestamp link to seek player.
+- [COMPLETED] Deliverable C: Action Item Tracker (`ActionItem`) with owner, due date, priority, status (`OPEN`, `PROPOSED`, `ACCEPTED`, `IN_PROGRESS`, `COMPLETED`), ungrounded claim defense, and quote link to seek player.
+- [COMPLETED] EvidenceValidator service (`app/services/evidence_validator.py`) verifying segment existence, clamping timestamps, downgrading suggestions from confirmed to proposed, and stripping ungrounded owners/deadlines.
+- [COMPLETED] Idempotent Regeneration API (`POST /api/meetings/{id}/regenerate-intelligence`) re-generating deliverables with zero duplicate records.
+- [COMPLETED] Meeting-specific Chat Q&A with verifiable timestamp citations and explicit insufficient-evidence handling (`found_evidence = False`).
+- [COMPLETED] Multi-tenant organization isolation and access control enforced in chat.
+- [COMPLETED] Next.js meeting detail UI upgrades: model provenance badges, typed event timeline cards, executive summary layout, decision cards, action item tracker, and clickable citation buttons that seek the media player.
+- [COMPLETED] Expanded automated regression test suite to 34 tests: 34 passed in 85.21s, 0 failed.
+- [COMPLETED] Clean frontend TypeScript verification: 0 errors (`npx tsc --noEmit`).
 
 ---
 
-## Phase 5: Single-Meeting Grounded RAG Chat
+## Phase 5: Single-Meeting Grounded RAG Chat (NEXT UP)
 - [PENDING] Text chunker and vector embedding pipeline.
 - [PENDING] Meeting-scoped similarity retrieval engine.
 - [PENDING] Grounded answer generator with required timestamp citations (`[mm:ss]`).
