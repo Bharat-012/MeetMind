@@ -38,3 +38,18 @@
 - **Decision**: Implement Voice Emotion Analysis as an independent, optional pipeline stage. Predictions are stored as tentative acoustic tags with confidence scores. If this stage fails, the meeting completes with status `PARTIALLY_COMPLETED`.
 - **Consequences**: Core meeting intelligence is resilient to emotion analysis failures.
 
+---
+
+## ADR-006: Strict Local-First AI Inference Policy
+- **Status**: Accepted
+- **Context**: Privacy and organizational sovereignty require that meeting audio, transcripts, summaries, embeddings, and chat questions must never be sent to third-party cloud AI APIs (OpenAI, Anthropic, Gemini, cloud transcription).
+- **Decision**: Enforce that all AI inference executes locally on user-controlled hardware. Speech recognition uses `faster-whisper`, diarization uses `NVIDIA Nemotron-3-Diarization`, LLM summarization and chat use locally hosted `Ollama`, and embeddings use local Sentence-Transformers. No silent cloud fallback is permitted.
+- **Consequences**: Complete privacy guarantee for enterprise meeting data, offline operation capability, zero per-token cloud inference costs.
+
+---
+
+## ADR-007: NVIDIA Nemotron-3-Diarization as Primary Diarization Engine
+- **Status**: Accepted
+- **Context**: Speaker diarization is critical for attributing decisions and action items to correct participants. NVIDIA's Nemotron-3-Diarization is an open-weight, 100M parameter Sortformer model delivering state-of-the-art low Diarization Error Rate (DER) across up to 8 concurrent speakers and overlapping speech with 10ms frame resolution.
+- **Decision**: Adopt `nvidia/Nemotron-3-Diarization` under OpenMDW 1.1 license as MeetMind's primary speaker diarization architecture. Interface it through `Nemotron3DiarizationProvider`, mapping its speaker dictionary outputs into MeetMind's internal `DiarizationTurnDTO` and aligning them with Whisper transcript segments.
+- **Consequences**: Handles multi-speaker overlap accurately while keeping memory consumption under ~1.5 GB VRAM.

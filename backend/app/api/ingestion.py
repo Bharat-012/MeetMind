@@ -1,4 +1,5 @@
 """Media upload, URL ingestion, and pipeline execution endpoints."""
+import urllib.parse
 from typing import Optional
 from fastapi import (
     APIRouter,
@@ -36,6 +37,7 @@ async def upload_meeting_media(
 ):
     """Upload media file and initiate background AI processing pipeline."""
     media_title = title or (file.filename or "Uploaded Meeting").rsplit(".", 1)[0]
+    media_service.validate_file(file.filename or "", file.content_type, 0)
 
     # Create meeting record in UPLOADED state
     meeting = Meeting(
@@ -78,7 +80,14 @@ async def import_media_url(
     db: AsyncSession = Depends(get_db)
 ):
     """Import online video or meeting URL and trigger processing."""
-    source_type = SourceType.YOUTUBE if "youtube.com" in payload.url or "youtu.be" in payload.url else SourceType.UPLOAD
+    parsed = urllib.parse.urlparse(payload.url)
+    if parsed.scheme.lower() not in ("http", "https") or not parsed.netloc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Unsupported or insecure URL scheme. Only HTTP and HTTPS are permitted."
+        )
+
+    source_type = SourceType.YOUTUBE if ("youtube.com" in payload.url or "youtu.be" in payload.url) else SourceType.UPLOAD
     meeting_title = payload.title or f"Imported Media ({payload.url[:40]})"
 
     meeting = Meeting(
@@ -94,13 +103,20 @@ async def import_media_url(
     await db.flush()
     await db.refresh(meeting)
 
-    # Create empty asset placeholder
+    # Import metadata and prepare audio from URL
+    url_info = await media_service.import_from_url(payload.url, meeting.id)
+
     media_asset = MediaAsset(
         meeting_id=meeting.id,
-        file_path=payload.url,
+        file_path=url_info.get("audio_path", payload.url),
+        audio_path=url_info.get("audio_path"),
         file_size_bytes=0,
         mime_type="video/url",
-        media_metadata={"source_url": payload.url}
+        media_metadata={
+            "source_url": payload.url,
+            "is_youtube": url_info.get("is_youtube", False),
+            "has_captions": url_info.get("has_captions", False)
+        }
     )
     db.add(media_asset)
     await db.commit()

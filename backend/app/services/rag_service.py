@@ -20,9 +20,11 @@ class RAGService:
 
     async def index_meeting(self, db: AsyncSession, meeting_id: str) -> int:
         """Extract and index knowledge chunks with embeddings for a meeting (idempotent)."""
-        # 1. Clear previous chunks to ensure idempotency
-        del_stmt = delete(KnowledgeChunk).where(KnowledgeChunk.meeting_id == meeting_id)
-        await db.execute(del_stmt)
+        # 1. Clear previous chunks and embeddings to ensure idempotency
+        subquery = select(KnowledgeChunk.id).where(KnowledgeChunk.meeting_id == meeting_id)
+        await db.execute(delete(EmbeddingRecord).where(EmbeddingRecord.chunk_id.in_(subquery)))
+        await db.execute(delete(KnowledgeChunk).where(KnowledgeChunk.meeting_id == meeting_id))
+        await db.flush()
 
         # 2. Gather transcript segments
         seg_stmt = (

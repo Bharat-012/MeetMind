@@ -14,6 +14,9 @@ htmlcov/
 *.sqlite3
 storage/media/
 storage/temp/
+backend/storage/media/
+backend/storage/temp/
+*.tsbuildinfo
 
 # Environment Variables
 .env
