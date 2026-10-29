@@ -107,6 +107,21 @@
 
 ---
 
+## Critical Bug Fix: YouTube Import + Local Video Preview and Processing (COMPLETED)
+- [COMPLETED] Media stream serving route GET /api/meetings/{id}/media with HTTP 206 Partial Content byte-range support and path traversal protection.
+- [COMPLETED] Media capabilities probe GET /api/meetings/{id}/media-info extracting video/audio codecs, duration, dimensions, and browser playability.
+- [COMPLETED] FFmpeg static binary detection using imageio-ffmpeg with PyAV frame-resampling fallback for 16kHz mono WAV extraction.
+- [COMPLETED] Web preview generator for unsupported video codecs/containers (ensure_web_preview) and JPEG thumbnail extraction (generate_thumbnail).
+- [COMPLETED] Real YouTube URL import service with yt-dlp: syntax validation, accessibility checks, permitted media download, livestream rejection, and duplicate prevention (409 Conflict).
+- [COMPLETED] Frontend real HTML5 <video> and <audio> player replacing simulated setInterval slider.
+- [COMPLETED] Bidirectional transcript sync: clicking segment seeks media player, and media playback dynamically highlights active segment.
+- [COMPLETED] Automated Playwright Browser E2E Test Suite (test_video_and_youtube_browser_e2e.py) verifying all local video and YouTube flows with 100% pass rate.
+- [COMPLETED] Captured 17 new high-resolution screenshots (20_* to 36_*) documenting real browser behavior.
+- [COMPLETED] Full pytest regression test suite: 34/34 passing (100% pass rate).
+- [COMPLETED] Frontend TypeScript compilation check: 0 errors via npx tsc --noEmit.
+
+---
+
 ## Phase 5: Single-Meeting Grounded RAG Chat (NEXT UP)
 - [PENDING] Text chunker and vector embedding pipeline.
 - [PENDING] Meeting-scoped similarity retrieval engine.

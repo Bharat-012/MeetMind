@@ -30,7 +30,9 @@ import {
   UserCheck,
   UserX,
   BarChart3,
-  ShieldCheck
+  ShieldCheck,
+  Video,
+  Volume2
 } from 'lucide-react';
 
 export default function MeetingDetailPage() {
@@ -49,11 +51,15 @@ export default function MeetingDetailPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [isRegenerating, setIsRegenerating] = useState<boolean>(false);
 
-  // Playback state
+  // Playback & Media state
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<number>(0);
-  const [duration, setDuration] = useState<number>(75);
-  const playbackTimerRef = useRef<any>(null);
+  const [duration, setDuration] = useState<number>(0);
+  const [mediaInfo, setMediaInfo] = useState<any>(null);
+  const [showVideoPreview, setShowVideoPreview] = useState<boolean>(true);
+  const [videoError, setVideoError] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Speaker assignment modal state
   const [assignModalOpen, setAssignModalOpen] = useState<boolean>(false);
@@ -85,7 +91,7 @@ export default function MeetingDetailPage() {
 
   const fetchMeetingData = async () => {
     try {
-      const [mRes, tRes, sRes, stRes, dRes, aRes, statRes] = await Promise.all([
+      const [mRes, tRes, sRes, stRes, dRes, aRes, statRes, mediaRes] = await Promise.all([
         fetch(`http://localhost:8000/api/meetings/${meetingId}`).catch(() => null),
         fetch(`http://localhost:8000/api/meetings/${meetingId}/transcript`).catch(() => null),
         fetch(`http://localhost:8000/api/meetings/${meetingId}/summary`).catch(() => null),
@@ -93,6 +99,7 @@ export default function MeetingDetailPage() {
         fetch(`http://localhost:8000/api/meetings/${meetingId}/decisions`).catch(() => null),
         fetch(`http://localhost:8000/api/meetings/${meetingId}/action-items`).catch(() => null),
         fetch(`http://localhost:8000/api/meetings/${meetingId}/speakers/stats`).catch(() => null),
+        fetch(`http://localhost:8000/api/meetings/${meetingId}/media-info`).catch(() => null),
       ]);
 
       let meetingObj = null;
@@ -108,6 +115,11 @@ export default function MeetingDetailPage() {
       if (dRes && dRes.ok) setDecisions(await dRes.json());
       if (aRes && aRes.ok) setActionItems(await aRes.json());
       if (statRes && statRes.ok) setSpeakerStats(await statRes.json());
+      if (mediaRes && mediaRes.ok) {
+        const mInfo = await mediaRes.json();
+        setMediaInfo(mInfo);
+        if (mInfo.duration) setDuration(Math.round(mInfo.duration));
+      }
 
       // Fetch organization speaker directory profiles
       if (meetingObj?.organization_id) {
@@ -128,27 +140,34 @@ export default function MeetingDetailPage() {
     fetchMeetingData();
   }, [meetingId]);
 
-  // Synchronized playback timer simulator
-  useEffect(() => {
-    if (isPlaying) {
-      playbackTimerRef.current = setInterval(() => {
-        setCurrentTime((prev) => {
-          if (prev >= duration) {
-            setIsPlaying(false);
-            return 0;
-          }
-          return prev + 1;
-        });
-      }, 1000);
-    } else {
-      if (playbackTimerRef.current) clearInterval(playbackTimerRef.current);
+  const getActiveMedia = (): HTMLMediaElement | null => {
+    if (mediaInfo?.has_video && videoRef.current) {
+      return videoRef.current;
     }
-    return () => {
-      if (playbackTimerRef.current) clearInterval(playbackTimerRef.current);
-    };
-  }, [isPlaying, duration]);
+    return audioRef.current;
+  };
+
+  const togglePlay = () => {
+    const el = getActiveMedia();
+    if (!el) {
+      setIsPlaying(!isPlaying);
+      return;
+    }
+    if (isPlaying) {
+      el.pause();
+    } else {
+      el.play().catch((err) => {
+        console.warn('Playback error:', err);
+      });
+    }
+  };
 
   const seekTo = (seconds: number) => {
+    const el = getActiveMedia();
+    if (el) {
+      el.currentTime = seconds;
+      el.play().then(() => setIsPlaying(true)).catch(() => {});
+    }
     setCurrentTime(seconds);
     setIsPlaying(true);
   };
@@ -358,11 +377,74 @@ export default function MeetingDetailPage() {
           </div>
         </header>
 
+        {/* Video Player Display Container */}
+        {mediaInfo?.has_video && showVideoPreview && (
+          <div className="bg-slate-950 border-b border-slate-800 p-4 flex flex-col items-center justify-center">
+            <div className="relative w-full max-w-2xl aspect-video bg-black rounded-xl overflow-hidden border border-slate-800 shadow-2xl flex items-center justify-center">
+              <video
+                ref={videoRef}
+                src={`http://localhost:8000/api/meetings/${meetingId}/media`}
+                poster={mediaInfo.thumbnail_url ? `http://localhost:8000${mediaInfo.thumbnail_url}` : undefined}
+                onTimeUpdate={() => {
+                  if (videoRef.current) setCurrentTime(videoRef.current.currentTime);
+                }}
+                onLoadedMetadata={() => {
+                  if (videoRef.current && videoRef.current.duration) {
+                    setDuration(Math.round(videoRef.current.duration));
+                  }
+                }}
+                onPlay={() => setIsPlaying(true)}
+                onPause={() => setIsPlaying(false)}
+                onEnded={() => setIsPlaying(false)}
+                onError={() => {
+                  setVideoError('Video stream cannot be rendered in direct web preview. Fallback audio active.');
+                }}
+                className="w-full h-full object-contain"
+                playsInline
+              />
+            </div>
+
+            {mediaInfo.codec_warning && (
+              <div className="mt-2 text-xs text-amber-400 bg-amber-950/40 border border-amber-800/40 rounded-lg px-3 py-1.5 flex items-center gap-2 max-w-2xl w-full">
+                <AlertTriangle className="h-4 w-4 flex-shrink-0 text-amber-400" />
+                <span className="flex-1">{mediaInfo.codec_warning}</span>
+              </div>
+            )}
+
+            {videoError && (
+              <div className="mt-2 text-xs text-rose-400 bg-rose-950/40 border border-rose-800/40 rounded-lg px-3 py-1.5 flex items-center gap-2 max-w-2xl w-full">
+                <AlertTriangle className="h-4 w-4 flex-shrink-0 text-rose-400" />
+                <span className="flex-1">{videoError}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Audio Player Fallback (for audio-only meetings or when video collapsed) */}
+        {(!mediaInfo?.has_video || !showVideoPreview || videoError) && (
+          <audio
+            ref={audioRef}
+            src={`http://localhost:8000/api/meetings/${meetingId}/media`}
+            onTimeUpdate={() => {
+              if (audioRef.current) setCurrentTime(audioRef.current.currentTime);
+            }}
+            onLoadedMetadata={() => {
+              if (audioRef.current && audioRef.current.duration) {
+                setDuration(Math.round(audioRef.current.duration));
+              }
+            }}
+            onPlay={() => setIsPlaying(true)}
+            onPause={() => setIsPlaying(false)}
+            onEnded={() => setIsPlaying(false)}
+          />
+        )}
+
         {/* Media Player Sync Bar */}
         <div className="bg-slate-950 border-b border-slate-800 px-6 py-3 flex items-center gap-4">
           <button
-            onClick={() => setIsPlaying(!isPlaying)}
+            onClick={togglePlay}
             className="h-9 w-9 rounded-full bg-indigo-600 hover:bg-indigo-500 flex items-center justify-center text-white transition shadow-md shadow-indigo-600/30"
+            title={isPlaying ? 'Pause' : 'Play'}
           >
             {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
           </button>
@@ -375,7 +457,8 @@ export default function MeetingDetailPage() {
             <input
               type="range"
               min="0"
-              max={duration}
+              max={duration || 100}
+              step="0.1"
               value={currentTime}
               onChange={(e) => seekTo(Number(e.target.value))}
               className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
@@ -385,6 +468,27 @@ export default function MeetingDetailPage() {
           <span className="text-xs font-mono text-slate-400 w-12">
             {formatTime(duration)}
           </span>
+
+          {/* Media Format Indicator & Preview Toggle */}
+          {mediaInfo?.has_video ? (
+            <div className="flex items-center gap-2">
+              <span className="flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded bg-indigo-950/60 text-indigo-300 border border-indigo-800/40">
+                <Video className="h-3 w-3 text-indigo-400" />
+                <span>{mediaInfo.video_codec ? mediaInfo.video_codec.toUpperCase() : 'VIDEO'}</span>
+              </span>
+              <button
+                onClick={() => setShowVideoPreview(!showVideoPreview)}
+                className="text-[11px] text-slate-400 hover:text-white px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 transition"
+              >
+                {showVideoPreview ? 'Hide Video' : 'Show Video'}
+              </button>
+            </div>
+          ) : (
+            <span className="flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded bg-slate-800/60 text-slate-300 border border-slate-700/40">
+              <Volume2 className="h-3 w-3 text-slate-400" />
+              <span>AUDIO</span>
+            </span>
+          )}
         </div>
 
         {/* Navigation Tabs Bar */}

@@ -1,3 +1,4 @@
+import os
 """Idempotent Background Pipeline Orchestrator for MeetMind."""
 import logging
 from typing import Optional, List
@@ -77,10 +78,16 @@ class PipelineService:
             audio_path = None
             duration = 60.0
 
-            if media_asset and media_asset.file_path:
-                audio_path, duration = self.media_service.extract_audio(media_asset.file_path, meeting_id)
-                media_asset.audio_path = audio_path
-                meeting.duration_seconds = duration
+            if media_asset:
+                if media_asset.audio_path and os.path.exists(media_asset.audio_path) and os.path.getsize(media_asset.audio_path) > 100:
+                    audio_path = media_asset.audio_path
+                    duration = self.media_service.probe_audio_duration(audio_path)
+                elif media_asset.file_path and os.path.exists(media_asset.file_path):
+                    audio_path, duration = self.media_service.extract_audio(media_asset.file_path, meeting_id)
+                    media_asset.audio_path = audio_path
+
+                if duration:
+                    meeting.duration_seconds = duration
                 db.add(media_asset)
                 await db.commit()
 

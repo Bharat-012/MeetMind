@@ -5,6 +5,47 @@ All notable changes to the MeetMind project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.6] - 2026-10-29: Critical Bug Fix — YouTube Import + Local Video Preview and Processing
+
+### Fixed
+- **Local Media Streaming & Byte-Range Delivery (GET /api/meetings/{id}/media)**:
+  - Implemented secure Starlette FileResponse route supporting HTTP 206 Partial Content range requests (Accept-Ranges: bytes, Content-Range) and path traversal security validation (os.path.realpath inside MEDIA_STORAGE_DIR).
+  - Enables smooth seeking, scrubbing, and streaming in HTML5 video/audio players without downloading the entire media file upfront.
+- **Media Information API (GET /api/meetings/{id}/media-info)**:
+  - Probes uploaded media files via PyAV (v.open) to extract duration, dimensions, framerate, video/audio codecs, and browser playability flags (is_browser_playable).
+  - Delivers codec warnings and playback capabilities to the frontend client.
+- **Frontend HTML5 Video & Audio Player (rontend/app/meetings/[id]/page.tsx)**:
+  - Replaced simulated setInterval timer with real HTML5 <video> and <audio> elements listening to onTimeUpdate and onLoadedMetadata.
+  - Added responsive video preview container, format badge, and collapsible toggle.
+  - Linked scrubber slider and Play/Pause controls directly to ideo.currentTime and ideo.play().
+  - Synchronized transcript segment clicks to seek the real video/audio player to the exact timestamp (ideo.currentTime = seg.start_time; video.play()) and dynamically highlight the active segment during playback.
+  - Added browser codec warning banner and audio-only playback fallback.
+- **Audio Extraction with FFmpeg & PyAV Fallback (ackend/app/services/media_service.py)**:
+  - Integrated imageio-ffmpeg static binary detection in ModelManager._detect_ffmpeg() for reliable standalone FFmpeg execution.
+  - Implemented extract_audio extracting standard 16kHz mono 16-bit PCM WAV from any container (MP4, WebM, MOV, MKV, AVI) with PyAV frame-resampling fallback.
+  - Implemented ensure_web_preview for browser-incompatible video containers (e.g., MKV, ProRes) and generate_thumbnail for frame snapshots.
+- **Real YouTube Import Service with yt-dlp (ackend/app/services/media_service.py)**:
+  - Integrated yt-dlp dependency to safely extract metadata and permitted public video/audio streams.
+  - Added strict syntax and video ID validation (alidate_youtube_url), rejecting invalid schemes and unsupported domains.
+  - Added pre-download accessibility checks for private, restricted, removed, or DRM-protected videos with clear HTTP 400 error messages.
+  - Prevented ingestion of active livestreams before broadcast conclusion.
+  - Automated download of permitted media and conversion to 16kHz mono WAV for downstream Faster-Whisper and Nemotron-3 processing.
+  - Added duplicate detection in POST /api/meetings/import-url to prevent re-importing the same YouTube URL within the same workspace (HTTP 409 Conflict).
+- **Ingestion Modal Navigation (rontend/app/workspace/page.tsx)**:
+  - Updated onSuccess callback to automatically route to /meetings/{createdMeeting.id} on submission.
+
+### Verified
+- **Playwright Browser E2E Test Suite (ackend/test_video_and_youtube_browser_e2e.py)**:
+  - Test 1: Workspace loaded cleanly.
+  - Test 2: Corrupt media file rejected cleanly with HTTP 400 error displayed in UI.
+  - Test 3: Local video upload (sample_meeting_video.mp4), pipeline completion in 10s, HTML5 <video> player rendered, HTTP 206 range requests confirmed, Play/Pause functional, transcript segment click seeking video and active highlight confirmed, Deliverables A/B/C rendered.
+  - Test 4: YouTube non-YouTube domain rejection and non-existent video ID rejection confirmed with UI error messages.
+  - Test 5: Real public YouTube video imported (https://www.youtube.com/watch?v=jNQXAC9IVRw), downloaded, transcribed, diarized, and played back with seeking.
+  - Test 6: Duplicate YouTube URL in same workspace rejected with 409 Conflict.
+  - Captured 17 high-resolution screenshots (20_* to 36_*) validating the full browser journey.
+- **Unit & Integration Regression Suite**:
+  - All 34/34 tests passed with 100% success rate.
+
 ## [0.4.5] - 2026-10-29: Browser-Based End-to-End Testing & Bug Fixes
 
 ### Added

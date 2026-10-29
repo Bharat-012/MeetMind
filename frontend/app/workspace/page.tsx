@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Layers,
   Search,
@@ -20,6 +21,7 @@ import {
 import IngestModal from '@/components/IngestModal';
 
 export default function WorkspacePage() {
+  const router = useRouter();
   const [organizations, setOrganizations] = useState<any[]>([]);
   const [selectedOrgId, setSelectedOrgId] = useState<string>('');
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string>('');
@@ -392,11 +394,15 @@ export default function WorkspacePage() {
         onClose={() => setIsModalOpen(false)}
         organizationId={selectedOrgId}
         workspaceId={selectedWorkspaceId || selectedOrgId}
-        onSuccess={() => {
-          // Refresh meeting list
-          fetch(`http://localhost:8000/api/meetings?organization_id=${selectedOrgId}`)
-            .then((res) => res.json())
-            .then((data) => setMeetings(data.items || []));
+        onSuccess={(createdMeeting: any) => {
+          setIsModalOpen(false);
+          if (createdMeeting?.id) {
+            router.push(`/meetings/${createdMeeting.id}`);
+          } else {
+            fetch(`http://localhost:8000/api/meetings?organization_id=${selectedOrgId}`)
+              .then((res) => res.json())
+              .then((data) => setMeetings(data.items || []));
+          }
         }}
       />
     </div>

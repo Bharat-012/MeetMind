@@ -45,13 +45,22 @@ class LocalModelManager:
         self.ffmpeg_path = self._detect_ffmpeg()
 
     def _detect_ffmpeg(self) -> Optional[str]:
-        """Detect FFmpeg binary from PATH or common system installations."""
-        # 1. System PATH
+        """Detect FFmpeg binary from imageio-ffmpeg, PATH, or common system installations."""
+        # 1. imageio-ffmpeg packaged binary (reliable cross-platform fallback)
+        try:
+            import imageio_ffmpeg
+            ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+            if ffmpeg_exe and os.path.exists(ffmpeg_exe):
+                return ffmpeg_exe
+        except Exception:
+            pass
+
+        # 2. System PATH
         which_ffmpeg = shutil.which("ffmpeg")
         if which_ffmpeg:
             return which_ffmpeg
 
-        # 2. Configured or known paths on Windows
+        # 3. Configured or known paths on Windows
         candidate_paths = [
             r"C:\Program Files\Softdeluxe\Free Download Manager\ffmpeg.exe",
             r"C:\Program Files\BlueStacks_nxt\ffmpeg.exe",
