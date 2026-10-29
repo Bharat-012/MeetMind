@@ -81,6 +81,32 @@
 
 ---
 
+## Phase 4.5: Browser-Based End-to-End Testing & Hardening (COMPLETED)
+- [COMPLETED] Browser automation suite using Playwright driving native Google Chrome (`C:\Program Files\Google\Chrome\Application\chrome.exe`).
+- [COMPLETED] Generated real spoken English audio test file (`sample_speech.wav`, 16kHz mono, ~8.2s).
+- [COMPLETED] Verified 14 end-to-end browser user journeys with 17 high-resolution screenshots saved to artifacts.
+  - Step 1: Home Dashboard loaded without blank page or console errors (`PASS`).
+  - Step 2: Workspace Library loaded Acme Corp organization (`PASS`).
+  - Step 3: Real media upload via IngestModal (`PASS`).
+  - Step 4: Meeting Detail navigation (`PASS`).
+  - Step 5: Full background AI pipeline execution reaching COMPLETED (`PASS`).
+  - Step 6: Deliverable A (Full Transcript, verbatim Faster-Whisper text, search filter, playback seek) (`PASS`).
+  - Step 7: Speaker Attribution & Audit Trail (Assigning Alice Tech Lead, audit modal) (`PASS`).
+  - Step 8: Deliverable B (Chronological Meeting Explanation & typed Event Sequence) (`PASS`).
+  - Step 9: Deliverable C (Executive Summary, Key Takeaways, Risks, Questions) (`PASS`).
+  - Step 10: Deliverable C (Decision Register with CONFIRMED/PROPOSED status pills) (`PASS`).
+  - Step 11: Deliverable C (Action Item Tracker with non-hallucinated owners and deadlines) (`PASS`).
+  - Step 12: Grounded Meeting Chat (Answerable queries with citations + unanswerable query insufficient evidence handling) (`PASS`).
+  - Step 13: Idempotent Intelligence Regeneration (zero duplicate records) (`PASS`).
+  - Step 14: Organization Speaker Directory page (`PASS`).
+- [COMPLETED] Resolved schema migration issue in `init_db()` for SQLite columns added in Phase 3/4.
+- [COMPLETED] Fixed default workspace ID fallback during UI media ingestion.
+- [COMPLETED] Fixed evidence verification in offline rule-based fallback of `OllamaProvider`.
+- [COMPLETED] Backend test suite: 34/34 passing in 68.60s (100% pass rate).
+- [COMPLETED] Frontend TypeScript check: 0 errors (`npx tsc --noEmit`).
+
+---
+
 ## Phase 5: Single-Meeting Grounded RAG Chat (NEXT UP)
 - [PENDING] Text chunker and vector embedding pipeline.
 - [PENDING] Meeting-scoped similarity retrieval engine.

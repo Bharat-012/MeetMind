@@ -378,3 +378,4 @@ async def test_chat_grounding_and_tenant_security(client: AsyncClient):
     )
     assert forbidden_chat.status_code == 403
     assert "access denied" in forbidden_chat.json()["detail"].lower()
+

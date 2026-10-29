@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import {
   Video,
   FileAudio,
@@ -48,22 +49,26 @@ export default function Dashboard() {
           </div>
 
           <nav className="space-y-1">
-            <a href="#" className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-indigo-600/20 text-indigo-400 font-medium text-sm">
+            <Link href="/workspace" className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-indigo-600/20 text-indigo-400 font-medium text-sm">
               <Layers className="h-4 w-4" />
               <span>Workspace Library</span>
-            </a>
-            <a href="#" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-900 font-medium text-sm transition">
+            </Link>
+            <Link href="/speakers" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-900 font-medium text-sm transition">
+              <Users className="h-4 w-4" />
+              <span>Speaker Directory</span>
+            </Link>
+            <Link href="/workspace" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-900 font-medium text-sm transition">
               <Search className="h-4 w-4" />
               <span>Global Knowledge</span>
-            </a>
-            <a href="#" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-900 font-medium text-sm transition">
+            </Link>
+            <Link href="/workspace" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-900 font-medium text-sm transition">
               <CheckCircle2 className="h-4 w-4" />
               <span>Action Items</span>
-            </a>
-            <a href="#" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-900 font-medium text-sm transition">
+            </Link>
+            <Link href="/workspace" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-900 font-medium text-sm transition">
               <MessageSquare className="h-4 w-4" />
               <span>Org Chat</span>
-            </a>
+            </Link>
           </nav>
         </div>
 
@@ -90,10 +95,10 @@ export default function Dashboard() {
               Acme Corp
             </span>
           </div>
-          <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-medium shadow-md shadow-indigo-600/30 transition">
+          <Link href="/workspace" className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-medium shadow-md shadow-indigo-600/30 transition">
             <Video className="h-4 w-4" />
             <span>Ingest Meeting</span>
-          </button>
+          </Link>
         </header>
 
         <div className="p-8 space-y-8 max-w-7xl">

@@ -15,6 +15,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.models.meeting import Meeting, MediaAsset, ProcessingStatus, SourceType
+from app.models.organization import Workspace
 from app.schemas.meeting import MeetingRead, URLImportRequest
 from app.services.media_service import MediaService
 from app.services.pipeline_service import PipelineService
@@ -38,6 +39,16 @@ async def upload_meeting_media(
     """Upload media file and initiate background AI processing pipeline."""
     media_title = title or (file.filename or "Uploaded Meeting").rsplit(".", 1)[0]
     media_service.validate_file(file.filename or "", file.content_type, 0)
+
+    # Ensure valid workspace_id: fallback to default workspace if needed
+    ws_stmt = select(Workspace).where(Workspace.id == workspace_id)
+    ws_res = await db.execute(ws_stmt)
+    if not ws_res.scalar_one_or_none():
+        fb_stmt = select(Workspace).where(Workspace.organization_id == organization_id)
+        fb_res = await db.execute(fb_stmt)
+        fb_ws = fb_res.scalar_one_or_none()
+        if fb_ws:
+            workspace_id = fb_ws.id
 
     # Create meeting record in UPLOADED state
     meeting = Meeting(
@@ -90,9 +101,20 @@ async def import_media_url(
     source_type = SourceType.YOUTUBE if ("youtube.com" in payload.url or "youtu.be" in payload.url) else SourceType.UPLOAD
     meeting_title = payload.title or f"Imported Media ({payload.url[:40]})"
 
+    # Ensure valid workspace_id: fallback to default workspace if needed
+    ws_id = payload.workspace_id
+    ws_stmt = select(Workspace).where(Workspace.id == ws_id)
+    ws_res = await db.execute(ws_stmt)
+    if not ws_res.scalar_one_or_none():
+        fb_stmt = select(Workspace).where(Workspace.organization_id == payload.organization_id)
+        fb_res = await db.execute(fb_stmt)
+        fb_ws = fb_res.scalar_one_or_none()
+        if fb_ws:
+            ws_id = fb_ws.id
+
     meeting = Meeting(
         organization_id=payload.organization_id,
-        workspace_id=payload.workspace_id,
+        workspace_id=ws_id,
         project_id=payload.project_id,
         title=meeting_title,
         source_type=source_type,

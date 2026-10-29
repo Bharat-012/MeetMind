@@ -5,8 +5,15 @@ from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from app.core import database
 from app.core.database import Base, get_db
+from app.core.config import settings
 import app.models  # noqa: F401
 from app.main import app
+
+# Ensure unit tests use fast isolated mock providers by default
+settings.ASR_PROVIDER = "mock"
+settings.DIARIZATION_PROVIDER = "mock"
+settings.LLM_PROVIDER = "mock"
+settings.EMBEDDING_PROVIDER = "mock"
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///./test_meetmind.db"
 

@@ -344,9 +344,25 @@ class OllamaProvider:
                     })
             return GroundedAnswerDTO(answer=answer, citations=citations, found_evidence=found)
         except Exception:
-            # Fallback to direct citation extract without cloud call
+            # Rule-based fallback when Ollama is offline: verify genuine keyword evidence
+            # Filter query words to meaningful content words (ignore stop words)
+            stop_words = {"what", "when", "where", "which", "who", "whom", "this", "that", "these", "those", "is", "are", "was", "were", "the", "a", "an", "for", "did", "team"}
+            query_words = [w.lower() for w in re.findall(r'\b[a-zA-Z]{3,}\b', query) if w.lower() not in stop_words]
+            matching_chunks = []
+            for c in context:
+                c_text = c.get("text", "").lower()
+                if query_words and any(qw in c_text for qw in query_words):
+                    matching_chunks.append(c)
+
+            if not matching_chunks:
+                return GroundedAnswerDTO(
+                    answer="The meeting records do not contain sufficient evidence to answer this question.",
+                    citations=[],
+                    found_evidence=False
+                )
+
             citations = []
-            for c in context[:3]:
+            for c in matching_chunks[:3]:
                 citations.append({
                     "meeting_id": c.get("meeting_id", ""),
                     "timestamp_start": c.get("start_time"),
@@ -354,7 +370,7 @@ class OllamaProvider:
                     "speaker_name": c.get("speaker"),
                     "quote": c.get("text", "")[:150]
                 })
-            matching_texts = [c.get("text", "") for c in context[:2]]
+            matching_texts = [c.get("text", "") for c in matching_chunks[:2]]
             combined = " ".join(matching_texts)
             return GroundedAnswerDTO(
                 answer=f"[RULE-BASED FALLBACK · Ollama offline] Evidence located in meeting records: \"{combined[:250]}\"",

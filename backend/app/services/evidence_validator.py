@@ -165,3 +165,4 @@ class EvidenceValidator:
             if seg.id == segment_id and seg.meeting_id == meeting_id:
                 return True
         return False
+

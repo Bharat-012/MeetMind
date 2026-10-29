@@ -22,6 +22,7 @@ import IngestModal from '@/components/IngestModal';
 export default function WorkspacePage() {
   const [organizations, setOrganizations] = useState<any[]>([]);
   const [selectedOrgId, setSelectedOrgId] = useState<string>('');
+  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string>('');
   const [meetings, setMeetings] = useState<any[]>([]);
   const [orgDecisions, setOrgDecisions] = useState<any[]>([]);
   const [orgActions, setOrgActions] = useState<any[]>([]);
@@ -53,6 +54,15 @@ export default function WorkspacePage() {
 
   useEffect(() => {
     if (!selectedOrgId) return;
+
+    fetch(`http://localhost:8000/api/organizations/${selectedOrgId}/workspaces`)
+      .then((res) => res.json())
+      .then((wsList) => {
+        if (wsList && wsList.length > 0) {
+          setSelectedWorkspaceId(wsList[0].id);
+        }
+      })
+      .catch((err) => console.error(err));
 
     fetch(`http://localhost:8000/api/meetings?organization_id=${selectedOrgId}`)
       .then((res) => res.json())
@@ -381,7 +391,7 @@ export default function WorkspacePage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         organizationId={selectedOrgId}
-        workspaceId={organizations[0]?.workspaces?.[0]?.id || selectedOrgId}
+        workspaceId={selectedWorkspaceId || selectedOrgId}
         onSuccess={() => {
           // Refresh meeting list
           fetch(`http://localhost:8000/api/meetings?organization_id=${selectedOrgId}`)

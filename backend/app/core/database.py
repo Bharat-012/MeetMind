@@ -43,9 +43,29 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def init_db() -> None:
-    """Initialize database tables."""
+    """Initialize database tables and run automatic lightweight column migrations."""
     async with engine.begin() as conn:
         # Import models so Base has them registered
         import app.models  # noqa: F401
         await conn.run_sync(Base.metadata.create_all)
+
+        # Automatic lightweight migrations for evolved schemas
+        from sqlalchemy import text
+        migrations = [
+            ("decisions", "source_segment_id", "VARCHAR(36)"),
+            ("decisions", "model_name", "VARCHAR(100)"),
+            ("action_items", "source_segment_id", "VARCHAR(36)"),
+            ("action_items", "model_name", "VARCHAR(100)"),
+            ("short_transcripts", "model_name", "VARCHAR(100)"),
+            ("speakers", "is_confirmed", "BOOLEAN DEFAULT 0"),
+            ("meeting_participants", "description", "VARCHAR(1000)"),
+            ("speaker_assignments", "assignment_source", "VARCHAR(50) DEFAULT 'MANUAL_CONFIRMED'"),
+            ("speaker_assignments", "notes", "VARCHAR(500)"),
+        ]
+        for table, col, col_type in migrations:
+            try:
+                await conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {col} {col_type}"))
+            except Exception:
+                # Column already exists or table not yet created
+                pass
 

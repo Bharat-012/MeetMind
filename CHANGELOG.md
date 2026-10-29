@@ -5,6 +5,27 @@ All notable changes to the MeetMind project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.5] - 2026-10-29: Browser-Based End-to-End Testing & Bug Fixes
+
+### Added
+- **Automated Playwright E2E Browser Testing Suite (`test_browser_e2e.py`)**:
+  - Drove native Google Chrome headless browser across 14 distinct user journeys.
+  - Generated and uploaded real 16kHz mono spoken English audio (`sample_speech.wav`, ~8.2s).
+  - Captured 17 high-resolution screenshots covering Home Dashboard, Workspace Library, Ingest Modal, Real Media Upload, Background Pipeline Completion, Deliverable A (Full Transcript, search filter, playback seek), Speaker Attribution & Audit Trail, Deliverable B (Chronological Explanation & Event Sequence), Deliverable C (Structured Summary, Decision Register, Action Item Tracker), Grounded Meeting Chat (Answerable & Unanswerable), Idempotent Regeneration, and Organization Speaker Directory.
+- **Evidence Verification in Offline Chat Fallback**:
+  - Implemented meaningful keyword matching in `OllamaProvider.answer_question` fallback to strictly verify grounded evidence before returning `found_evidence=True`.
+  - Unanswerable queries (e.g. out-of-context questions) now truthfully return `found_evidence=False` with `"The meeting records do not contain sufficient evidence to answer this question."`.
+
+### Fixed
+- **Database Schema Evolution**:
+  - Added automatic lightweight column migrations in `init_db()` (`app/core/database.py`) to safely apply `ALTER TABLE ... ADD COLUMN` for columns added across Phases 3 and 4 (`source_segment_id`, `model_name`, `is_confirmed`, `description`, `notes`, `assignment_source`).
+- **Workspace Media Ingestion Fallback**:
+  - Fixed `WorkspacePage` frontend and backend ingestion endpoints (`upload_meeting_media`, `import_media_url`) to fall back to the organization's default workspace if an invalid or unselected workspace ID is passed.
+- **Navigation Links**:
+  - Added proper `next/link` links on the dashboard sidebar to `/workspace` and `/speakers`.
+- **Test Suite Isolation**:
+  - Configured `conftest.py` with mock defaults for unit tests to prevent dummy-byte audio decoding exceptions, while preserving genuine local inference tests in `test_real_models_and_audit.py`.
+
 ## [0.4.0] - 2026-10-29: Phase 4 Meeting Intelligence Engine
 
 ### Added
