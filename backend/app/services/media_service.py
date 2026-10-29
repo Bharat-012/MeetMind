@@ -421,11 +421,12 @@ class MediaService:
         thumbnail_url = info.get("thumbnail")
         channel = info.get("uploader") or info.get("channel")
 
-        # 2. Download permitted media (prefers standard webm/mp4 audio/video)
+        # 2. Download permitted media (prefers standard MP4/WebM video + audio, with audio fallback)
         media_output_template = os.path.join(meeting_dir, "yt_media.%(ext)s")
         ydl_opts_download = {
-            "format": "bestaudio[ext=m4a]/bestaudio/best[height<=720]/best",
+            "format": "best[ext=mp4][height<=720]/bestvideo[height<=720]+bestaudio/best[height<=720]/best/bestaudio",
             "outtmpl": media_output_template,
+            "ffmpeg_location": self.ffmpeg_path,
             "quiet": True,
             "no_warnings": True,
             "noplaylist": True,

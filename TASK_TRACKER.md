@@ -122,6 +122,20 @@
 
 ---
 
+## Milestone: Video Preview, Audio/Video Player & Meeting Detail UI Overhaul (COMPLETED)
+- [COMPLETED] Diagnose root cause of missing media preview: yt-dlp downloaded audio-only m4a due to format string priority and lack of ffmpeg_location; fixed to merge video+audio into MP4 with imageio-ffmpeg.
+- [COMPLETED] Diagnose root cause of stuck GENERATING_SUMMARY and 0 events: single-mount useEffect in page.tsx never re-fetched after background pipeline completed; fixed with active 2.5s polling.
+- [COMPLETED] Redesign meeting detail page with responsive 16:9 HTML5 <video> player for local MP4/WebM video files with visible video frames, custom playback controls, scrubber, volume, speed selector (1x-2x), and fullscreen.
+- [COMPLETED] Implement YouTube Showcase Card for YouTube imports with original thumbnail backdrop, channel attribution, duration, external video link, and one-click toggle to YouTube player.
+- [COMPLETED] Implement dedicated spacious Audio Player Card for audio-only recordings with wave icon, audio codec badge, duration, and synchronized local audio player.
+- [COMPLETED] Fix navigation tab horizontal white scrollbar across browsers using Tailwind scrollbar-none and CSS .no-scrollbar.
+- [COMPLETED] Fix header text collision with breadcrumbs, meeting title, status badge, and action buttons cleanly spaced.
+- [COMPLETED] Verify synchronized transcript seek & active turn highlighting across all media formats.
+- [COMPLETED] Automated browser tests verified in Chrome with Playwright (screenshots 37-43 captured).
+- [COMPLETED] Full backend pytest test suite verified (34 passed, 0 failed).
+
+---
+
 ## Phase 5: Single-Meeting Grounded RAG Chat (NEXT UP)
 - [PENDING] Text chunker and vector embedding pipeline.
 - [PENDING] Meeting-scoped similarity retrieval engine.

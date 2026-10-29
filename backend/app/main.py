@@ -18,6 +18,26 @@ from app.api.speakers import router as speakers_router
 async def lifespan(app: FastAPI):
     """Startup and shutdown lifecycle handler."""
     await init_db()
+    # Check and clean up orphaned in-flight jobs from prior server interruption
+    try:
+        from app.core.database import AsyncSessionLocal
+        from app.models.meeting import Meeting, ProcessingStatus
+        from sqlalchemy import select
+        async with AsyncSessionLocal() as session:
+            stmt = select(Meeting).where(Meeting.status.notin_([
+                ProcessingStatus.COMPLETED,
+                ProcessingStatus.FAILED,
+                ProcessingStatus.CANCELLED
+            ]))
+            res = await session.execute(stmt)
+            orphaned = res.scalars().all()
+            for m in orphaned:
+                m.status = ProcessingStatus.FAILED
+                m.error_message = "Processing was interrupted by a previous server shutdown. Click Retry Processing to re-run."
+            if orphaned:
+                await session.commit()
+    except Exception:
+        pass
     yield
 
 

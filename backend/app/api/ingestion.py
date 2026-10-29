@@ -303,7 +303,12 @@ async def get_meeting_media_info(
         "height": meta.get("height"),
         "codec_warning": codec_warning,
         "is_youtube": meta.get("is_youtube", False),
-        "source_url": meeting.source_url
+        "video_id": meta.get("video_id"),
+        "channel": meta.get("channel"),
+        "source_type": meeting.source_type.value if hasattr(meeting.source_type, "value") else str(meeting.source_type),
+        "source_url": meeting.source_url,
+        "status": meeting.status.value if hasattr(meeting.status, "value") else str(meeting.status),
+        "error_message": meeting.error_message
     }
 
 

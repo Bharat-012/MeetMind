@@ -23,7 +23,6 @@ import {
   Sparkles,
   AlertTriangle,
   ArrowRight,
-  Edit2,
   Check,
   X,
   History,
@@ -32,7 +31,13 @@ import {
   BarChart3,
   ShieldCheck,
   Video,
-  Volume2
+  Volume2,
+  VolumeX,
+  Volume1,
+  Maximize,
+  RefreshCw,
+  Music,
+  Tv
 } from 'lucide-react';
 
 export default function MeetingDetailPage() {
@@ -41,6 +46,7 @@ export default function MeetingDetailPage() {
 
   const [activeTab, setActiveTab] = useState<string>('transcript');
   const [meeting, setMeeting] = useState<any>(null);
+  const [mediaInfo, setMediaInfo] = useState<any>(null);
   const [transcriptData, setTranscriptData] = useState<any>(null);
   const [summaryData, setSummaryData] = useState<any>(null);
   const [shortTranscript, setShortTranscript] = useState<any>(null);
@@ -50,16 +56,21 @@ export default function MeetingDetailPage() {
   const [orgParticipants, setOrgParticipants] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [isRegenerating, setIsRegenerating] = useState<boolean>(false);
+  const [isRetrying, setIsRetrying] = useState<boolean>(false);
 
   // Playback & Media state
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
-  const [mediaInfo, setMediaInfo] = useState<any>(null);
-  const [showVideoPreview, setShowVideoPreview] = useState<boolean>(true);
+  const [volume, setVolume] = useState<number>(1.0);
+  const [isMuted, setIsMuted] = useState<boolean>(false);
+  const [playbackRate, setPlaybackRate] = useState<number>(1.0);
   const [videoError, setVideoError] = useState<string | null>(null);
+  const [youtubeMode, setYoutubeMode] = useState<'audio' | 'embed'>('audio');
+
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const videoContainerRef = useRef<HTMLDivElement | null>(null);
 
   // Speaker assignment modal state
   const [assignModalOpen, setAssignModalOpen] = useState<boolean>(false);
@@ -106,7 +117,9 @@ export default function MeetingDetailPage() {
       if (mRes && mRes.ok) {
         meetingObj = await mRes.json();
         setMeeting(meetingObj);
-        if (meetingObj.duration_seconds) setDuration(Math.round(meetingObj.duration_seconds));
+        if (meetingObj.duration_seconds && duration === 0) {
+          setDuration(Math.round(meetingObj.duration_seconds));
+        }
       }
 
       if (tRes && tRes.ok) setTranscriptData(await tRes.json());
@@ -118,7 +131,9 @@ export default function MeetingDetailPage() {
       if (mediaRes && mediaRes.ok) {
         const mInfo = await mediaRes.json();
         setMediaInfo(mInfo);
-        if (mInfo.duration) setDuration(Math.round(mInfo.duration));
+        if (mInfo.duration_seconds && duration === 0) {
+          setDuration(Math.round(mInfo.duration_seconds));
+        }
       }
 
       // Fetch organization speaker directory profiles
@@ -138,8 +153,35 @@ export default function MeetingDetailPage() {
   useEffect(() => {
     if (!meetingId) return;
     fetchMeetingData();
+
+    // Active polling while meeting is processing
+    const pollInterval = setInterval(() => {
+      fetch(`http://localhost:8000/api/meetings/${meetingId}`)
+        .then((res) => res.ok ? res.json() : null)
+        .then((latestMeeting) => {
+          if (!latestMeeting) return;
+          const status = latestMeeting.status;
+          const isDone = status === 'COMPLETED' || status === 'FAILED' || status === 'CANCELLED';
+          setMeeting(latestMeeting);
+          if (!isDone) {
+            // Also refresh media-info
+            fetch(`http://localhost:8000/api/meetings/${meetingId}/media-info`)
+              .then((r) => r.ok ? r.json() : null)
+              .then((m) => { if (m) setMediaInfo(m); })
+              .catch(() => {});
+          } else {
+            // Processing finished: do a full refresh of deliverables and clear interval
+            fetchMeetingData();
+            clearInterval(pollInterval);
+          }
+        })
+        .catch(() => {});
+    }, 2500);
+
+    return () => clearInterval(pollInterval);
   }, [meetingId]);
 
+  // Media Player Helpers
   const getActiveMedia = (): HTMLMediaElement | null => {
     if (mediaInfo?.has_video && videoRef.current) {
       return videoRef.current;
@@ -149,16 +191,12 @@ export default function MeetingDetailPage() {
 
   const togglePlay = () => {
     const el = getActiveMedia();
-    if (!el) {
-      setIsPlaying(!isPlaying);
-      return;
-    }
+    if (!el) return;
     if (isPlaying) {
       el.pause();
+      setIsPlaying(false);
     } else {
-      el.play().catch((err) => {
-        console.warn('Playback error:', err);
-      });
+      el.play().then(() => setIsPlaying(true)).catch((err) => console.warn('Play error:', err));
     }
   };
 
@@ -170,6 +208,103 @@ export default function MeetingDetailPage() {
     }
     setCurrentTime(seconds);
     setIsPlaying(true);
+  };
+
+  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const targetTime = Number(e.target.value);
+    seekTo(targetTime);
+  };
+
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVol = Number(e.target.value);
+    setVolume(newVol);
+    setIsMuted(newVol === 0);
+    const el = getActiveMedia();
+    if (el) {
+      el.volume = newVol;
+      el.muted = newVol === 0;
+    }
+  };
+
+  const toggleMute = () => {
+    const el = getActiveMedia();
+    if (!el) return;
+    const nextMuted = !isMuted;
+    setIsMuted(nextMuted);
+    el.muted = nextMuted;
+    if (!nextMuted && volume === 0) {
+      setVolume(0.5);
+      el.volume = 0.5;
+    }
+  };
+
+  const handlePlaybackRateChange = (rate: number) => {
+    setPlaybackRate(rate);
+    const el = getActiveMedia();
+    if (el) {
+      el.playbackRate = rate;
+    }
+  };
+
+  const handleToggleFullscreen = () => {
+    if (videoContainerRef.current) {
+      if (!document.fullscreenElement) {
+        videoContainerRef.current.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+  };
+
+  const handleTimeUpdate = (e: any) => {
+    if (e.target && !isNaN(e.target.currentTime)) {
+      setCurrentTime(e.target.currentTime);
+    }
+  };
+
+  const handleLoadedMetadata = (e: any) => {
+    if (e.target && e.target.duration && !isNaN(e.target.duration)) {
+      setDuration(Math.round(e.target.duration));
+    }
+  };
+
+  const formatTime = (secs: number) => {
+    if (isNaN(secs) || secs < 0) return '0:00';
+    const m = Math.floor(secs / 60);
+    const s = Math.floor(secs % 60);
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
+
+  const handleRetryProcessing = async () => {
+    setIsRetrying(true);
+    try {
+      const res = await fetch(`http://localhost:8000/api/meetings/${meetingId}/retry`, {
+        method: 'POST'
+      });
+      if (res.ok) {
+        await fetchMeetingData();
+      }
+    } catch (err) {
+      console.error('Failed to retry processing:', err);
+    } finally {
+      setIsRetrying(false);
+    }
+  };
+
+  const handleRegenerateIntelligence = async () => {
+    setIsRegenerating(true);
+    try {
+      const res = await fetch(`http://localhost:8000/api/meetings/${meetingId}/regenerate-intelligence`, {
+        method: 'POST'
+      });
+      if (res.ok) {
+        await fetchMeetingData();
+      }
+    } catch (err) {
+      console.error('Failed to regenerate intelligence:', err);
+    } finally {
+      setIsRegenerating(false);
+    }
   };
 
   const openAssignModal = (speaker: any) => {
@@ -266,22 +401,6 @@ export default function MeetingDetailPage() {
     }
   };
 
-  const handleRegenerateIntelligence = async () => {
-    setIsRegenerating(true);
-    try {
-      const res = await fetch(`http://localhost:8000/api/meetings/${meetingId}/regenerate-intelligence`, {
-        method: 'POST'
-      });
-      if (res.ok) {
-        await fetchMeetingData();
-      }
-    } catch (err) {
-      console.error('Failed to regenerate intelligence:', err);
-    } finally {
-      setIsRegenerating(false);
-    }
-  };
-
   const handleChatSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!chatQuery.trim()) return;
@@ -319,11 +438,33 @@ export default function MeetingDetailPage() {
     }
   };
 
-  const formatTime = (secs: number) => {
-    const m = Math.floor(secs / 60);
-    const s = Math.floor(secs % 60);
-    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  // Status mapping
+  const status = meeting?.status || 'UPLOADED';
+  const isCompleted = status === 'COMPLETED';
+  const isFailed = status === 'FAILED';
+  const isProcessing = !isCompleted && !isFailed && status !== 'CANCELLED';
+
+  const stageDescriptions: Record<string, { label: string; percent: number }> = {
+    QUEUED: { label: 'Queued for processing', percent: 5 },
+    UPLOADED: { label: 'Media uploaded', percent: 10 },
+    VALIDATING: { label: 'Validating media container & codecs', percent: 15 },
+    EXTRACTING_MEDIA: { label: 'Extracting 16kHz mono audio', percent: 25 },
+    TRANSCRIBING: { label: 'Speech recognition (Faster-Whisper)', percent: 45 },
+    DIARIZING: { label: 'Speaker diarization (NVIDIA Nemotron-3)', percent: 65 },
+    ALIGNING_SPEAKERS: { label: 'Aligning speaker turns & timestamps', percent: 75 },
+    GENERATING_SUMMARY: { label: 'Generating meeting intelligence & summary', percent: 85 },
+    INDEXING_KNOWLEDGE: { label: 'Indexing vector embeddings for QA', percent: 95 },
+    COMPLETED: { label: 'Processing complete', percent: 100 },
+    FAILED: { label: 'Processing failed', percent: 0 },
   };
+
+  const currentStageInfo = stageDescriptions[status] || { label: status, percent: 50 };
+
+  // Determine media presentation
+  const hasVideo = Boolean(mediaInfo?.has_video);
+  const isYouTube = Boolean(mediaInfo?.is_youtube || meeting?.source_type === 'YOUTUBE');
+  const isYouTubeAudioOnly = isYouTube && !hasVideo;
+  const isAudioOnly = !hasVideo && !isYouTube;
 
   // Filtered segments
   const filteredSegments = (transcriptData?.segments || []).filter((seg: any) => {
@@ -337,202 +478,490 @@ export default function MeetingDetailPage() {
 
   return (
     <div className="flex h-screen bg-slate-900 text-slate-100 overflow-hidden font-sans">
-      {/* Main Workspace Layout */}
-      <div className="flex-1 flex flex-col min-w-0 bg-slate-950">
-        {/* Top Header */}
-        <header className="h-14 border-b border-slate-800 bg-slate-900/60 px-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+      <div className="flex-1 flex flex-col min-w-0 bg-slate-950 overflow-y-auto">
+
+        {/* TOP HEADER */}
+        <header className="h-16 border-b border-slate-800 bg-slate-900/80 px-6 flex items-center justify-between sticky top-0 z-20 backdrop-blur">
+          <div className="flex items-center gap-3 min-w-0">
             <Link
               href="/workspace"
-              className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition flex items-center gap-1 text-xs"
+              className="text-slate-400 hover:text-white px-2.5 py-1.5 rounded-lg hover:bg-slate-800 transition flex items-center gap-1.5 text-xs font-medium border border-transparent hover:border-slate-700 flex-shrink-0"
             >
               <ChevronLeft className="h-4 w-4" />
               <span>Workspace</span>
             </Link>
-            <div className="h-4 w-[1px] bg-slate-800" />
-            <h1 className="font-semibold text-sm text-white truncate max-w-md">
+
+            <div className="h-4 w-[1px] bg-slate-800 flex-shrink-0" />
+
+            <h1 className="font-semibold text-sm text-white truncate max-w-sm sm:max-w-md" title={meeting?.title}>
               {meeting?.title || 'Meeting Details'}
             </h1>
-            <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-indigo-950/60 text-indigo-400 border border-indigo-800/40">
-              {meeting?.status}
+
+            {/* Status Badge */}
+            <span className={`text-[11px] font-mono px-2.5 py-0.5 rounded-full border flex-shrink-0 ${
+              isCompleted
+                ? 'bg-emerald-950/60 text-emerald-400 border-emerald-800/40'
+                : isFailed
+                ? 'bg-rose-950/60 text-rose-400 border-rose-800/40'
+                : 'bg-indigo-950/60 text-indigo-300 border-indigo-800/40 animate-pulse'
+            }`}>
+              {status}
             </span>
+
+            {/* Source Badge */}
+            {isYouTube ? (
+              <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded bg-red-950/60 text-red-400 border border-red-800/40">
+                <Tv className="h-3 w-3" />
+                <span>YouTube</span>
+              </span>
+            ) : hasVideo ? (
+              <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded bg-indigo-950/60 text-indigo-400 border border-indigo-800/40">
+                <Video className="h-3 w-3" />
+                <span>Video MP4</span>
+              </span>
+            ) : (
+              <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                <Music className="h-3 w-3" />
+                <span>Audio Recording</span>
+              </span>
+            )}
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 flex-shrink-0">
+            {isFailed && (
+              <button
+                onClick={handleRetryProcessing}
+                disabled={isRetrying}
+                className="flex items-center gap-1.5 text-xs text-rose-300 hover:text-white font-medium px-3 py-1.5 rounded-lg border border-rose-800/60 bg-rose-950/60 hover:bg-rose-900/60 transition disabled:opacity-50"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${isRetrying ? 'animate-spin' : ''}`} />
+                <span>Retry Processing</span>
+              </button>
+            )}
+
             <button
               onClick={handleRegenerateIntelligence}
-              disabled={isRegenerating}
-              className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white font-medium px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-900 hover:bg-slate-800 transition disabled:opacity-50"
+              disabled={isRegenerating || isProcessing}
+              className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white font-medium px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-900 hover:bg-slate-800 transition disabled:opacity-50 shadow-sm"
+              title="Regenerate summary, decisions, and action items from transcript"
             >
               <Sparkles className={`h-3.5 w-3.5 text-indigo-400 ${isRegenerating ? 'animate-spin' : ''}`} />
-              <span>{isRegenerating ? 'Regenerating...' : 'Regenerate Intelligence'}</span>
+              <span className="hidden md:inline">{isRegenerating ? 'Regenerating...' : 'Regenerate Intelligence'}</span>
             </button>
+
             <Link
               href="/speakers"
-              className="flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 font-medium px-2.5 py-1.5 rounded-lg border border-indigo-900/40 bg-indigo-950/30 hover:bg-indigo-950/50 transition"
+              className="flex items-center gap-1.5 text-xs text-indigo-300 hover:text-white font-medium px-3 py-1.5 rounded-lg border border-indigo-900/40 bg-indigo-950/40 hover:bg-indigo-900/50 transition shadow-sm"
             >
-              <Users className="h-3.5 w-3.5" />
-              <span>Speaker Directory</span>
+              <Users className="h-3.5 w-3.5 text-indigo-400" />
+              <span className="hidden md:inline">Speaker Directory</span>
             </Link>
           </div>
         </header>
 
-        {/* Video Player Display Container */}
-        {mediaInfo?.has_video && showVideoPreview && (
-          <div className="bg-slate-950 border-b border-slate-800 p-4 flex flex-col items-center justify-center">
-            <div className="relative w-full max-w-2xl aspect-video bg-black rounded-xl overflow-hidden border border-slate-800 shadow-2xl flex items-center justify-center">
-              <video
-                ref={videoRef}
+        {/* PROCESSING IN PROGRESS BANNER */}
+        {isProcessing && (
+          <div className="bg-gradient-to-r from-indigo-950/90 via-slate-900 to-indigo-950/90 border-b border-indigo-800/40 px-6 py-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-3">
+              <RefreshCw className="h-4 w-4 text-indigo-400 animate-spin flex-shrink-0" />
+              <div>
+                <span className="font-semibold text-white">Pipeline Processing: </span>
+                <span className="text-indigo-300 font-medium">{currentStageInfo.label}</span>
+                <span className="text-slate-400 block sm:inline sm:ml-2 text-[11px]">
+                  (Live updating automatically · {currentStageInfo.percent}% complete)
+                </span>
+              </div>
+            </div>
+            <div className="w-full sm:w-48 bg-slate-800 rounded-full h-2 overflow-hidden border border-slate-700">
+              <div
+                className="bg-indigo-500 h-full rounded-full transition-all duration-500 animate-pulse"
+                style={{ width: `${currentStageInfo.percent}%` }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* PROCESSING FAILED ALERT BANNER */}
+        {isFailed && (
+          <div className="bg-rose-950/80 border-b border-rose-800/40 px-6 py-3 flex items-center justify-between gap-4 text-xs">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="h-4 w-4 text-rose-400 flex-shrink-0" />
+              <div>
+                <span className="font-semibold text-rose-200">Pipeline Failed: </span>
+                <span className="text-slate-300">{meeting?.error_message || 'An error halted media processing.'}</span>
+              </div>
+            </div>
+            <button
+              onClick={handleRetryProcessing}
+              disabled={isRetrying}
+              className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-medium flex items-center gap-1.5 transition flex-shrink-0 disabled:opacity-50"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${isRetrying ? 'animate-spin' : ''}`} />
+              <span>Retry</span>
+            </button>
+          </div>
+        )}
+
+        {/* REDESIGNED MEDIA AREA */}
+        <section className="bg-slate-950 border-b border-slate-800/80 p-6 flex flex-col items-center">
+          <div className="w-full max-w-4xl space-y-4">
+
+            {/* 1. LOCAL VIDEO OR YOUTUBE WITH REAL VIDEO FRAMES */}
+            {hasVideo && (
+              <div className="flex flex-col items-center space-y-3">
+                <div
+                  ref={videoContainerRef}
+                  className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden border border-slate-800 shadow-2xl flex items-center justify-center group"
+                >
+                  <video
+                    ref={videoRef}
+                    src={`http://localhost:8000/api/meetings/${meetingId}/media`}
+                    poster={mediaInfo?.thumbnail_url || undefined}
+                    onTimeUpdate={handleTimeUpdate}
+                    onLoadedMetadata={handleLoadedMetadata}
+                    onPlay={() => setIsPlaying(true)}
+                    onPause={() => setIsPlaying(false)}
+                    onEnded={() => setIsPlaying(false)}
+                    onError={() => setVideoError('Direct video stream playback error. Fallback audio active.')}
+                    className="w-full h-full object-contain"
+                    playsInline
+                  />
+
+                  {/* Play Overlay Button */}
+                  {!isPlaying && (
+                    <button
+                      onClick={togglePlay}
+                      className="absolute inset-0 m-auto h-16 w-16 rounded-full bg-indigo-600/90 hover:bg-indigo-500 text-white flex items-center justify-center shadow-xl shadow-indigo-900/50 transition transform hover:scale-110"
+                      title="Play Video"
+                    >
+                      <Play className="h-8 w-8 ml-1" />
+                    </button>
+                  )}
+
+                  {/* Top Video Badges */}
+                  <div className="absolute top-3 left-3 flex items-center gap-2">
+                    <span className="px-2.5 py-1 rounded-md text-[11px] font-mono font-semibold bg-black/70 backdrop-blur text-indigo-300 border border-indigo-500/30 flex items-center gap-1.5 shadow">
+                      <Video className="h-3.5 w-3.5 text-indigo-400" />
+                      <span>{mediaInfo?.video_codec?.toUpperCase() || 'MP4 VIDEO'}</span>
+                    </span>
+                    {mediaInfo?.is_youtube && (
+                      <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-red-600/90 text-white shadow">
+                        YouTube
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {mediaInfo?.codec_warning && (
+                  <div className="w-full p-2.5 rounded-lg bg-amber-950/40 border border-amber-800/40 text-amber-400 text-xs flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+                    <span>{mediaInfo.codec_warning}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 2. YOUTUBE IMPORTS (AUDIO TRACK LEGALLY EXTRACTED) */}
+            {isYouTubeAudioOnly && (
+              <div className="w-full flex flex-col space-y-3">
+                <div className="flex items-center justify-between px-1">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+                    <span className="text-xs font-semibold text-white">YouTube Ingestion</span>
+                    <span className="text-[11px] text-slate-400">
+                      (Audio track transcribed via Faster-Whisper & Nemotron-3)
+                    </span>
+                  </div>
+
+                  {mediaInfo?.video_id && (
+                    <div className="flex items-center gap-1.5 bg-slate-900 p-1 rounded-lg border border-slate-800">
+                      <button
+                        onClick={() => setYoutubeMode('audio')}
+                        className={`px-3 py-1 rounded text-xs font-medium transition ${
+                          youtubeMode === 'audio'
+                            ? 'bg-indigo-600 text-white shadow'
+                            : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Synced Audio Player
+                      </button>
+                      <button
+                        onClick={() => setYoutubeMode('embed')}
+                        className={`px-3 py-1 rounded text-xs font-medium transition ${
+                          youtubeMode === 'embed'
+                            ? 'bg-indigo-600 text-white shadow'
+                            : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Watch on YouTube
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {youtubeMode === 'embed' && mediaInfo?.video_id ? (
+                  <div className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden border border-slate-800 shadow-2xl">
+                    <iframe
+                      src={`https://www.youtube-nocookie.com/embed/${mediaInfo.video_id}?start=${Math.floor(currentTime)}&autoplay=1`}
+                      title={meeting?.title || 'YouTube Player'}
+                      className="w-full h-full border-0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-slate-800 bg-gradient-to-r from-slate-900 via-slate-900/90 to-indigo-950/40 p-5 shadow-xl flex flex-col sm:flex-row items-center gap-5">
+                    {/* Thumbnail Artwork with Play Trigger */}
+                    <div className="relative w-full sm:w-56 aspect-video rounded-xl overflow-hidden border border-slate-700/60 shadow-lg flex-shrink-0 bg-black flex items-center justify-center group">
+                      {mediaInfo?.thumbnail_url ? (
+                        <img
+                          src={mediaInfo.thumbnail_url}
+                          alt={meeting?.title || 'YouTube Thumbnail'}
+                          className="w-full h-full object-cover opacity-85 group-hover:opacity-100 transition"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-slate-950 text-slate-600">
+                          <Tv className="h-10 w-10" />
+                        </div>
+                      )}
+                      <button
+                        onClick={togglePlay}
+                        className="absolute inset-0 m-auto h-12 w-12 rounded-full bg-indigo-600/95 hover:bg-indigo-500 text-white flex items-center justify-center shadow-lg transition transform group-hover:scale-110"
+                        title={isPlaying ? 'Pause' : 'Play Audio'}
+                      >
+                        {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
+                      </button>
+                    </div>
+
+                    {/* Metadata details */}
+                    <div className="flex-1 w-full space-y-1.5 text-center sm:text-left">
+                      <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-red-600/20 text-red-400 border border-red-500/30">
+                          YouTube Audio Extracted
+                        </span>
+                        {mediaInfo?.channel && (
+                          <span className="text-xs text-slate-400">Channel: {mediaInfo.channel}</span>
+                        )}
+                        <span className="text-xs text-slate-500 font-mono">
+                          Duration: {formatTime(duration)}
+                        </span>
+                      </div>
+                      <h3 className="text-base font-semibold text-white line-clamp-1">{meeting?.title}</h3>
+                      <p className="text-xs text-slate-400 leading-relaxed">
+                        Extracted audio track is synchronized with speech transcript turns. Click any transcript timestamp to jump to that moment in the recording.
+                      </p>
+                      {mediaInfo?.source_url && (
+                        <a
+                          href={mediaInfo.source_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 font-medium pt-1 transition"
+                        >
+                          <span>Open original YouTube stream</span>
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 3. AUDIO-ONLY RECORDING (LOCAL WAV/MP3) */}
+            {isAudioOnly && (
+              <div className="p-6 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900/90 to-indigo-950/40 border border-slate-800 shadow-xl flex flex-col sm:flex-row items-center gap-6">
+                <div className="h-20 w-20 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center flex-shrink-0 text-indigo-400 shadow-inner">
+                  <Music className="h-9 w-9" />
+                </div>
+                <div className="flex-1 w-full space-y-1.5 text-center sm:text-left">
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                    <span className="px-2.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-indigo-950/80 text-indigo-300 border border-indigo-800/50">
+                      AUDIO RECORDING · {mediaInfo?.audio_codec?.toUpperCase() || 'WAV'}
+                    </span>
+                    <span className="text-xs text-slate-400 font-mono">
+                      Duration: {formatTime(duration)}
+                    </span>
+                  </div>
+                  <h3 className="text-base font-semibold text-white truncate">{meeting?.title}</h3>
+                  <p className="text-xs text-slate-400">
+                    High-fidelity 16kHz audio processed by local Faster-Whisper and NVIDIA Nemotron-3-Diarization.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* HIDDEN AUDIO ELEMENT (active for audio-only, youtube-audio, or when video is collapsed) */}
+            {(!hasVideo || videoError) && (
+              <audio
+                ref={audioRef}
                 src={`http://localhost:8000/api/meetings/${meetingId}/media`}
-                poster={mediaInfo.thumbnail_url ? `http://localhost:8000${mediaInfo.thumbnail_url}` : undefined}
-                onTimeUpdate={() => {
-                  if (videoRef.current) setCurrentTime(videoRef.current.currentTime);
-                }}
-                onLoadedMetadata={() => {
-                  if (videoRef.current && videoRef.current.duration) {
-                    setDuration(Math.round(videoRef.current.duration));
-                  }
-                }}
+                onTimeUpdate={handleTimeUpdate}
+                onLoadedMetadata={handleLoadedMetadata}
                 onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}
                 onEnded={() => setIsPlaying(false)}
-                onError={() => {
-                  setVideoError('Video stream cannot be rendered in direct web preview. Fallback audio active.');
-                }}
-                className="w-full h-full object-contain"
-                playsInline
               />
-            </div>
-
-            {mediaInfo.codec_warning && (
-              <div className="mt-2 text-xs text-amber-400 bg-amber-950/40 border border-amber-800/40 rounded-lg px-3 py-1.5 flex items-center gap-2 max-w-2xl w-full">
-                <AlertTriangle className="h-4 w-4 flex-shrink-0 text-amber-400" />
-                <span className="flex-1">{mediaInfo.codec_warning}</span>
-              </div>
             )}
 
-            {videoError && (
-              <div className="mt-2 text-xs text-rose-400 bg-rose-950/40 border border-rose-800/40 rounded-lg px-3 py-1.5 flex items-center gap-2 max-w-2xl w-full">
-                <AlertTriangle className="h-4 w-4 flex-shrink-0 text-rose-400" />
-                <span className="flex-1">{videoError}</span>
+            {/* UNIFIED CONTROLS BAR */}
+            <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl flex flex-col gap-3">
+              {/* Scrubber slider and time display */}
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-mono text-indigo-300 w-12 text-right">
+                  {formatTime(currentTime)}
+                </span>
+                <div className="flex-1 relative flex items-center">
+                  <input
+                    type="range"
+                    min="0"
+                    max={duration || 100}
+                    step="0.1"
+                    value={currentTime}
+                    onChange={handleSliderChange}
+                    className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 hover:accent-indigo-400 transition"
+                  />
+                </div>
+                <span className="text-xs font-mono text-slate-400 w-12">
+                  {formatTime(duration)}
+                </span>
               </div>
-            )}
-          </div>
-        )}
 
-        {/* Audio Player Fallback (for audio-only meetings or when video collapsed) */}
-        {(!mediaInfo?.has_video || !showVideoPreview || videoError) && (
-          <audio
-            ref={audioRef}
-            src={`http://localhost:8000/api/meetings/${meetingId}/media`}
-            onTimeUpdate={() => {
-              if (audioRef.current) setCurrentTime(audioRef.current.currentTime);
-            }}
-            onLoadedMetadata={() => {
-              if (audioRef.current && audioRef.current.duration) {
-                setDuration(Math.round(audioRef.current.duration));
-              }
-            }}
-            onPlay={() => setIsPlaying(true)}
-            onPause={() => setIsPlaying(false)}
-            onEnded={() => setIsPlaying(false)}
-          />
-        )}
+              {/* Controls row */}
+              <div className="flex items-center justify-between pt-1 border-t border-slate-800/60">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <button
+                    onClick={togglePlay}
+                    className="h-9 w-9 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center transition shadow-md shadow-indigo-600/30"
+                    title={isPlaying ? 'Pause' : 'Play'}
+                  >
+                    {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
+                  </button>
 
-        {/* Media Player Sync Bar */}
-        <div className="bg-slate-950 border-b border-slate-800 px-6 py-3 flex items-center gap-4">
-          <button
-            onClick={togglePlay}
-            className="h-9 w-9 rounded-full bg-indigo-600 hover:bg-indigo-500 flex items-center justify-center text-white transition shadow-md shadow-indigo-600/30"
-            title={isPlaying ? 'Pause' : 'Play'}
-          >
-            {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
-          </button>
+                  <button
+                    onClick={() => seekTo(Math.max(0, currentTime - 5))}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition text-xs flex items-center gap-0.5"
+                    title="Rewind 5s"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                    <span className="text-[11px]">-5s</span>
+                  </button>
 
-          <span className="text-xs font-mono text-slate-300 w-12 text-right">
-            {formatTime(currentTime)}
-          </span>
+                  <button
+                    onClick={() => seekTo(Math.min(duration, currentTime + 5))}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition text-xs flex items-center gap-0.5"
+                    title="Forward 5s"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5 transform rotate-180" />
+                    <span className="text-[11px]">+5s</span>
+                  </button>
 
-          <div className="flex-1 relative flex items-center">
-            <input
-              type="range"
-              min="0"
-              max={duration || 100}
-              step="0.1"
-              value={currentTime}
-              onChange={(e) => seekTo(Number(e.target.value))}
-              className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-            />
-          </div>
+                  {/* Volume Slider */}
+                  <div className="flex items-center gap-1.5 ml-2 pl-2 border-l border-slate-800">
+                    <button
+                      onClick={toggleMute}
+                      className="text-slate-400 hover:text-white transition"
+                      title={isMuted ? 'Unmute' : 'Mute'}
+                    >
+                      {isMuted || volume === 0 ? (
+                        <VolumeX className="h-4 w-4 text-rose-400" />
+                      ) : volume < 0.5 ? (
+                        <Volume1 className="h-4 w-4" />
+                      ) : (
+                        <Volume2 className="h-4 w-4" />
+                      )}
+                    </button>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.05"
+                      value={isMuted ? 0 : volume}
+                      onChange={handleVolumeChange}
+                      className="w-16 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 hidden sm:block"
+                      title={`Volume: ${Math.round((isMuted ? 0 : volume) * 100)}%`}
+                    />
+                  </div>
+                </div>
 
-          <span className="text-xs font-mono text-slate-400 w-12">
-            {formatTime(duration)}
-          </span>
+                <div className="flex items-center gap-2 sm:gap-3">
+                  {/* Playback Speed Buttons */}
+                  <div className="flex items-center gap-1">
+                    <span className="text-slate-500 text-[10px] hidden sm:inline">Speed:</span>
+                    {[1.0, 1.25, 1.5, 2.0].map((rate) => (
+                      <button
+                        key={rate}
+                        onClick={() => handlePlaybackRateChange(rate)}
+                        className={`px-2 py-0.5 rounded text-[11px] font-mono transition ${
+                          playbackRate === rate
+                            ? 'bg-indigo-600 text-white font-bold'
+                            : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                        }`}
+                      >
+                        {rate}x
+                      </button>
+                    ))}
+                  </div>
 
-          {/* Media Format Indicator & Preview Toggle */}
-          {mediaInfo?.has_video ? (
-            <div className="flex items-center gap-2">
-              <span className="flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded bg-indigo-950/60 text-indigo-300 border border-indigo-800/40">
-                <Video className="h-3 w-3 text-indigo-400" />
-                <span>{mediaInfo.video_codec ? mediaInfo.video_codec.toUpperCase() : 'VIDEO'}</span>
-              </span>
-              <button
-                onClick={() => setShowVideoPreview(!showVideoPreview)}
-                className="text-[11px] text-slate-400 hover:text-white px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 transition"
-              >
-                {showVideoPreview ? 'Hide Video' : 'Show Video'}
-              </button>
+                  {/* Fullscreen Button (if Video) */}
+                  {hasVideo && (
+                    <button
+                      onClick={handleToggleFullscreen}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                      title="Fullscreen"
+                    >
+                      <Maximize className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
-          ) : (
-            <span className="flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded bg-slate-800/60 text-slate-300 border border-slate-700/40">
-              <Volume2 className="h-3 w-3 text-slate-400" />
-              <span>AUDIO</span>
-            </span>
-          )}
+
+          </div>
+        </section>
+
+        {/* RESPONSIVE NAVIGATION TABS BAR (NO UGLY HORIZONTAL SCROLLBAR) */}
+        <div className="border-b border-slate-800 bg-slate-950 px-6 py-2 sticky top-16 z-10 backdrop-blur">
+          <div className="flex gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-1">
+            {[
+              { id: 'transcript', label: '1. Full Transcript', icon: FileText },
+              { id: 'short_transcript', label: '2. Chronological Explanation', icon: Clock },
+              { id: 'summary', label: '3. Structured Summary', icon: Sparkles },
+              { id: 'decisions', label: 'Decisions', icon: CheckCircle2, badge: decisions.length },
+              { id: 'actions', label: 'Action Items', icon: ListTodo, badge: actionItems.length },
+              { id: 'speakers', label: 'Speakers & Attribution', icon: Users, badge: transcriptData?.speakers?.length },
+              { id: 'chat', label: 'Meeting Chat', icon: MessageSquare },
+              { id: 'voice_emotion', label: 'Voice Analysis', icon: Activity },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              const active = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`py-2 px-3.5 rounded-lg text-xs font-medium flex items-center gap-2 whitespace-nowrap transition ${
+                    active
+                      ? 'bg-indigo-600/20 text-indigo-400 border border-indigo-500/40 shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900 border border-transparent'
+                  }`}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  <span>{tab.label}</span>
+                  {tab.badge !== undefined && tab.badge > 0 && (
+                    <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-indigo-500/20 text-indigo-300 font-semibold">
+                      {tab.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Navigation Tabs Bar */}
-        <div className="flex border-b border-slate-800 bg-slate-950/40 px-6 overflow-x-auto">
-          {[
-            { id: 'transcript', label: '1. Full Transcript', icon: FileText },
-            { id: 'short_transcript', label: '2. Chronological Explanation', icon: Clock },
-            { id: 'summary', label: '3. Structured Summary', icon: Sparkles },
-            { id: 'decisions', label: 'Decisions', icon: CheckCircle2, badge: decisions.length },
-            { id: 'actions', label: 'Action Items', icon: ListTodo, badge: actionItems.length },
-            { id: 'speakers', label: 'Speakers & Attribution', icon: Users, badge: transcriptData?.speakers?.length },
-            { id: 'chat', label: 'Meeting Chat', icon: MessageSquare },
-            { id: 'voice_emotion', label: 'Voice Analysis', icon: Activity },
-          ].map((tab) => {
-            const Icon = tab.icon;
-            const active = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`py-3 px-4 text-xs font-medium border-b-2 flex items-center gap-2 whitespace-nowrap transition ${
-                  active
-                    ? 'border-indigo-500 text-indigo-400 bg-slate-900/30'
-                    : 'border-transparent text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                <Icon className="h-3.5 w-3.5" />
-                <span>{tab.label}</span>
-                {tab.badge !== undefined && tab.badge > 0 && (
-                  <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-indigo-500/20 text-indigo-300 font-semibold">
-                    {tab.badge}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Tab Content Display Area */}
-        <div className="flex-1 overflow-y-auto p-6">
+        {/* TAB CONTENT DISPLAY AREA */}
+        <div className="flex-1 p-6">
           {/* TAB 1: FULL TRANSCRIPT */}
           {activeTab === 'transcript' && (
             <div className="space-y-4 max-w-4xl mx-auto">
-              {/* Filter controls */}
               <div className="flex items-center justify-between gap-4 mb-4">
                 <div className="relative flex-1 max-w-md">
                   <Search className="h-4 w-4 absolute left-3 top-2.5 text-slate-500" />
@@ -562,47 +991,54 @@ export default function MeetingDetailPage() {
                 </div>
               </div>
 
-              {/* Segments List */}
-              <div className="space-y-3">
-                {filteredSegments.map((seg: any) => {
-                  const isCurrent = currentTime >= seg.start_time && currentTime <= seg.end_time;
-                  return (
-                    <div
-                      key={seg.id}
-                      onClick={() => seekTo(seg.start_time)}
-                      className={`p-4 rounded-xl border transition cursor-pointer ${
-                        isCurrent
-                          ? 'bg-indigo-950/40 border-indigo-500/50 shadow-md shadow-indigo-950/50'
-                          : 'bg-slate-950/40 border-slate-800 hover:border-slate-700'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1.5">
-                        <div className="flex items-center gap-2">
-                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold ${
-                            seg.is_confirmed
-                              ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/40'
-                              : 'bg-slate-800 text-indigo-300 border border-slate-700'
-                          }`}>
-                            {seg.is_confirmed ? <ShieldCheck className="h-3 w-3 text-emerald-400" /> : null}
-                            <span>{seg.speaker_name || seg.speaker_label || 'Speaker'}</span>
-                          </span>
-
-                          {seg.speaker_label && seg.speaker_name !== seg.speaker_label && (
-                            <span className="text-[10px] font-mono text-slate-500">
-                              ({seg.speaker_label})
+              {filteredSegments.length === 0 ? (
+                <div className="p-12 text-center rounded-2xl border border-dashed border-slate-800 bg-slate-950/40 text-slate-400 text-xs">
+                  {isProcessing
+                    ? 'Transcribing audio turns with Faster-Whisper... transcript will appear once completed.'
+                    : 'No transcript segments found matching your filters.'}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {filteredSegments.map((seg: any) => {
+                    const isCurrent = currentTime >= seg.start_time && currentTime <= seg.end_time;
+                    return (
+                      <div
+                        key={seg.id}
+                        onClick={() => seekTo(seg.start_time)}
+                        className={`p-4 rounded-xl border transition cursor-pointer ${
+                          isCurrent
+                            ? 'bg-indigo-950/50 border-indigo-500/60 shadow-lg shadow-indigo-950/50'
+                            : 'bg-slate-950/40 border-slate-800 hover:border-slate-700'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1.5">
+                          <div className="flex items-center gap-2">
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold ${
+                              seg.is_confirmed
+                                ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/40'
+                                : 'bg-slate-800 text-indigo-300 border border-slate-700'
+                            }`}>
+                              {seg.is_confirmed ? <ShieldCheck className="h-3 w-3 text-emerald-400" /> : null}
+                              <span>{seg.speaker_name || seg.speaker_label || 'Speaker'}</span>
                             </span>
-                          )}
-                        </div>
 
-                        <span className="text-xs font-mono text-slate-500">
-                          {formatTime(seg.start_time)} - {formatTime(seg.end_time)}
-                        </span>
+                            {seg.speaker_label && seg.speaker_name !== seg.speaker_label && (
+                              <span className="text-[10px] font-mono text-slate-500">
+                                ({seg.speaker_label})
+                              </span>
+                            )}
+                          </div>
+
+                          <span className="text-xs font-mono text-slate-500">
+                            {formatTime(seg.start_time)} - {formatTime(seg.end_time)}
+                          </span>
+                        </div>
+                        <p className="text-sm text-slate-200 leading-relaxed">{seg.text}</p>
                       </div>
-                      <p className="text-sm text-slate-200 leading-relaxed">{seg.text}</p>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 
@@ -622,19 +1058,27 @@ export default function MeetingDetailPage() {
                   )}
                 </div>
                 <p className="text-sm text-slate-200 leading-relaxed font-sans">
-                  {shortTranscript?.narrative_text || 'Chronological explanation will appear here once processed.'}
+                  {shortTranscript?.narrative_text || (
+                    isCompleted
+                      ? 'No chronological narrative was generated for this meeting.'
+                      : 'Chronological explanation is being processed by the intelligence engine...'
+                  )}
                 </p>
               </div>
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-semibold text-white">Event Sequence & Speaker Flow</h3>
-                  <span className="text-xs text-slate-400">{(shortTranscript?.chronological_events || []).length} events recorded</span>
+                  <span className="text-xs text-slate-400">
+                    {(shortTranscript?.chronological_events || []).length} events recorded
+                  </span>
                 </div>
 
                 {(!shortTranscript?.chronological_events || shortTranscript.chronological_events.length === 0) ? (
                   <div className="p-8 text-center rounded-xl bg-slate-950/40 border border-slate-800 text-slate-400 text-xs">
-                    No chronological events extracted yet.
+                    {isCompleted
+                      ? 'No distinct chronological events detected in this meeting.'
+                      : 'Chronological events will appear here once pipeline finishes.'}
                   </div>
                 ) : (
                   <div className="border-l-2 border-slate-800 pl-4 space-y-6">
@@ -690,12 +1134,15 @@ export default function MeetingDetailPage() {
                   )}
                 </div>
                 <p className="text-sm text-slate-200 leading-relaxed font-sans">
-                  {summaryData?.executive_summary || 'Summary is being computed...'}
+                  {summaryData?.executive_summary || (
+                    isCompleted
+                      ? 'No executive summary was generated for this meeting.'
+                      : 'Summary is being computed by the local model...'
+                  )}
                 </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Key Points */}
                 <div className="p-5 rounded-xl bg-slate-950/40 border border-slate-800 space-y-3">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
                     <CheckCircle2 className="h-3.5 w-3.5 text-indigo-400" />
@@ -715,7 +1162,6 @@ export default function MeetingDetailPage() {
                   )}
                 </div>
 
-                {/* Risks & Considerations */}
                 <div className="p-5 rounded-xl bg-slate-950/40 border border-slate-800 space-y-3">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
                     <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
@@ -735,7 +1181,6 @@ export default function MeetingDetailPage() {
                   )}
                 </div>
 
-                {/* Open Questions */}
                 <div className="p-5 rounded-xl bg-slate-950/40 border border-slate-800 space-y-3">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
                     <HelpCircle className="h-3.5 w-3.5 text-purple-400" />
@@ -755,7 +1200,6 @@ export default function MeetingDetailPage() {
                   )}
                 </div>
 
-                {/* Next Steps */}
                 <div className="p-5 rounded-xl bg-slate-950/40 border border-slate-800 space-y-3">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
                     <ArrowRight className="h-3.5 w-3.5 text-emerald-400" />
@@ -788,7 +1232,9 @@ export default function MeetingDetailPage() {
 
               {decisions.length === 0 ? (
                 <div className="p-8 text-center rounded-xl bg-slate-950/40 border border-slate-800 text-slate-400 text-xs">
-                  No decisions extracted from this meeting yet.
+                  {isCompleted
+                    ? 'No explicit decisions extracted from this meeting.'
+                    : 'Decisions are being extracted by the intelligence engine...'}
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -855,7 +1301,9 @@ export default function MeetingDetailPage() {
 
               {actionItems.length === 0 ? (
                 <div className="p-8 text-center rounded-xl bg-slate-950/40 border border-slate-800 text-slate-400 text-xs">
-                  No action items extracted from this meeting yet.
+                  {isCompleted
+                    ? 'No action items extracted from this meeting.'
+                    : 'Action items will appear here once pipeline completes.'}
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -934,7 +1382,6 @@ export default function MeetingDetailPage() {
           {/* TAB 6: SPEAKERS & ATTRIBUTION */}
           {activeTab === 'speakers' && (
             <div className="max-w-4xl mx-auto space-y-6">
-              {/* Speaker Contribution Stats */}
               {speakerStats.length > 0 && (
                 <div className="p-5 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-4">
                   <h3 className="text-xs uppercase tracking-wider text-slate-400 font-bold flex items-center gap-2">
@@ -942,7 +1389,6 @@ export default function MeetingDetailPage() {
                     <span>Meeting Talk-Time Distribution</span>
                   </h3>
 
-                  {/* Distribution Bar */}
                   <div className="h-3 w-full bg-slate-800 rounded-full overflow-hidden flex">
                     {speakerStats.map((s, idx) => {
                       const colors = ['bg-indigo-500', 'bg-violet-500', 'bg-cyan-500', 'bg-emerald-500', 'bg-amber-500', 'bg-rose-500'];
@@ -974,7 +1420,6 @@ export default function MeetingDetailPage() {
                 </div>
               )}
 
-              {/* Speaker List & Assignment Cards */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-semibold text-white">Diarized Speaker Turns & Confirmations</h3>
@@ -1169,7 +1614,6 @@ export default function MeetingDetailPage() {
                 </div>
               )}
 
-              {/* Option 1: Select from Organization Speaker Directory */}
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1.5">
                   Select from Organization Speaker Directory
@@ -1195,7 +1639,6 @@ export default function MeetingDetailPage() {
                 </select>
               </div>
 
-              {/* Option 2: Custom Confirmed Name */}
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1.5">
                   Confirmed Display Name *
@@ -1210,7 +1653,6 @@ export default function MeetingDetailPage() {
                 />
               </div>
 
-              {/* Notes */}
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1.5">
                   Assignment Note / Reason (Optional)

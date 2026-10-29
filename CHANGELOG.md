@@ -5,6 +5,36 @@ All notable changes to the MeetMind project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.7] - 2026-10-29: Video Preview, Audio/Video Player & Meeting Detail UI Overhaul
+
+### Fixed
+- **Missing Video Preview Container for Local & YouTube Videos**:
+  - Replaced the compact audio bar with a prominent, responsive 16:9 HTML5 video player for local MP4/WebM video files displaying real video frames.
+  - Added video codec format badges (e.g. `H264`, `MP4 VIDEO`), duration display, and browser compatibility warning banners.
+  - Updated `media_service.import_from_url` in `backend/app/services/media_service.py` with `"ffmpeg_location": self.ffmpeg_path` and format preference `best[ext=mp4][height<=720]/bestvideo[height<=720]+bestaudio/best[height<=720]/best/bestaudio`, allowing yt-dlp to merge separated video/audio streams into a standard playable MP4 file.
+  - Added rich YouTube Showcase Card for YouTube imports displaying original YouTube thumbnail backdrop, channel attribution, duration, external video link, and one-click toggle to YouTube player.
+- **Dedicated Audio Player Experience for Audio-Only Files**:
+  - For audio recordings (e.g. WAV, MP3), renders a dedicated spacious Audio Player Card with audio wave icon, audio format badge, title, duration, volume controls, and playback scrubber without an awkward empty black video frame.
+- **Stuck `GENERATING_SUMMARY` Status & 0 Events Placeholder**:
+  - Diagnosed root cause: `fetchMeetingData()` in `frontend/app/meetings/[id]/page.tsx` was only called once on mount (`useEffect(..., [meetingId])`). If the user navigated to the page while the backend was still generating summaries, the UI froze permanently in that state with empty deliverables.
+  - Added active real-time polling (every 2.5 seconds) while `status !== 'COMPLETED' && status !== 'FAILED'`, ensuring the frontend automatically detects completion and renders all intelligence deliverables (executive summary, chronological events, decisions, action items, speaker attribution) without manual reload.
+- **Orphaned Job Recovery on Server Restart**:
+  - Added lifespan cleanup in `backend/app/main.py` that queries any meetings stuck in intermediate processing states (`VALIDATING`, `TRANSCRIBING`, `DIARIZING`, `GENERATING_SUMMARY`, etc.) during startup and transitions them to `FAILED` with an actionable message prompting the user to click 'Retry Processing'.
+- **Horizontal White Scrollbar Removal**:
+  - Overhauled navigation tabs container using Tailwind `[scrollbar-width:none] [&::-webkit-scrollbar]:hidden` and `.no-scrollbar` utility in `frontend/app/globals.css`, eliminating the unsightly default browser scrollbar on Windows Chrome.
+- **Header Breadcrumb & Title Layout**:
+  - Resolved text collisions and overlapping elements in the header bar. Breadcrumb `<- Workspace`, meeting title, status badge, and source badge are cleanly separated with truncation and standard spacing.
+
+### Verified
+- **Automated Playwright Browser E2E Test Suite (`test_player_ui_e2e.py`)**:
+  - Tested meeting `fake` (user screenshot reference): verified status displays `COMPLETED`, YouTube Showcase Card renders thumbnail and channel `Unsocial Programmer`, and Tab 2 renders 15 chronological events (screenshots 37-39).
+  - Tested local video meeting: verified HTML5 `<video>` element with video frames, playback, seeking, and active transcript highlighting (screenshots 40-41).
+  - Tested audio-only meeting: verified dedicated audio player card without empty video container (screenshot 42).
+- **Backend Pytest Suite**:
+  - 34/34 tests passing (100% pass rate).
+- **Frontend TypeScript Compiler**:
+  - 0 errors via `npx tsc --noEmit`.
+
 ## [0.4.6] - 2026-10-29: Critical Bug Fix — YouTube Import + Local Video Preview and Processing
 
 ### Fixed
