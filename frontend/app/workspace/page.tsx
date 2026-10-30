@@ -12,13 +12,17 @@ import {
   Video,
   ChevronRight,
   Sparkles,
-  Building,
-  Filter,
   Calendar,
   Clock,
-  Users
+  Tv,
+  ExternalLink,
+  Send,
+  Loader2,
+  Filter,
+  UserCheck,
+  Building
 } from 'lucide-react';
-import IngestModal from '@/components/IngestModal';
+import AppShell from '@/components/AppShell';
 
 export default function WorkspacePage() {
   const router = useRouter();
@@ -29,7 +33,11 @@ export default function WorkspacePage() {
   const [orgDecisions, setOrgDecisions] = useState<any[]>([]);
   const [orgActions, setOrgActions] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'meetings' | 'chat' | 'decisions' | 'actions'>('meetings');
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  // Filters for meetings list
+  const [searchFilter, setSearchFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
 
   // Cross-meeting chat state
   const [chatMessages, setChatMessages] = useState<any[]>([
@@ -56,6 +64,7 @@ export default function WorkspacePage() {
 
   useEffect(() => {
     if (!selectedOrgId) return;
+    setLoading(true);
 
     fetch(`http://localhost:8000/api/organizations/${selectedOrgId}/workspaces`)
       .then((res) => res.json())
@@ -68,8 +77,14 @@ export default function WorkspacePage() {
 
     fetch(`http://localhost:8000/api/meetings?organization_id=${selectedOrgId}`)
       .then((res) => res.json())
-      .then((data) => setMeetings(data.items || []))
-      .catch((err) => console.error(err));
+      .then((data) => {
+        setMeetings(data.items || []);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setLoading(false);
+      });
 
     fetch(`http://localhost:8000/api/organizations/${selectedOrgId}/decisions`)
       .then((res) => res.json())
@@ -104,308 +119,401 @@ export default function WorkspacePage() {
           ...prev,
           { role: 'assistant', content: data.answer, citations: data.citations || [] }
         ]);
+      } else {
+        throw new Error('Chat request failed');
       }
     } catch (err) {
       setChatMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: 'Failed to retrieve cross-meeting intelligence.', citations: [] }
+        {
+          role: 'assistant',
+          content: 'Unable to retrieve answer across organization meetings. Verify backend status.',
+          citations: []
+        }
       ]);
     } finally {
       setChatLoading(false);
     }
   };
 
+  const formatDuration = (seconds?: number) => {
+    if (!seconds) return '0:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const filteredMeetings = meetings.filter((m) => {
+    const matchesSearch =
+      !searchFilter ||
+      m.title?.toLowerCase().includes(searchFilter.toLowerCase()) ||
+      m.description?.toLowerCase().includes(searchFilter.toLowerCase());
+    const matchesStatus = statusFilter === 'ALL' || m.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
   return (
-    <div className="flex h-screen bg-slate-900 text-slate-100 overflow-hidden">
-      {/* Sidebar */}
-      <aside className="w-64 border-r border-slate-800 bg-slate-950/70 p-4 flex flex-col justify-between">
-        <div>
-          <Link href="/" className="flex items-center gap-3 px-2 py-3 mb-6">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-500 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/30">
-              M
-            </div>
-            <div>
-              <span className="font-bold text-lg tracking-tight text-white">MeetMind</span>
-              <span className="block text-xs text-indigo-400 font-medium">Organizational Memory</span>
-            </div>
-          </Link>
-
-          <nav className="space-y-1">
-            <button
-              onClick={() => setActiveTab('meetings')}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${
-                activeTab === 'meetings' ? 'bg-indigo-600/20 text-indigo-400' : 'text-slate-400 hover:text-white hover:bg-slate-900'
-              }`}
-            >
-              <Layers className="h-4 w-4" />
-              <span>Meeting Library</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('chat')}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${
-                activeTab === 'chat' ? 'bg-indigo-600/20 text-indigo-400' : 'text-slate-400 hover:text-white hover:bg-slate-900'
-              }`}
-            >
-              <MessageSquare className="h-4 w-4" />
-              <span>Cross-Meeting Chat</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('decisions')}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${
-                activeTab === 'decisions' ? 'bg-indigo-600/20 text-indigo-400' : 'text-slate-400 hover:text-white hover:bg-slate-900'
-              }`}
-            >
-              <CheckCircle2 className="h-4 w-4" />
-              <span>Decisions Timeline</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('actions')}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${
-                activeTab === 'actions' ? 'bg-indigo-600/20 text-indigo-400' : 'text-slate-400 hover:text-white hover:bg-slate-900'
-              }`}
-            >
-              <ListTodo className="h-4 w-4" />
-              <span>All Action Items</span>
-            </button>
-
-            <Link
-              href="/speakers"
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition text-slate-400 hover:text-white hover:bg-slate-900"
-            >
-              <Users className="h-4 w-4 text-indigo-400" />
-              <span>Speaker Directory</span>
-            </Link>
-          </nav>
-        </div>
-
-        {/* Organization Switcher */}
-        <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs space-y-2">
-          <div className="flex items-center gap-2 text-slate-400">
-            <Building className="h-3.5 w-3.5" />
-            <span>Active Organization</span>
+    <AppShell
+      title="Meetings Library & Organizational Memory"
+      subtitle="Searchable archive, historical decision register, and cross-meeting intelligence"
+      activeOrgId={selectedOrgId}
+      onOrgChange={setSelectedOrgId}
+      organizations={organizations}
+    >
+      <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-6">
+        {/* Navigation Tabs Bar */}
+        <div className="border-b border-slate-800 pb-3 flex items-center justify-between flex-wrap gap-3">
+          <div className="flex gap-1.5 p-1 bg-slate-900/80 rounded-xl border border-slate-800">
+            {[
+              { id: 'meetings', label: 'All Meetings', icon: Layers, badge: meetings.length },
+              { id: 'chat', label: 'Cross-Meeting Chat', icon: MessageSquare },
+              { id: 'decisions', label: 'Decisions Register', icon: CheckCircle2, badge: orgDecisions.length },
+              { id: 'actions', label: 'Action Items', icon: ListTodo, badge: orgActions.length },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              const active = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-medium flex items-center gap-2 transition ${
+                    active
+                      ? 'bg-indigo-600 text-white shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                  }`}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  <span>{tab.label}</span>
+                  {tab.badge !== undefined && tab.badge > 0 && (
+                    <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-semibold ${
+                      active ? 'bg-indigo-800 text-indigo-100' : 'bg-slate-800 text-slate-300'
+                    }`}>
+                      {tab.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
-          <select
-            value={selectedOrgId}
-            onChange={(e) => setSelectedOrgId(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-white text-xs focus:outline-none focus:border-indigo-500"
-          >
-            {organizations.map((org) => (
-              <option key={org.id} value={org.id}>{org.name}</option>
-            ))}
-          </select>
         </div>
-      </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Header */}
-        <header className="h-16 border-b border-slate-800 px-8 flex items-center justify-between bg-slate-950/40 backdrop-blur">
-          <h1 className="text-lg font-semibold text-white">
-            {activeTab === 'meetings' && 'Meeting Archive'}
-            {activeTab === 'chat' && 'Cross-Meeting Organizational Chat'}
-            {activeTab === 'decisions' && 'Historical Decisions Register'}
-            {activeTab === 'actions' && 'Organization Action Items'}
-          </h1>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-medium shadow-md shadow-indigo-600/30 transition"
-          >
-            <Video className="h-4 w-4" />
-            <span>Ingest Meeting</span>
-          </button>
-        </header>
+        {/* TAB 1: ALL MEETINGS */}
+        {activeTab === 'meetings' && (
+          <div className="space-y-4">
+            {/* Search and Filters Bar */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
+                <input
+                  type="text"
+                  value={searchFilter}
+                  onChange={(e) => setSearchFilter(e.target.value)}
+                  placeholder="Search meetings by title or description..."
+                  className="w-full pl-9 pr-3 py-2 bg-[#0f172a] border border-slate-800 rounded-lg text-xs text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
 
-        {/* Content Body */}
-        <div className="flex-1 overflow-y-auto p-8">
-          {/* TAB 1: MEETINGS LIST */}
-          {activeTab === 'meetings' && (
-            <div className="space-y-4 max-w-5xl">
-              {meetings.length === 0 ? (
-                <div className="p-12 text-center rounded-2xl border border-dashed border-slate-800 bg-slate-950/30">
-                  <Video className="h-8 w-8 text-slate-500 mx-auto mb-3" />
-                  <p className="text-sm text-slate-300 font-medium">No meetings found in this organization.</p>
-                  <p className="text-xs text-slate-500 mt-1">Upload an audio/video recording or import a URL to start.</p>
-                  <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium rounded-lg transition"
-                  >
-                    Ingest First Meeting
-                  </button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {meetings.map((m) => (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-400 font-medium">Status:</span>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="bg-[#0f172a] border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                >
+                  <option value="ALL">All Statuses</option>
+                  <option value="COMPLETED">Completed</option>
+                  <option value="TRANSCRIBING">Transcribing</option>
+                  <option value="DIARIZING">Diarizing</option>
+                  <option value="GENERATING_SUMMARY">Generating Summary</option>
+                  <option value="FAILED">Failed</option>
+                </select>
+              </div>
+            </div>
+
+            {loading ? (
+              <div className="p-12 text-center rounded-xl border border-slate-800 bg-[#0f172a]">
+                <p className="text-xs text-slate-400">Loading meetings...</p>
+              </div>
+            ) : filteredMeetings.length === 0 ? (
+              <div className="p-12 text-center rounded-xl border border-dashed border-slate-800 bg-[#0f172a]/40 space-y-3">
+                <Video className="h-8 w-8 text-slate-400 mx-auto" />
+                <p className="text-sm font-semibold text-white">No matching meetings found</p>
+                <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                  {searchFilter || statusFilter !== 'ALL'
+                    ? 'Try adjusting your search query or status filter.'
+                    : 'Get started by uploading an audio/video recording or importing a YouTube URL.'}
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredMeetings.map((m) => {
+                  const isCompleted = m.status === 'COMPLETED';
+                  const isFailed = m.status === 'FAILED';
+                  const isYouTube = m.source_type === 'YOUTUBE';
+
+                  return (
                     <Link
                       key={m.id}
                       href={`/meetings/${m.id}`}
-                      className="p-5 rounded-xl bg-slate-950/50 border border-slate-800 hover:border-indigo-500/50 hover:bg-slate-900/60 transition group flex flex-col justify-between"
+                      className="p-5 rounded-xl bg-[#0f172a] border border-slate-800 hover:border-indigo-500/50 hover:bg-slate-900/60 transition group flex flex-col justify-between"
                     >
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-[10px] uppercase font-semibold tracking-wider text-slate-500">
-                            {m.source_type}
+                      <div className="space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-semibold uppercase font-mono bg-slate-900 text-slate-300 border border-slate-800">
+                            {isYouTube ? (
+                              <>
+                                <Tv className="h-3 w-3 text-red-400" />
+                                <span>YouTube</span>
+                              </>
+                            ) : (
+                              <>
+                                <Video className="h-3 w-3 text-indigo-400" />
+                                <span>Local Video</span>
+                              </>
+                            )}
                           </span>
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-400">
+
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold border ${
+                              isCompleted
+                                ? 'bg-emerald-950/60 text-emerald-400 border-emerald-800/40'
+                                : isFailed
+                                ? 'bg-rose-950/60 text-rose-400 border-rose-800/40'
+                                : 'bg-indigo-950/60 text-indigo-300 border-indigo-800/40 animate-pulse'
+                            }`}
+                          >
                             {m.status}
                           </span>
                         </div>
-                        <h3 className="font-semibold text-sm text-white group-hover:text-indigo-300 transition">
-                          {m.title}
-                        </h3>
-                        <p className="text-xs text-slate-400 mt-1 line-clamp-2">
-                          {m.description || 'AI-processed transcript, chronological explanation, decisions, and action items.'}
-                        </p>
+
+                        <div>
+                          <h3 className="font-semibold text-sm text-white group-hover:text-indigo-300 transition line-clamp-1">
+                            {m.title}
+                          </h3>
+                          <p className="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                            {m.description || 'Spoken dialogue transcribed and attributed with local Faster-Whisper and Nemotron-3.'}
+                          </p>
+                        </div>
                       </div>
 
-                      <div className="flex items-center justify-between pt-4 mt-4 border-t border-slate-900 text-xs text-slate-500">
-                        <span>{new Date(m.created_at).toLocaleDateString()}</span>
-                        <span className="flex items-center gap-1 text-indigo-400 font-medium group-hover:translate-x-1 transition">
+                      <div className="pt-4 mt-4 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+                        <div className="flex items-center gap-2">
+                          <span>{new Date(m.created_at).toLocaleDateString()}</span>
+                          {m.duration_seconds && (
+                            <>
+                              <span>•</span>
+                              <span>{formatDuration(m.duration_seconds)}</span>
+                            </>
+                          )}
+                        </div>
+
+                        <span className="text-indigo-400 font-sans font-medium flex items-center gap-1 group-hover:translate-x-0.5 transition">
                           <span>Open</span>
                           <ChevronRight className="h-3.5 w-3.5" />
                         </span>
                       </div>
                     </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* TAB 2: CROSS-MEETING CHAT */}
-          {activeTab === 'chat' && (
-            <div className="max-w-4xl flex flex-col h-[600px] bg-slate-950/60 border border-slate-800 rounded-2xl overflow-hidden">
-              <div className="p-4 border-b border-slate-800 bg-slate-950 flex items-center justify-between">
-                <span className="text-xs font-semibold text-white flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-indigo-400" />
-                  <span>Synthesizing Answers Across All Organization Meetings</span>
-                </span>
-                <span className="text-[11px] text-slate-500">
-                  {meetings.length} Meetings in Scope
-                </span>
+                  );
+                })}
               </div>
+            )}
+          </div>
+        )}
 
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {chatMessages.map((msg, idx) => (
-                  <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-xl p-4 rounded-2xl text-xs leading-relaxed ${
-                      msg.role === 'user'
-                        ? 'bg-indigo-600 text-white rounded-br-none'
-                        : 'bg-slate-900 text-slate-200 border border-slate-800 rounded-bl-none'
-                    }`}>
-                      <p>{msg.content}</p>
+        {/* TAB 2: CROSS-MEETING CHAT */}
+        {activeTab === 'chat' && (
+          <div className="max-w-4xl mx-auto flex flex-col h-[650px] bg-[#0f172a] border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+            <div className="px-5 py-3.5 border-b border-slate-800 bg-slate-900/60 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs font-semibold text-white">
+                <Sparkles className="h-4 w-4 text-indigo-400" />
+                <span>Multi-Meeting Synthesizer</span>
+              </div>
+              <span className="text-[11px] font-mono text-slate-400">
+                {meetings.length} meetings in organizational scope
+              </span>
+            </div>
+
+            {/* Messages Scroll Area */}
+            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+              {chatMessages.map((msg, idx) => {
+                const isUser = msg.role === 'user';
+                return (
+                  <div key={idx} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+                    <div
+                      className={`max-w-2xl p-4 rounded-2xl text-xs leading-relaxed ${
+                        isUser
+                          ? 'bg-indigo-600 text-white rounded-br-none'
+                          : 'bg-slate-900 text-slate-200 border border-slate-800 rounded-bl-none'
+                      }`}
+                    >
+                      <p className="whitespace-pre-wrap">{msg.content}</p>
+
+                      {/* Evidence Citations */}
                       {msg.citations && msg.citations.length > 0 && (
-                        <div className="mt-3 pt-2.5 border-t border-slate-800 space-y-1.5">
-                          <span className="text-[10px] text-slate-400 font-semibold uppercase">Source Meeting Evidence:</span>
-                          {msg.citations.map((c: any, ci: number) => (
-                            <Link
-                              key={ci}
-                              href={`/meetings/${c.meeting_id}`}
-                              className="block p-2 rounded bg-slate-950/60 border border-slate-800/80 hover:border-slate-700 transition"
-                            >
-                              <div className="flex items-center justify-between text-[11px] text-indigo-400 font-medium">
-                                <span>{c.meeting_title || 'Meeting'}</span>
-                                <span className="font-mono text-slate-500">
-                                  [{Math.floor((c.timestamp_start || 0) / 60)}:{((c.timestamp_start || 0) % 60).toString().padStart(2, '0')}]
-                                </span>
-                              </div>
-                              <p className="text-[11px] text-slate-300 italic mt-0.5">"{c.quote}"</p>
-                            </Link>
-                          ))}
+                        <div className="mt-3.5 pt-3 border-t border-slate-800/80 space-y-2">
+                          <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block font-semibold">
+                            Verifiable Meeting Citations:
+                          </span>
+                          <div className="space-y-1.5">
+                            {msg.citations.map((c: any, ci: number) => (
+                              <Link
+                                key={ci}
+                                href={`/meetings/${c.meeting_id}`}
+                                className="block p-2.5 rounded-lg bg-slate-950/60 border border-slate-800/80 hover:border-indigo-500/40 hover:bg-slate-900/40 transition group"
+                              >
+                                <div className="flex items-center justify-between text-[11px] text-indigo-400 font-medium">
+                                  <span className="group-hover:underline truncate max-w-sm">
+                                    {c.meeting_title || 'Meeting'}
+                                  </span>
+                                  <span className="font-mono text-slate-400">
+                                    [{formatDuration(c.timestamp_start)}]
+                                  </span>
+                                </div>
+                                <p className="text-[11px] text-slate-300 italic mt-1 line-clamp-2">
+                                  "{c.quote}"
+                                </p>
+                              </Link>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>
                   </div>
-                ))}
-                {chatLoading && (
-                  <div className="p-3 bg-slate-900 text-slate-400 rounded-xl text-xs animate-pulse max-w-xs">
-                    Searching across organization meetings...
-                  </div>
-                )}
-              </div>
+                );
+              })}
 
-              <form onSubmit={handleOrgChatSubmit} className="p-3 border-t border-slate-800 bg-slate-950 flex gap-2">
-                <input
-                  type="text"
-                  value={chatQuery}
-                  onChange={(e) => setChatQuery(e.target.value)}
-                  placeholder="Ask across all meetings (e.g., What did we decide about cloud migration?)..."
-                  className="flex-1 px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
-                />
-                <button
-                  type="submit"
-                  disabled={chatLoading || !chatQuery.trim()}
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-lg text-xs font-medium transition"
-                >
-                  Send
-                </button>
-              </form>
+              {chatLoading && (
+                <div className="p-3.5 bg-slate-900 border border-slate-800 text-slate-400 rounded-xl text-xs flex items-center gap-2.5 max-w-xs animate-pulse">
+                  <Loader2 className="h-4 w-4 animate-spin text-indigo-400" />
+                  <span>Synthesizing answers across meetings...</span>
+                </div>
+              )}
             </div>
-          )}
 
-          {/* TAB 3: DECISIONS TIMELINE */}
-          {activeTab === 'decisions' && (
-            <div className="space-y-4 max-w-4xl">
-              {orgDecisions.map((dec) => (
-                <div key={dec.id} className="p-5 rounded-xl bg-slate-950/50 border border-slate-800 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="font-semibold text-sm text-white">{dec.title}</span>
-                      <span className="block text-xs text-slate-500">
-                        Origin: {dec.meeting_title} ({dec.meeting_date ? new Date(dec.meeting_date).toLocaleDateString() : 'Recent'})
+            {/* Chat Input */}
+            <form onSubmit={handleOrgChatSubmit} className="p-3.5 border-t border-slate-800 bg-slate-900/60 flex gap-2">
+              <input
+                type="text"
+                value={chatQuery}
+                onChange={(e) => setChatQuery(e.target.value)}
+                placeholder="Ask any question across all authorized meetings (e.g., What did we decide about cloud migration?)..."
+                className="flex-1 px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500"
+              />
+              <button
+                type="submit"
+                disabled={chatLoading || !chatQuery.trim()}
+                className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-xl text-xs font-semibold shadow-sm transition flex items-center gap-1.5"
+              >
+                <Send className="h-3.5 w-3.5" />
+                <span>Ask</span>
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* TAB 3: DECISIONS REGISTER */}
+        {activeTab === 'decisions' && (
+          <div className="space-y-3 max-w-4xl mx-auto">
+            <div className="p-4 rounded-xl bg-[#0f172a] border border-slate-800 flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-semibold text-white">Historical Decisions Register</h3>
+                <p className="text-xs text-slate-400">Chronological record of approved technical and product decisions</p>
+              </div>
+              <span className="text-xs font-mono px-2.5 py-1 rounded bg-slate-900 text-slate-300 border border-slate-800">
+                {orgDecisions.length} recorded
+              </span>
+            </div>
+
+            {orgDecisions.length === 0 ? (
+              <div className="p-12 text-center rounded-xl border border-dashed border-slate-800 bg-[#0f172a]/40 text-xs text-slate-400">
+                No decisions recorded in this organization yet.
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {orgDecisions.map((dec) => (
+                  <div key={dec.id} className="p-5 rounded-xl bg-[#0f172a] border border-slate-800 space-y-2">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="space-y-0.5">
+                        <span className="font-semibold text-sm text-white">{dec.title}</span>
+                        <div className="flex items-center gap-2 text-xs text-slate-400 font-mono">
+                          <span>Origin:</span>
+                          <Link
+                            href={`/meetings/${dec.meeting_id}`}
+                            className="text-indigo-400 hover:underline font-sans"
+                          >
+                            {dec.meeting_title || 'Meeting'}
+                          </Link>
+                          <span>•</span>
+                          <span>{dec.meeting_date ? new Date(dec.meeting_date).toLocaleDateString() : 'Recent'}</span>
+                        </div>
+                      </div>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-emerald-950/60 text-emerald-400 border border-emerald-800/40">
+                        {dec.status || 'APPROVED'}
                       </span>
                     </div>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/20 text-emerald-400">
-                      {dec.status}
+                    <p className="text-xs text-slate-300 leading-relaxed font-sans">{dec.decision_text}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 4: ACTION ITEMS */}
+        {activeTab === 'actions' && (
+          <div className="space-y-3 max-w-4xl mx-auto">
+            <div className="p-4 rounded-xl bg-[#0f172a] border border-slate-800 flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-semibold text-white">Organization Action Items</h3>
+                <p className="text-xs text-slate-400">Comprehensive task tracking across all team meetings</p>
+              </div>
+              <span className="text-xs font-mono px-2.5 py-1 rounded bg-slate-900 text-slate-300 border border-slate-800">
+                {orgActions.length} recorded
+              </span>
+            </div>
+
+            {orgActions.length === 0 ? (
+              <div className="p-12 text-center rounded-xl border border-dashed border-slate-800 bg-[#0f172a]/40 text-xs text-slate-400">
+                No action items recorded in this organization yet.
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {orgActions.map((item) => (
+                  <div
+                    key={item.id}
+                    className="p-4 rounded-xl bg-[#0f172a] border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  >
+                    <div className="space-y-1">
+                      <span className="text-xs font-semibold text-white block">{item.task_description}</span>
+                      <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
+                        <span className="text-slate-300">Owner: {item.owner_name || 'Unassigned'}</span>
+                        <span>•</span>
+                        <span>Meeting:</span>
+                        <Link
+                          href={`/meetings/${item.meeting_id}`}
+                          className="text-indigo-400 hover:underline"
+                        >
+                          {item.meeting_title || 'Meeting'}
+                        </Link>
+                        {item.due_date && (
+                          <>
+                            <span>•</span>
+                            <span className="font-mono text-slate-400">Due: {item.due_date}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-indigo-950/60 text-indigo-300 border border-indigo-800/40 self-start sm:self-center">
+                      {item.status || 'PENDING'}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-300">{dec.decision_text}</p>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* TAB 4: ACTION ITEMS */}
-          {activeTab === 'actions' && (
-            <div className="space-y-3 max-w-4xl">
-              {orgActions.map((item) => (
-                <div key={item.id} className="p-4 rounded-xl bg-slate-950/50 border border-slate-800 flex items-center justify-between">
-                  <div>
-                    <span className="text-sm font-medium text-slate-200">{item.task_description}</span>
-                    <span className="block text-xs text-slate-500 mt-1">
-                      Meeting: {item.meeting_title} • Owner: {item.owner_name || 'Unassigned'}
-                    </span>
-                  </div>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-500/20 text-indigo-300">
-                    {item.status}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </main>
-
-      {/* Ingestion Modal */}
-      <IngestModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        organizationId={selectedOrgId}
-        workspaceId={selectedWorkspaceId || selectedOrgId}
-        onSuccess={(createdMeeting: any) => {
-          setIsModalOpen(false);
-          if (createdMeeting?.id) {
-            router.push(`/meetings/${createdMeeting.id}`);
-          } else {
-            fetch(`http://localhost:8000/api/meetings?organization_id=${selectedOrgId}`)
-              .then((res) => res.json())
-              .then((data) => setMeetings(data.items || []));
-          }
-        }}
-      />
-    </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </AppShell>
   );
 }
-

@@ -477,11 +477,11 @@ export default function MeetingDetailPage() {
   });
 
   return (
-    <div className="flex h-screen bg-slate-900 text-slate-100 overflow-hidden font-sans">
-      <div className="flex-1 flex flex-col min-w-0 bg-slate-950 overflow-y-auto">
+    <div className="flex h-screen bg-[#090d16] text-slate-100 overflow-hidden font-sans">
+      <div className="flex-1 flex flex-col min-w-0 bg-[#090d16] overflow-y-auto">
 
         {/* TOP HEADER */}
-        <header className="h-16 border-b border-slate-800 bg-slate-900/80 px-6 flex items-center justify-between sticky top-0 z-20 backdrop-blur">
+        <header className="h-16 border-b border-slate-800 bg-[#0d121f]/90 px-6 flex items-center justify-between sticky top-0 z-20 backdrop-blur">
           <div className="flex items-center gap-3 min-w-0">
             <Link
               href="/workspace"
@@ -603,7 +603,7 @@ export default function MeetingDetailPage() {
         )}
 
         {/* REDESIGNED MEDIA AREA */}
-        <section className="bg-slate-950 border-b border-slate-800/80 p-6 flex flex-col items-center">
+        <section className="bg-[#0b101d] border-b border-slate-800/80 p-6 flex flex-col items-center">
           <div className="w-full max-w-4xl space-y-4">
 
             {/* 1. LOCAL VIDEO OR YOUTUBE WITH REAL VIDEO FRAMES */}
@@ -920,7 +920,7 @@ export default function MeetingDetailPage() {
         </section>
 
         {/* RESPONSIVE NAVIGATION TABS BAR (NO UGLY HORIZONTAL SCROLLBAR) */}
-        <div className="border-b border-slate-800 bg-slate-950 px-6 py-2 sticky top-16 z-10 backdrop-blur">
+        <div className="border-b border-slate-800 bg-[#0d121f] px-6 py-2 sticky top-16 z-10 backdrop-blur">
           <div className="flex gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-1">
             {[
               { id: 'transcript', label: '1. Full Transcript', icon: FileText },

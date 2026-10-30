@@ -176,3 +176,4 @@ with open(r"d:\MeetRoom\player_ui_test_summary.json", "w") as f:
         "console_errors": [c for c in console_logs if "[error]" in c],
         "page_errors": page_errors
     }, f, indent=2)
+
