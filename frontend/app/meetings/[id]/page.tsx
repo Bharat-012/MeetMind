@@ -37,7 +37,11 @@ import {
   Maximize,
   RefreshCw,
   Music,
-  Tv
+  Tv,
+  Send,
+  Square,
+  Bot,
+  Loader2
 } from 'lucide-react';
 
 export default function MeetingDetailPage() {
@@ -90,11 +94,16 @@ export default function MeetingDetailPage() {
     {
       role: 'assistant',
       content: 'Hello! I am MeetMind Assistant. You can ask me any question about this meeting with timestamped citations.',
-      citations: []
+      citations: [],
+      model_name: 'ollama:llama3.2'
     }
   ]);
   const [chatQuery, setChatQuery] = useState<string>('');
   const [chatLoading, setChatLoading] = useState<boolean>(false);
+  const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
+  const [activeModelName, setActiveModelName] = useState<string>('ollama:llama3.2');
+  const [isStreaming, setIsStreaming] = useState<boolean>(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Filters
   const [transcriptSearch, setTranscriptSearch] = useState<string>('');
@@ -135,6 +144,16 @@ export default function MeetingDetailPage() {
           setDuration(Math.round(mInfo.duration_seconds));
         }
       }
+
+      // Fetch suggested questions for meeting
+      fetch(`http://localhost:8000/api/chat/suggested-questions?meeting_id=${meetingId}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data?.questions && data.questions.length > 0) {
+            setSuggestedQuestions(data.questions);
+          }
+        })
+        .catch(() => {});
 
       // Fetch organization speaker directory profiles
       if (meetingObj?.organization_id) {
@@ -401,41 +420,202 @@ export default function MeetingDetailPage() {
     }
   };
 
-  const handleChatSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!chatQuery.trim()) return;
+  const submitQuery = async (queryText: string) => {
+    if (!queryText.trim() || chatLoading || isStreaming) return;
 
-    const userText = chatQuery;
+    const userText = queryText.trim();
     setChatQuery('');
-    setChatMessages((prev) => [...prev, { role: 'user', content: userText }]);
     setChatLoading(true);
+    setIsStreaming(true);
+
+    // Append user message immediately
+    setChatMessages((prev) => [
+      ...prev,
+      { role: 'user', content: userText },
+      {
+        role: 'assistant',
+        content: '',
+        citations: [],
+        model_name: activeModelName,
+        isStreaming: true
+      }
+    ]);
+
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
 
     try {
-      const res = await fetch('http://localhost:8000/api/chat', {
+      const res = await fetch('http://localhost:8000/api/chat/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           query: userText,
           meeting_id: meetingId,
           scope: 'SINGLE_MEETING'
-        })
+        }),
+        signal: abortController.signal
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        setChatMessages((prev) => [
-          ...prev,
-          { role: 'assistant', content: data.answer, citations: data.citations || [] }
-        ]);
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
       }
-    } catch (err) {
-      setChatMessages((prev) => [
-        ...prev,
-        { role: 'assistant', content: 'Could not connect to meeting intelligence engine.', citations: [] }
-      ]);
+
+      if (!res.body) {
+        throw new Error('No readable stream');
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let accumulatedText = '';
+      let buffer = '';
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const jsonStr = line.slice(6).trim();
+            if (!jsonStr) continue;
+            try {
+              const event = JSON.parse(jsonStr);
+              if (event.type === 'start') {
+                if (event.model_name) {
+                  setActiveModelName(event.model_name);
+                }
+              } else if (event.type === 'token') {
+                accumulatedText += event.content;
+                setChatMessages((prev) => {
+                  const updated = [...prev];
+                  const lastIdx = updated.length - 1;
+                  if (lastIdx >= 0 && updated[lastIdx].role === 'assistant') {
+                    updated[lastIdx] = {
+                      ...updated[lastIdx],
+                      content: accumulatedText,
+                      isStreaming: true
+                    };
+                  }
+                  return updated;
+                });
+              } else if (event.type === 'done') {
+                setChatMessages((prev) => {
+                  const updated = [...prev];
+                  const lastIdx = updated.length - 1;
+                  if (lastIdx >= 0 && updated[lastIdx].role === 'assistant') {
+                    updated[lastIdx] = {
+                      ...updated[lastIdx],
+                      content: event.answer || accumulatedText,
+                      citations: event.citations || [],
+                      model_name: event.model_name || activeModelName,
+                      isStreaming: false
+                    };
+                  }
+                  return updated;
+                });
+                if (event.model_name) {
+                  setActiveModelName(event.model_name);
+                }
+              }
+            } catch (pErr) {}
+          }
+        }
+      }
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        setChatMessages((prev) => {
+          const updated = [...prev];
+          const lastIdx = updated.length - 1;
+          if (lastIdx >= 0 && updated[lastIdx].role === 'assistant') {
+            updated[lastIdx] = {
+              ...updated[lastIdx],
+              content: updated[lastIdx].content + ' [Generation stopped by user]',
+              isStreaming: false
+            };
+          }
+          return updated;
+        });
+      } else {
+        // Fallback to standard chat endpoint if stream is unavailable
+        try {
+          const fallbackRes = await fetch('http://localhost:8000/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              query: userText,
+              meeting_id: meetingId,
+              scope: 'SINGLE_MEETING'
+            })
+          });
+          if (fallbackRes.ok) {
+            const data = await fallbackRes.json();
+            setChatMessages((prev) => {
+              const updated = [...prev];
+              const lastIdx = updated.length - 1;
+              if (lastIdx >= 0 && updated[lastIdx].role === 'assistant') {
+                updated[lastIdx] = {
+                  role: 'assistant',
+                  content: data.answer,
+                  citations: data.citations || [],
+                  model_name: data.model_name || 'ollama:llama3.2',
+                  isStreaming: false
+                };
+              }
+              return updated;
+            });
+            if (data.model_name) setActiveModelName(data.model_name);
+            return;
+          }
+        } catch (fbErr) {}
+
+        setChatMessages((prev) => {
+          const updated = [...prev];
+          const lastIdx = updated.length - 1;
+          if (lastIdx >= 0 && updated[lastIdx].role === 'assistant') {
+            updated[lastIdx] = {
+              role: 'assistant',
+              content: 'Could not connect to meeting intelligence engine.',
+              citations: [],
+              isStreaming: false
+            };
+          }
+          return updated;
+        });
+      }
     } finally {
       setChatLoading(false);
+      setIsStreaming(false);
+      abortControllerRef.current = null;
     }
+  };
+
+  const handleChatSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    submitQuery(chatQuery);
+  };
+
+  const handleSuggestedQuestionClick = (q: string) => {
+    submitQuery(q);
+  };
+
+  const handleCancelStream = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+  };
+
+  const handleClearChat = () => {
+    setChatMessages([
+      {
+        role: 'assistant',
+        content: 'Hello! I am MeetMind Assistant. You can ask me any question about this meeting with timestamped citations.',
+        citations: [],
+        model_name: activeModelName
+      }
+    ]);
   };
 
   // Status mapping
@@ -1504,73 +1684,175 @@ export default function MeetingDetailPage() {
 
           {/* TAB 7: CHAT */}
           {activeTab === 'chat' && (
-            <div className="max-w-3xl mx-auto flex flex-col h-[600px] bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden">
-              <div className="flex-1 p-4 overflow-y-auto space-y-4">
-                {chatMessages.map((msg, i) => (
-                  <div
-                    key={i}
-                    className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
-                  >
-                    <div
-                      className={`max-w-[80%] rounded-2xl p-4 text-xs leading-relaxed ${
-                        msg.role === 'user'
-                          ? 'bg-indigo-600 text-white rounded-br-none'
-                          : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-bl-none'
-                      }`}
-                    >
-                      <p>{msg.content}</p>
-
-                      {msg.citations && msg.citations.length > 0 && (
-                        <div className="mt-3 pt-3 border-t border-slate-800 space-y-1.5">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400 block">
-                            Evidence Citations
-                          </span>
-                          {msg.citations.map((c: any, ci: number) => (
-                            <div
-                              key={ci}
-                              onClick={() => {
-                                const ts = c.timestamp_start !== undefined && c.timestamp_start !== null ? c.timestamp_start : c.timestamp;
-                                if (ts !== undefined && ts !== null) seekTo(ts);
-                              }}
-                              className="text-[11px] text-slate-400 bg-slate-950 p-2 rounded border border-slate-800/80 cursor-pointer hover:border-indigo-500/50 transition flex items-center justify-between"
-                            >
-                              <span>{c.speaker_name || c.speaker_label || 'Evidence'}: "{c.quote}"</span>
-                              {(c.timestamp_start !== null && c.timestamp_start !== undefined) ? (
-                                <span className="font-mono text-indigo-400 ml-2">
-                                  [{formatTime(c.timestamp_start)}]
-                                </span>
-                              ) : (c.timestamp !== null && c.timestamp !== undefined ? (
-                                <span className="font-mono text-indigo-400 ml-2">
-                                  [{formatTime(c.timestamp)}]
-                                </span>
-                              ) : null)}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+            <div className="max-w-4xl mx-auto flex flex-col h-[680px] bg-[#0c1220] rounded-2xl border border-slate-800 shadow-2xl overflow-hidden">
+              {/* Chat Header Bar */}
+              <div className="px-5 py-3.5 border-b border-slate-800 bg-[#0f172a] flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                    <Sparkles className="h-4 w-4" />
                   </div>
-                ))}
-                {chatLoading && (
-                  <div className="text-xs text-slate-500 italic">Synthesizing grounded answer...</div>
+                  <div>
+                    <h3 className="text-xs font-semibold text-white flex items-center gap-2">
+                      <span>Meeting Conversational Intelligence</span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full border border-indigo-800/50 bg-indigo-950/60 text-indigo-300 flex items-center gap-1.5 font-normal">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <span>{activeModelName}</span>
+                      </span>
+                    </h3>
+                    <p className="text-[11px] text-slate-400">
+                      Grounded strictly in transcribed dialogue, verified decisions, and assigned action items.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleClearChat}
+                  className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white px-3 py-1.5 rounded-xl border border-slate-800 hover:border-slate-700 bg-slate-900/80 transition"
+                  title="Clear conversation and reset context"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  <span>New Chat</span>
+                </button>
+              </div>
+
+              {/* Suggested Questions Pills */}
+              {suggestedQuestions.length > 0 && (
+                <div className="px-5 py-2.5 border-b border-slate-800/80 bg-slate-900/40">
+                  <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+                    <span className="text-[10px] uppercase font-mono font-semibold tracking-wider text-slate-400 flex-shrink-0 flex items-center gap-1">
+                      <Sparkles className="h-2.5 w-2.5 text-indigo-400" />
+                      <span>Suggested:</span>
+                    </span>
+                    {suggestedQuestions.map((q, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => handleSuggestedQuestionClick(q)}
+                        disabled={chatLoading || isStreaming}
+                        className="text-[11px] text-indigo-300 hover:text-white bg-indigo-950/40 hover:bg-indigo-900/60 border border-indigo-800/40 hover:border-indigo-600/50 px-3 py-1 rounded-full whitespace-nowrap transition flex-shrink-0 disabled:opacity-50"
+                      >
+                        {q}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Messages Scroll Area */}
+              <div className="flex-1 overflow-y-auto p-5 space-y-4">
+                {chatMessages.map((msg, i) => {
+                  const isUser = msg.role === 'user';
+                  return (
+                    <div
+                      key={i}
+                      className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}
+                    >
+                      <div
+                        className={`max-w-[85%] rounded-2xl p-4 text-xs leading-relaxed ${
+                          isUser
+                            ? 'bg-indigo-600 text-white rounded-br-none shadow-md'
+                            : 'bg-slate-900/90 border border-slate-800 text-slate-200 rounded-bl-none shadow-sm'
+                        }`}
+                      >
+                        {/* Model tag for assistant */}
+                        {!isUser && msg.model_name && (
+                          <div className="flex items-center gap-1 text-[10px] font-mono text-slate-400 mb-2 pb-1.5 border-b border-slate-800/80">
+                            <Bot className="h-3 w-3 text-indigo-400" />
+                            <span>{msg.model_name}</span>
+                          </div>
+                        )}
+
+                        {/* Content text */}
+                        <div className="whitespace-pre-wrap leading-relaxed">
+                          {msg.content}
+                          {msg.isStreaming && (
+                            <span className="inline-block w-2 h-3.5 bg-indigo-400 ml-1 animate-pulse align-middle" />
+                          )}
+                        </div>
+
+                        {/* Evidence Citations */}
+                        {msg.citations && msg.citations.length > 0 && (
+                          <div className="mt-3.5 pt-3 border-t border-slate-800/90 space-y-2">
+                            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-indigo-400 block">
+                              Verifiable Evidence Citations (Click to Seek Media Player):
+                            </span>
+                            <div className="space-y-1.5">
+                              {msg.citations.map((c: any, ci: number) => {
+                                const ts = c.timestamp_start !== undefined && c.timestamp_start !== null ? c.timestamp_start : c.timestamp;
+                                return (
+                                  <button
+                                    key={ci}
+                                    type="button"
+                                    onClick={() => {
+                                      if (ts !== undefined && ts !== null) {
+                                        seekTo(ts);
+                                      }
+                                    }}
+                                    className="w-full text-left text-[11px] text-slate-300 bg-slate-950/80 hover:bg-indigo-950/30 p-2.5 rounded-xl border border-slate-800/80 hover:border-indigo-500/50 transition flex items-start justify-between gap-3 group"
+                                  >
+                                    <div className="min-w-0 flex-1">
+                                      <span className="font-semibold text-indigo-300">
+                                        {c.speaker_name || c.speaker_label || 'Speaker'}:
+                                      </span>{' '}
+                                      <span className="italic text-slate-300">"{c.quote}"</span>
+                                    </div>
+
+                                    {ts !== null && ts !== undefined && (
+                                      <span className="font-mono text-indigo-400 group-hover:text-indigo-300 flex-shrink-0 bg-indigo-950/90 border border-indigo-800/60 px-2 py-0.5 rounded text-[10px] flex items-center gap-1 shadow-sm">
+                                        <Play className="h-2.5 w-2.5 fill-indigo-400" />
+                                        <span>[{formatTime(ts)}]</span>
+                                      </span>
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {chatLoading && !isStreaming && (
+                  <div className="p-3 bg-slate-900 border border-slate-800 text-slate-400 rounded-xl text-xs flex items-center gap-2 max-w-xs animate-pulse">
+                    <Loader2 className="h-4 w-4 animate-spin text-indigo-400" />
+                    <span>Synthesizing grounded answer...</span>
+                  </div>
                 )}
               </div>
 
-              <form onSubmit={handleChatSubmit} className="p-3 border-t border-slate-800 bg-slate-900 flex gap-2">
+              {/* Chat Form */}
+              <form onSubmit={handleChatSubmit} className="p-3.5 border-t border-slate-800 bg-slate-900/60 flex items-center gap-2">
                 <input
                   type="text"
-                  placeholder="Ask a question about this meeting..."
+                  placeholder="Ask a question about this meeting (e.g. What were the key decisions?)..."
                   value={chatQuery}
                   onChange={(e) => setChatQuery(e.target.value)}
-                  className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                  disabled={isStreaming}
+                  className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 disabled:opacity-60"
                 />
-                <button
-                  type="submit"
-                  disabled={chatLoading}
-                  className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-4 py-2 rounded-xl font-medium transition"
-                >
-                  Ask
-                </button>
+
+                {isStreaming ? (
+                  <button
+                    type="button"
+                    onClick={handleCancelStream}
+                    className="bg-rose-600 hover:bg-rose-500 text-white text-xs px-4 py-2.5 rounded-xl font-medium transition flex items-center gap-1.5 shadow-sm"
+                  >
+                    <Square className="h-3.5 w-3.5 fill-white" />
+                    <span>Stop</span>
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={chatLoading || !chatQuery.trim()}
+                    className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs px-4 py-2.5 rounded-xl font-medium transition flex items-center gap-1.5 shadow-sm"
+                  >
+                    <Send className="h-3.5 w-3.5" />
+                    <span>Ask</span>
+                  </button>
+                )}
               </form>
             </div>
           )}

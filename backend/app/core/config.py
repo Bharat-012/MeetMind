@@ -47,8 +47,8 @@ class Settings(BaseSettings):
     OLLAMA_BASE_URL: str = "http://localhost:11434"
     OLLAMA_MODEL: str = "llama3.2"
 
-    EMBEDDING_PROVIDER: str = "mock"  # mock | sentence_transformers | openai
-    EMBEDDING_MODEL_NAME: str = "all-MiniLM-L6-v2"
+    EMBEDDING_PROVIDER: str = "sentence_transformers"  # sentence_transformers | mock
+    EMBEDDING_MODEL_NAME: str = "sentence-transformers/all-MiniLM-L6-v2"
 
     ENABLE_VOICE_EMOTION: bool = False
     VOICE_EMOTION_PROVIDER: str = "disabled"  # disabled | mock | speechbrain

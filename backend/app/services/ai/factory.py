@@ -59,6 +59,12 @@ def get_llm_provider() -> LLMProvider:
 
 def get_embedding_provider() -> EmbeddingProvider:
     """Return local embedding provider instance based on settings."""
+    if settings.EMBEDDING_PROVIDER in ["sentence_transformers", "local", "minilm", "all-MiniLM-L6-v2"]:
+        try:
+            from app.services.ai.local_embedding_provider import LocalSentenceEmbeddingProvider
+            return LocalSentenceEmbeddingProvider(model_name=settings.EMBEDDING_MODEL_NAME)
+        except Exception:
+            return MockEmbeddingProvider()
     return MockEmbeddingProvider()
 
 

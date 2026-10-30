@@ -19,6 +19,7 @@ class ChatQuestionRequest(BaseModel):
     meeting_id: Optional[str] = None  # None indicates organization-wide search
     organization_id: Optional[str] = None
     workspace_id: Optional[str] = None
+    conversation_id: Optional[str] = None
     scope: ChatScope = ChatScope.SINGLE_MEETING
     top_k: int = 5
 
@@ -28,7 +29,7 @@ class ChatMessageRead(BaseModel):
     conversation_id: str
     sender: MessageSender
     content: str
-    citations: List[dict]
+    citations: List[dict] = []
     created_at: datetime
     model_config = ConfigDict(from_attributes=True)
 
@@ -40,13 +41,32 @@ class ChatConversationRead(BaseModel):
     meeting_id: Optional[str] = None
     title: str
     scope: ChatScope
-    messages: List[ChatMessageRead]
+    messages: List[ChatMessageRead] = []
     created_at: datetime
     model_config = ConfigDict(from_attributes=True)
+
+
+class CreateConversationRequest(BaseModel):
+    title: Optional[str] = None
+    meeting_id: Optional[str] = None
+    organization_id: str
+    workspace_id: Optional[str] = None
+    scope: ChatScope = ChatScope.SINGLE_MEETING
+
+
+class SendMessageRequest(BaseModel):
+    content: str
+
+
+class SuggestedQuestionsResponse(BaseModel):
+    meeting_id: Optional[str] = None
+    organization_id: Optional[str] = None
+    questions: List[str]
 
 
 class GroundedAnswerResponse(BaseModel):
     answer: str
     citations: List[CitationRead]
     found_evidence: bool
-
+    model_name: Optional[str] = None
+    suggested_followups: Optional[List[str]] = None

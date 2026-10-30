@@ -80,3 +80,18 @@
   5. Enforce transparent model provenance: every intelligence artifact stores `model_name` (e.g. `ollama:llama3.2` or clearly labeled `local-rule-based-fallback (ollama offline)`).
   6. Ground single-meeting and organization chat with verifiable timestamp citations (`[mm:ss]`). If the transcript or memory does not answer a query, return an explicit "insufficient evidence" response (`found_evidence = False`) rather than guessing.
 - **Consequences**: Guaranteed factual grounding, complete traceability from summary/decision to exact spoken audio turn, zero ungrounded owner/deadline hallucinations, and transparent offline fallback behavior.
+
+
+---
+
+## ADR-010: Local Semantic Embeddings, Intent-Aware Hybrid Retrieval, and Streaming Conversational Intelligence
+- **Status**: Accepted
+- **Context**: In Phase 5, MeetMind introduces advanced single-meeting and organization-wide conversational intelligence. Users require rapid answers grounded in meeting history without transmitting audio or transcript vectors to cloud embedding APIs. Queries also vary widely in intent (e.g. asking specifically about decisions, action items, risks, or specific speakers), meaning naive cosine similarity over generic transcript chunks often misses structured intelligence artifacts.
+- **Decision**:
+  1. Implement `LocalSentenceEmbeddingProvider` using HuggingFace `transformers` and PyTorch with `sentence-transformers/all-MiniLM-L6-v2`, generating 384-dimensional dense semantic vectors locally with mean pooling and L2 normalization. Zero remote embedding APIs permitted.
+  2. Implement an Intent-Aware Hybrid Retriever that indexes transcript blocks alongside structured intelligence chunks (`summary`, `decision`, `action_item`, `risk_issue`, `open_questions`).
+  3. Classify query intent and apply hybrid scoring: combine dense cosine similarity, lexical keyword matching, chunk-type intent boost (+0.25), and speaker relevance boost (+0.20).
+  4. Provide contextual suggested questions derived from authentic meeting decisions, action items, and risks via `GET /api/chat/suggested-questions`.
+  5. Support Server-Sent Events (SSE) streaming via `POST /api/chat/stream` delivering real-time tokens, active model provenance tags, and final verifiable citations with clickable player seeking.
+  6. Support persistent chat conversation sessions (`ChatConversation`, `ChatMessage`) with strict multi-tenant isolation.
+- **Consequences**: Fast local retrieval (~50ms CPU inference), accurate intent routing boosting decisions/actions when requested, zero cloud dependencies, and fluid streaming user experience.

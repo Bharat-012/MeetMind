@@ -5,6 +5,44 @@ All notable changes to the MeetMind project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-10-30: Phase 5 — Advanced AI Meeting Chat & Knowledge Intelligence
+
+### Added
+- **Genuine Local Semantic Embedding Provider (`app/services/ai/local_embedding_provider.py`)**:
+  - Fully local CPU/CUDA dense embedding generation using HuggingFace `transformers` and PyTorch with `sentence-transformers/all-MiniLM-L6-v2`.
+  - Generates 384-dimensional L2-normalized vectors via mean pooling. Zero cloud embedding APIs.
+- **Intent-Aware Hybrid Retriever (`app/services/rag_service.py`)**:
+  - Indexes rich chunk types: `transcript_block`, `summary`, `decision`, `action_item`, `risk_issue`, `open_questions`.
+  - Intent classification (`decisions`, `action_items`, `blockers_risks`, `summary_overview`, `speaker_specific`).
+  - Hybrid scoring formula: dense cosine similarity + lexical keyword matching + intent chunk-type boost (+0.25) + speaker relevance boost (+0.20).
+- **Grounded Contextual Suggested Questions (`GET /api/chat/suggested-questions`)**:
+  - Dynamically derives realistic, grounded question chips from authentic meeting decisions, action items, risks, and attendee names.
+  - Supports both meeting-level and organization-wide scopes.
+- **Persistent Chat Sessions & Messages (`app/models/knowledge.py`, `app/api/chat.py`)**:
+  - `ChatConversation` and `ChatMessage` models with CRUD endpoints (`/api/chat/conversations`).
+  - Strict multi-tenant isolation enforcing organization ownership checks (HTTP 403 Forbidden on cross-tenant access).
+- **Real-Time SSE Streaming (`POST /api/chat/stream`)**:
+  - Streams Server-Sent Events (`data: {"type": "token", "content": "..."}`) for live typewriter rendering.
+  - Returns active model provenance badge (`ollama:llama3.2` or transparent offline `local-rule-based-fallback`).
+  - Delivers final verifiable evidence citations payload.
+- **Meeting Detail Chat UI Overhaul (`frontend/app/meetings/[id]/page.tsx` Tab 7)**:
+  - Redesigned chat container with active model indicator, "New Chat" session reset button, suggested question chips, streaming generation effect, user stop button, and verifiable citation cards.
+  - Interactive clickable timestamp pills (`[mm:ss]`): clicking seeks video/audio player directly (`seekTo(c.timestamp_start)`).
+- **Workspace Cross-Meeting Synthesizer UI Overhaul (`frontend/app/workspace/page.tsx` Tab 2)**:
+  - Cross-meeting chat with organizational suggested questions, multi-meeting citation pills linking to source meetings.
+
+### Verified
+- **Automated Backend Regression Test Suite**:
+  - 39 tests passing in 143.42s (100% pass rate) across all phases.
+- **Frontend Quality Assurance**:
+  - Clean TypeScript check: 0 errors (`npx tsc --noEmit`).
+  - Production build successful: 0 errors (`npm run build`).
+- **Browser End-to-End Automation via Playwright Chrome**:
+  - `test_phase5_browser.py`: Verified single-meeting chat, suggested questions, streaming answer, citation seek, reset, and multi-meeting organizational chat.
+  - 4 high-resolution screenshots captured: `64_meeting_chat_citations.png`, `65_meeting_chat_citation_seek.png`, `66_meeting_chat_reset.png`, `67_workspace_cross_meeting_chat.png`.
+
+---
+
 ## [0.4.8] - 2026-10-30: Complete UI/UX Redesign — Premium Modern Minimalist SaaS
 
 ### Added
