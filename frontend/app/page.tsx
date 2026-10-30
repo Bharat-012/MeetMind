@@ -52,15 +52,11 @@ export default function Dashboard() {
 
     Promise.all([
       fetch(`http://localhost:8000/api/meetings?organization_id=${selectedOrgId}`).then((r) => r.json()),
-      fetch(`http://localhost:8000/api/organizations/${selectedOrgId}/decisions`).then((r) => r.json()).catch(() => []),
       fetch(`http://localhost:8000/api/organizations/${selectedOrgId}/action-items`).then((r) => r.json()).catch(() => []),
-      fetch(`http://localhost:8000/api/organizations/${selectedOrgId}/speakers`).then((r) => r.json()).catch(() => []),
     ])
-      .then(([meetingsData, decisionsData, actionsData, speakersData]) => {
+      .then(([meetingsData, actionsData]) => {
         setMeetings(meetingsData.items || []);
-        setDecisions(decisionsData || []);
         setActions(actionsData || []);
-        setSpeakers(speakersData || []);
         setLoading(false);
       })
       .catch((err) => {
@@ -125,8 +121,8 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* 4 Pastel Metric Cards (Inspired by Reference Image Top Row) */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {/* 2 Metric Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Card 1: Total Meetings */}
           <div className="p-5 rounded-2xl bg-white border border-[#E9E4F2] shadow-soft-card space-y-3 hover:translate-y-[-2px] transition">
             <div className="flex items-center justify-between">
@@ -166,48 +162,6 @@ export default function Dashboard() {
             </div>
             <span className="text-[11px] font-medium text-[#77738A] block">
               Tracked deliverables
-            </span>
-          </div>
-
-          {/* Card 3: Decisions Logged */}
-          <div className="p-5 rounded-2xl bg-white border border-[#E9E4F2] shadow-soft-card space-y-3 hover:translate-y-[-2px] transition">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-[#77738A]">Decisions Logged</span>
-              <div className="h-8 w-8 rounded-xl bg-[#EAF3FD] border border-[#B9D9F8] flex items-center justify-center text-[#2463EB]">
-                <CheckCircle2 className="h-4 w-4" />
-              </div>
-            </div>
-            <div>
-              <p className="text-2xl md:text-3xl font-extrabold text-[#252238] tracking-tight">
-                {loading ? '—' : decisions.length}
-              </p>
-              <div className="w-full bg-[#FAF8FF] h-1.5 rounded-full mt-2.5 overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-[#2463EB] to-cyan-400 rounded-full" style={{ width: decisions.length > 0 ? '60%' : '0%' }} />
-              </div>
-            </div>
-            <span className="text-[11px] font-medium text-[#77738A] block">
-              Extracted with citations
-            </span>
-          </div>
-
-          {/* Card 4: Participants */}
-          <div className="p-5 rounded-2xl bg-white border border-[#E9E4F2] shadow-soft-card space-y-3 hover:translate-y-[-2px] transition">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-[#77738A]">Participants</span>
-              <div className="h-8 w-8 rounded-xl bg-[#E6F8F9] border border-[#C8EFF0] flex items-center justify-center text-[#0E7490]">
-                <Users className="h-4 w-4" />
-              </div>
-            </div>
-            <div>
-              <p className="text-2xl md:text-3xl font-extrabold text-[#252238] tracking-tight">
-                {loading ? '—' : speakers.length}
-              </p>
-              <div className="w-full bg-[#FAF8FF] h-1.5 rounded-full mt-2.5 overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-[#0E7490] to-teal-400 rounded-full" style={{ width: speakers.length > 0 ? '80%' : '0%' }} />
-              </div>
-            </div>
-            <span className="text-[11px] font-medium text-[#77738A] block">
-              Directory profiles
             </span>
           </div>
         </div>

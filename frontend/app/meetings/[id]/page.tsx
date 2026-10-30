@@ -726,14 +726,6 @@ export default function MeetingDetailPage() {
               <Sparkles className={`h-3.5 w-3.5 text-[#8B45D6] ${isRegenerating ? 'animate-spin' : ''}`} />
               <span className="hidden md:inline">{isRegenerating ? 'Regenerating...' : 'Regenerate Intelligence'}</span>
             </button>
-
-            <Link
-              href="/speakers"
-              className="flex items-center gap-1.5 text-xs text-[#8B45D6] font-semibold px-3.5 py-2 rounded-xl border border-[#E5D7FD] bg-[#F3ECFE] hover:bg-[#EAE2FD] transition shadow-sm"
-            >
-              <Users className="h-3.5 w-3.5 text-[#8B45D6]" />
-              <span className="hidden md:inline">Speaker Directory</span>
-            </Link>
           </div>
         </header>
 

@@ -62,7 +62,7 @@ async def create_meeting(payload: MeetingCreate, db: AsyncSession = Depends(get_
 
 @router.get("", response_model=MeetingListResponse)
 async def list_meetings(
-    organization_id: str = Query(..., description="Organization ID filter"),
+    organization_id: Optional[str] = Query(None, description="Organization ID filter"),
     workspace_id: Optional[str] = Query(None, description="Workspace ID filter"),
     status: Optional[ProcessingStatus] = Query(None, description="Processing status filter"),
     limit: int = Query(50, ge=1, le=100),
@@ -70,7 +70,9 @@ async def list_meetings(
     db: AsyncSession = Depends(get_db)
 ):
     """List meetings with multi-tenant filtering."""
-    query = select(Meeting).where(Meeting.organization_id == organization_id)
+    query = select(Meeting)
+    if organization_id:
+        query = query.where(Meeting.organization_id == organization_id)
     if workspace_id:
         query = query.where(Meeting.workspace_id == workspace_id)
     if status:

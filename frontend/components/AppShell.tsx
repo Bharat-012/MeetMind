@@ -58,7 +58,6 @@ export default function AppShell({
   const navItems = [
     { href: '/', label: 'Overview', icon: LayoutDashboard },
     { href: '/workspace', label: 'Meetings', icon: Layers },
-    { href: '/speakers', label: 'Speakers', icon: Users },
   ];
 
   const isActive = (href: string) => {
@@ -187,32 +186,7 @@ export default function AppShell({
           </nav>
         </div>
 
-        {/* Sidebar Footer: Hardware Status */}
-        <div className="p-3.5 mx-3 mb-3 rounded-2xl bg-[#FAF8FF] border border-[#EAE5FF] text-xs">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[11px] font-semibold text-[#7135C5] flex items-center gap-1.5">
-              <Cpu className="h-3.5 w-3.5 text-[#8B45D6]" />
-              <span>Local AI Engine</span>
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span
-                className={`h-2 w-2 rounded-full ${
-                  backendStatus === 'healthy'
-                    ? 'bg-[#16A34A]'
-                    : backendStatus === 'checking'
-                    ? 'bg-amber-400 animate-pulse'
-                    : 'bg-rose-500'
-                }`}
-              />
-              <span className="text-[10px] font-medium text-[#77738A]">
-                {backendStatus === 'healthy' ? 'Online' : backendStatus === 'checking' ? 'Checking' : 'Offline'}
-              </span>
-            </span>
-          </div>
-          <p className="text-[10px] text-[#77738A]">
-            Nemotron-3 • Faster-Whisper
-          </p>
-        </div>
+
       </aside>
 
       {/* Main Content Area */}
