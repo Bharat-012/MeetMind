@@ -11,7 +11,6 @@ import {
   FileVideo,
   FileAudio,
   Tv,
-  Info,
   Sparkles
 } from 'lucide-react';
 
@@ -331,13 +330,6 @@ export default function IngestModal({
         {/* Tab 2: YouTube Import */}
         {activeTab === 'url' && (
           <form onSubmit={handleUrlImport} className="p-6 space-y-4">
-            <div className="p-3.5 rounded-2xl bg-[#F3ECFE] border border-[#E5D7FD] flex items-start gap-3">
-              <Info className="h-4 w-4 text-[#8B45D6] flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-[#252238] leading-relaxed">
-                Provide a public YouTube video URL. MeetMind downloads the stream locally, extracts high-fidelity audio, and executes local speech recognition and Nemotron-3 diarization.
-              </p>
-            </div>
-
             <div>
               <label className="text-xs font-semibold text-[#252238] block mb-1">
                 YouTube Video URL <span className="text-[#BE123C]">*</span>
