@@ -7,14 +7,11 @@ import {
   LayoutDashboard,
   Layers,
   Users,
-  Video,
   Plus,
   Building,
   Menu,
   X,
-  Cpu,
-  ChevronRight,
-  ExternalLink
+  Cpu
 } from 'lucide-react';
 import IngestModal from '@/components/IngestModal';
 
@@ -75,14 +72,14 @@ export default function AppShell({
       {/* Mobile Drawer Backdrop */}
       {mobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden transition-opacity"
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 md:hidden transition-opacity"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
 
-      {/* Primary Sidebar (Desktop & Mobile Drawer) */}
+      {/* Primary Sidebar */}
       <aside
-        className={`fixed md:static top-0 bottom-0 left-0 z-50 w-64 bg-[#0d121f] border-r border-slate-800/80 flex flex-col justify-between transition-transform duration-200 ease-in-out ${
+        className={`fixed md:static top-0 bottom-0 left-0 z-50 w-64 bg-[#0d131f] border-r border-slate-800/80 flex flex-col justify-between transition-transform duration-200 ease-in-out ${
           mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
@@ -94,15 +91,15 @@ export default function AppShell({
               className="flex items-center gap-3 group focus:outline-none"
               onClick={() => setMobileMenuOpen(false)}
             >
-              <div className="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white text-sm shadow-sm shadow-indigo-600/30 group-hover:bg-indigo-500 transition">
+              <div className="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white text-sm shadow-sm group-hover:bg-indigo-500 transition">
                 M
               </div>
               <div className="flex flex-col">
                 <span className="font-semibold text-sm tracking-tight text-white group-hover:text-indigo-300 transition">
                   MeetMind
                 </span>
-                <span className="text-[10px] text-slate-400 font-mono tracking-wider uppercase">
-                  Local Intelligence
+                <span className="text-[11px] text-slate-400">
+                  Meeting Intelligence
                 </span>
               </div>
             </Link>
@@ -118,7 +115,7 @@ export default function AppShell({
 
           {/* Organization Indicator / Selector */}
           {organizations.length > 0 && (
-            <div className="px-4 py-3 border-b border-slate-800/60 bg-slate-900/40">
+            <div className="px-4 py-3 border-b border-slate-800/60 bg-slate-900/30">
               <label className="text-[10px] uppercase font-mono font-semibold text-slate-400 tracking-wider flex items-center gap-1.5 mb-1.5">
                 <Building className="h-3 w-3 text-indigo-400" />
                 <span>Organization</span>
@@ -136,25 +133,25 @@ export default function AppShell({
                   ))}
                 </select>
               ) : (
-                <div className="px-2.5 py-1.5 bg-slate-950/80 rounded-lg border border-slate-800/80 text-xs font-medium text-slate-200 truncate">
+                <div className="px-2.5 py-1.5 bg-slate-950/60 rounded-lg border border-slate-800/60 text-xs font-medium text-slate-300 truncate">
                   {currentOrg?.name || 'Acme Corp'}
                 </div>
               )}
             </div>
           )}
 
-          {/* Quick Action Button */}
+          {/* Mobile-only Ingest Action inside drawer */}
           {showIngestButton && (
-            <div className="p-4 pb-2">
+            <div className="p-3 md:hidden">
               <button
                 onClick={() => {
                   setIsIngestModalOpen(true);
                   setMobileMenuOpen(false);
                 }}
-                className="w-full flex items-center justify-center gap-2 px-3.5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold shadow-sm shadow-indigo-900/40 transition active:scale-[0.98]"
+                className="w-full flex items-center justify-center gap-2 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-medium transition"
               >
                 <Plus className="h-3.5 w-3.5" />
-                <span>New Meeting</span>
+                <span>Import Meeting</span>
               </button>
             </div>
           )}
@@ -162,7 +159,7 @@ export default function AppShell({
           {/* Navigation Links */}
           <nav className="p-3 space-y-1">
             <span className="px-3 text-[10px] uppercase font-mono font-semibold text-slate-400 tracking-wider block mb-2">
-              Platform
+              Workspace
             </span>
             {navItems.map((item) => {
               const Icon = item.icon;
@@ -174,43 +171,42 @@ export default function AppShell({
                   onClick={() => setMobileMenuOpen(false)}
                   className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition ${
                     active
-                      ? 'bg-indigo-600/15 text-indigo-400 border border-indigo-500/30'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 border border-transparent'
+                      ? 'bg-indigo-600/15 text-indigo-400 border border-indigo-500/20'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/50 border border-transparent'
                   }`}
                 >
                   <Icon className={`h-4 w-4 ${active ? 'text-indigo-400' : 'text-slate-400'}`} />
                   <span className="flex-1">{item.label}</span>
-                  {active && <ChevronRight className="h-3.5 w-3.5 text-indigo-400/60" />}
                 </Link>
               );
             })}
           </nav>
         </div>
 
-        {/* Sidebar Footer: Hardware & Model Status */}
-        <div className="p-4 border-t border-slate-800/80 bg-slate-950/40 text-xs">
-          <div className="flex items-center justify-between mb-1.5">
+        {/* Sidebar Footer: Hardware Status */}
+        <div className="p-3.5 border-t border-slate-800/80 bg-slate-950/40 text-xs">
+          <div className="flex items-center justify-between mb-1">
             <span className="text-[11px] font-mono text-slate-400 flex items-center gap-1.5">
               <Cpu className="h-3.5 w-3.5 text-indigo-400" />
-              <span>Local AI Engine</span>
+              <span>Engine Status</span>
             </span>
-            <span
-              className={`h-2 w-2 rounded-full ${
-                backendStatus === 'healthy'
-                  ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]'
-                  : backendStatus === 'checking'
-                  ? 'bg-amber-400 animate-pulse'
-                  : 'bg-rose-500'
-              }`}
-              title={
-                backendStatus === 'healthy'
-                  ? 'FastAPI + Faster-Whisper + Nemotron-3 Diarization Online'
-                  : 'Backend Offline'
-              }
-            />
+            <span className="flex items-center gap-1.5">
+              <span
+                className={`h-2 w-2 rounded-full ${
+                  backendStatus === 'healthy'
+                    ? 'bg-emerald-400'
+                    : backendStatus === 'checking'
+                    ? 'bg-amber-400 animate-pulse'
+                    : 'bg-rose-500'
+                }`}
+              />
+              <span className="text-[10px] font-mono text-slate-400">
+                {backendStatus === 'healthy' ? 'Online' : backendStatus === 'checking' ? 'Checking' : 'Offline'}
+              </span>
+            </span>
           </div>
-          <p className="text-[11px] text-slate-400 font-mono leading-tight">
-            Nemotron-3 Diarization • Whisper
+          <p className="text-[10px] text-slate-400 font-mono">
+            Nemotron-3 • Faster-Whisper
           </p>
         </div>
       </aside>
@@ -218,7 +214,7 @@ export default function AppShell({
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 bg-[#090d16] overflow-hidden">
         {/* Top Header Bar */}
-        <header className="h-16 border-b border-slate-800/80 bg-[#0d121f]/90 px-4 md:px-8 flex items-center justify-between sticky top-0 z-20 backdrop-blur">
+        <header className="h-16 border-b border-slate-800/80 bg-[#0d131f]/90 px-4 md:px-8 flex items-center justify-between sticky top-0 z-20 backdrop-blur">
           <div className="flex items-center gap-3 min-w-0">
             {/* Hamburger Button (Mobile Only) */}
             <button
@@ -245,7 +241,7 @@ export default function AppShell({
             {showIngestButton && (
               <button
                 onClick={() => setIsIngestModalOpen(true)}
-                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-medium shadow-sm shadow-indigo-900/30 transition"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-medium shadow-sm transition"
               >
                 <Plus className="h-3.5 w-3.5" />
                 <span>Import Meeting</span>

@@ -4,13 +4,16 @@
 
 :root {
   --background: #090d16;
-  --surface: #0f172a;
-  --surface-hover: #1e293b;
-  --border: #1e293b;
+  --surface-primary: #0d131f;
+  --surface-secondary: #121a2b;
+  --surface-card: #0e1526;
+  --border-subtle: #1e293b;
+  --border-muted: rgba(30, 41, 59, 0.6);
   --text-primary: #f8fafc;
-  --text-muted: #94a3b8;
-  --accent: #4f46e5;
-  --accent-hover: #4338ca;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --accent: #6366f1;
+  --accent-hover: #4f46e5;
 }
 
 body {
@@ -22,16 +25,18 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Hide default browser scrollbar for horizontal tabs & chips */
+/* Hide default browser scrollbars completely for horizontal tabs & chips */
 .no-scrollbar::-webkit-scrollbar {
-  display: none;
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 .no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
 }
 
-/* Custom subtle scrollbar for content areas */
+/* Subtle, dark scrollbar for vertical content areas (never white/grey) */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -50,4 +55,11 @@ body {
 /* Range input styling for video scrubber and volume */
 input[type="range"] {
   accent-color: #6366f1;
+}
+
+/* Smooth transitions for interactive elements */
+button, a, input, select, textarea {
+  transition-property: color, background-color, border-color, box-shadow, opacity, transform;
+  transition-duration: 150ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }

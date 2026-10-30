@@ -331,7 +331,7 @@ export default function WorkspacePage() {
       <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-6">
         {/* Navigation Tabs Bar */}
         <div className="border-b border-slate-800 pb-3 flex items-center justify-between flex-wrap gap-3">
-          <div className="flex gap-1.5 p-1 bg-slate-900/80 rounded-xl border border-slate-800">
+          <div className="flex gap-1.5 p-1 bg-slate-900/60 rounded-xl border border-slate-800/80 no-scrollbar overflow-x-auto">
             {[
               { id: 'meetings', label: 'All Meetings', icon: Layers, badge: meetings.length },
               { id: 'chat', label: 'Cross-Meeting Chat', icon: MessageSquare },
@@ -344,7 +344,7 @@ export default function WorkspacePage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-medium flex items-center gap-2 transition ${
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-medium flex items-center gap-2 transition whitespace-nowrap ${
                     active
                       ? 'bg-indigo-600 text-white shadow-sm'
                       : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
@@ -377,7 +377,7 @@ export default function WorkspacePage() {
                   value={searchFilter}
                   onChange={(e) => setSearchFilter(e.target.value)}
                   placeholder="Search meetings by title or description..."
-                  className="w-full pl-9 pr-3 py-2 bg-[#0f172a] border border-slate-800 rounded-lg text-xs text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500"
+                  className="w-full pl-9 pr-3 py-2 bg-[#0e1526] border border-slate-800 rounded-lg text-xs text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
@@ -386,7 +386,7 @@ export default function WorkspacePage() {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="bg-[#0f172a] border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  className="bg-[#0e1526] border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
                 >
                   <option value="ALL">All Statuses</option>
                   <option value="COMPLETED">Completed</option>
@@ -399,11 +399,11 @@ export default function WorkspacePage() {
             </div>
 
             {loading ? (
-              <div className="p-12 text-center rounded-xl border border-slate-800 bg-[#0f172a]">
+              <div className="p-12 text-center rounded-xl border border-slate-800 bg-[#0e1526]">
                 <p className="text-xs text-slate-400">Loading meetings...</p>
               </div>
             ) : filteredMeetings.length === 0 ? (
-              <div className="p-12 text-center rounded-xl border border-dashed border-slate-800 bg-[#0f172a]/40 space-y-3">
+              <div className="p-12 text-center rounded-xl border border-dashed border-slate-800 bg-[#0e1526]/40 space-y-3">
                 <Video className="h-8 w-8 text-slate-400 mx-auto" />
                 <p className="text-sm font-semibold text-white">No matching meetings found</p>
                 <p className="text-xs text-slate-400 max-w-sm mx-auto">
@@ -423,7 +423,7 @@ export default function WorkspacePage() {
                     <Link
                       key={m.id}
                       href={`/meetings/${m.id}`}
-                      className="p-5 rounded-xl bg-[#0f172a] border border-slate-800 hover:border-indigo-500/50 hover:bg-slate-900/60 transition group flex flex-col justify-between"
+                      className="p-5 rounded-xl bg-[#0e1526] border border-slate-800 hover:border-indigo-500/50 hover:bg-slate-900/60 transition group flex flex-col justify-between"
                     >
                       <div className="space-y-2.5">
                         <div className="flex items-center justify-between">
@@ -492,7 +492,7 @@ export default function WorkspacePage() {
         {activeTab === 'chat' && (
           <div className="max-w-4xl mx-auto flex flex-col h-[680px] bg-[#0c1220] border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
             {/* Header */}
-            <div className="px-5 py-3.5 border-b border-slate-800 bg-[#0f172a] flex items-center justify-between">
+            <div className="px-5 py-3.5 border-b border-slate-800 bg-[#0e1526] flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="h-8 w-8 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
                   <Sparkles className="h-4 w-4" />
@@ -654,7 +654,7 @@ export default function WorkspacePage() {
         {/* TAB 3: DECISIONS REGISTER */}
         {activeTab === 'decisions' && (
           <div className="space-y-3 max-w-4xl mx-auto">
-            <div className="p-4 rounded-xl bg-[#0f172a] border border-slate-800 flex items-center justify-between">
+            <div className="p-4 rounded-xl bg-[#0e1526] border border-slate-800 flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-semibold text-white">Historical Decisions Register</h3>
                 <p className="text-xs text-slate-400">Chronological record of approved technical and product decisions</p>
@@ -665,13 +665,13 @@ export default function WorkspacePage() {
             </div>
 
             {orgDecisions.length === 0 ? (
-              <div className="p-12 text-center rounded-xl border border-dashed border-slate-800 bg-[#0f172a]/40 text-xs text-slate-400">
+              <div className="p-12 text-center rounded-xl border border-dashed border-slate-800 bg-[#0e1526]/40 text-xs text-slate-400">
                 No decisions recorded in this organization yet.
               </div>
             ) : (
               <div className="space-y-2.5">
                 {orgDecisions.map((dec) => (
-                  <div key={dec.id} className="p-5 rounded-xl bg-[#0f172a] border border-slate-800 space-y-2">
+                  <div key={dec.id} className="p-5 rounded-xl bg-[#0e1526] border border-slate-800 space-y-2">
                     <div className="flex items-start justify-between gap-4">
                       <div className="space-y-0.5">
                         <span className="font-semibold text-sm text-white">{dec.title}</span>
@@ -702,7 +702,7 @@ export default function WorkspacePage() {
         {/* TAB 4: ACTION ITEMS */}
         {activeTab === 'actions' && (
           <div className="space-y-3 max-w-4xl mx-auto">
-            <div className="p-4 rounded-xl bg-[#0f172a] border border-slate-800 flex items-center justify-between">
+            <div className="p-4 rounded-xl bg-[#0e1526] border border-slate-800 flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-semibold text-white">Organization Action Items</h3>
                 <p className="text-xs text-slate-400">Comprehensive task tracking across all team meetings</p>
@@ -713,7 +713,7 @@ export default function WorkspacePage() {
             </div>
 
             {orgActions.length === 0 ? (
-              <div className="p-12 text-center rounded-xl border border-dashed border-slate-800 bg-[#0f172a]/40 text-xs text-slate-400">
+              <div className="p-12 text-center rounded-xl border border-dashed border-slate-800 bg-[#0e1526]/40 text-xs text-slate-400">
                 No action items recorded in this organization yet.
               </div>
             ) : (
@@ -721,7 +721,7 @@ export default function WorkspacePage() {
                 {orgActions.map((item) => (
                   <div
                     key={item.id}
-                    className="p-4 rounded-xl bg-[#0f172a] border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                    className="p-4 rounded-xl bg-[#0e1526] border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                   >
                     <div className="space-y-1">
                       <span className="text-xs font-semibold text-white block">{item.task_description}</span>

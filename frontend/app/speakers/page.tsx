@@ -240,7 +240,7 @@ export default function SpeakersDirectoryPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search speakers by name, email, or role..."
-              className="w-full pl-9 pr-3 py-2 bg-[#0f172a] border border-slate-800 rounded-lg text-xs text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500"
+              className="w-full pl-9 pr-3 py-2 bg-[#0e1526] border border-slate-800 rounded-lg text-xs text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500"
             />
           </div>
 
@@ -254,11 +254,11 @@ export default function SpeakersDirectoryPage() {
           {/* Left Column: Speaker Cards Grid */}
           <div className="flex-1 w-full">
             {loading ? (
-              <div className="p-12 text-center rounded-xl border border-slate-800 bg-[#0f172a] text-xs text-slate-400">
+              <div className="p-12 text-center rounded-xl border border-slate-800 bg-[#0e1526] text-xs text-slate-400">
                 Loading speakers...
               </div>
             ) : speakers.length === 0 ? (
-              <div className="p-12 text-center rounded-xl border border-dashed border-slate-800 bg-[#0f172a]/40 space-y-3">
+              <div className="p-12 text-center rounded-xl border border-dashed border-slate-800 bg-[#0e1526]/40 space-y-3">
                 <Users className="h-8 w-8 text-slate-400 mx-auto" />
                 <p className="text-sm font-semibold text-white">No speakers found</p>
                 <p className="text-xs text-slate-400 max-w-xs mx-auto">
@@ -283,7 +283,7 @@ export default function SpeakersDirectoryPage() {
                   return (
                     <div
                       key={spk.id}
-                      className={`p-5 rounded-xl bg-[#0f172a] border transition flex flex-col justify-between space-y-4 ${
+                      className={`p-5 rounded-xl bg-[#0e1526] border transition flex flex-col justify-between space-y-4 ${
                         isSelected
                           ? 'border-indigo-500/80 shadow-md shadow-indigo-950/40 bg-slate-900/70'
                           : 'border-slate-800 hover:border-slate-700 hover:bg-slate-900/40'
@@ -357,7 +357,7 @@ export default function SpeakersDirectoryPage() {
           </div>
 
           {/* Right Column: Speaker Detail & History Drawer */}
-          <div className="w-full lg:w-96 flex-shrink-0 bg-[#0f172a] border border-slate-800 rounded-xl overflow-hidden flex flex-col">
+          <div className="w-full lg:w-96 flex-shrink-0 bg-[#0e1526] border border-slate-800 rounded-xl overflow-hidden flex flex-col">
             {selectedSpeakerHistory ? (
               <div className="flex flex-col">
                 {/* Drawer Header */}
@@ -476,7 +476,7 @@ export default function SpeakersDirectoryPage() {
       {/* CREATE SPEAKER MODAL */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-[#0f172a] border border-slate-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col text-slate-100">
+          <div className="bg-[#0e1526] border border-slate-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col text-slate-100">
             <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/60">
               <h3 className="font-semibold text-sm text-white">Create Speaker Profile</h3>
               <button
@@ -560,7 +560,7 @@ export default function SpeakersDirectoryPage() {
       {/* EDIT SPEAKER MODAL */}
       {isEditModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-[#0f172a] border border-slate-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col text-slate-100">
+          <div className="bg-[#0e1526] border border-slate-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col text-slate-100">
             <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/60">
               <h3 className="font-semibold text-sm text-white">Edit Speaker Profile</h3>
               <button

@@ -665,13 +665,13 @@ export default function MeetingDetailPage() {
           <div className="flex items-center gap-3 min-w-0">
             <Link
               href="/workspace"
-              className="text-slate-400 hover:text-white px-2.5 py-1.5 rounded-lg hover:bg-slate-800 transition flex items-center gap-1.5 text-xs font-medium border border-transparent hover:border-slate-700 flex-shrink-0"
+              className="text-slate-400 hover:text-white px-2.5 py-1.5 rounded-lg hover:bg-slate-800/80 transition flex items-center gap-1.5 text-xs font-medium border border-slate-800/80 flex-shrink-0"
             >
               <ChevronLeft className="h-4 w-4" />
               <span>Workspace</span>
             </Link>
 
-            <div className="h-4 w-[1px] bg-slate-800 flex-shrink-0" />
+            <span className="text-slate-600 text-xs hidden sm:inline">/</span>
 
             <h1 className="font-semibold text-sm text-white truncate max-w-sm sm:max-w-md" title={meeting?.title}>
               {meeting?.title || 'Meeting Details'}
@@ -846,10 +846,10 @@ export default function MeetingDetailPage() {
               <div className="w-full flex flex-col space-y-3">
                 <div className="flex items-center justify-between px-1">
                   <div className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-                    <span className="text-xs font-semibold text-white">YouTube Ingestion</span>
+                    <span className="h-2 w-2 rounded-full bg-red-500" />
+                    <span className="text-xs font-medium text-white">YouTube Media</span>
                     <span className="text-[11px] text-slate-400">
-                      (Audio track transcribed via Faster-Whisper & Nemotron-3)
+                      Synchronized audio & transcript
                     </span>
                   </div>
 
@@ -983,8 +983,9 @@ export default function MeetingDetailPage() {
               />
             )}
 
-            {/* UNIFIED CONTROLS BAR */}
-            <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl flex flex-col gap-3">
+            {/* UNIFIED CONTROLS BAR (Hidden when watching native YouTube embed) */}
+            {(!isYouTubeAudioOnly || youtubeMode === 'audio') && (
+            <div className="p-4 rounded-xl bg-[#0e1526] border border-slate-800/80 shadow-md flex flex-col gap-3">
               {/* Scrubber slider and time display */}
               <div className="flex items-center gap-3">
                 <span className="text-xs font-mono text-indigo-300 w-12 text-right">
@@ -1095,22 +1096,23 @@ export default function MeetingDetailPage() {
                 </div>
               </div>
             </div>
+            )}
 
           </div>
         </section>
 
-        {/* RESPONSIVE NAVIGATION TABS BAR (NO UGLY HORIZONTAL SCROLLBAR) */}
-        <div className="border-b border-slate-800 bg-[#0d121f] px-6 py-2 sticky top-16 z-10 backdrop-blur">
-          <div className="flex gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-1">
+        {/* RESPONSIVE NAVIGATION TABS BAR */}
+        <div className="border-b border-slate-800/80 bg-[#0d131f]/95 px-6 py-2 sticky top-16 z-10 backdrop-blur">
+          <div className="flex gap-1.5 overflow-x-auto no-scrollbar py-1">
             {[
-              { id: 'transcript', label: '1. Full Transcript', icon: FileText },
-              { id: 'short_transcript', label: '2. Chronological Explanation', icon: Clock },
-              { id: 'summary', label: '3. Structured Summary', icon: Sparkles },
+              { id: 'transcript', label: 'Transcript', icon: FileText },
+              { id: 'short_transcript', label: 'Timeline', icon: Clock },
+              { id: 'summary', label: 'Summary', icon: Sparkles },
               { id: 'decisions', label: 'Decisions', icon: CheckCircle2, badge: decisions.length },
               { id: 'actions', label: 'Action Items', icon: ListTodo, badge: actionItems.length },
-              { id: 'speakers', label: 'Speakers & Attribution', icon: Users, badge: transcriptData?.speakers?.length },
-              { id: 'chat', label: 'Meeting Chat', icon: MessageSquare },
-              { id: 'voice_emotion', label: 'Voice Analysis', icon: Activity },
+              { id: 'speakers', label: 'Speakers', icon: Users, badge: transcriptData?.speakers?.length },
+              { id: 'chat', label: 'Chat', icon: MessageSquare },
+              { id: 'voice_emotion', label: 'Voice & Emotion', icon: Activity },
             ].map((tab) => {
               const Icon = tab.icon;
               const active = activeTab === tab.id;
@@ -1225,40 +1227,41 @@ export default function MeetingDetailPage() {
           {/* TAB 2: CHRONOLOGICAL EXPLANATION */}
           {activeTab === 'short_transcript' && (
             <div className="max-w-3xl mx-auto space-y-6">
-              <div className="p-6 rounded-2xl bg-indigo-950/30 border border-indigo-900/40 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-indigo-400 font-semibold text-sm">
-                    <Clock className="h-4 w-4" />
-                    <span>Chronological Meeting Explanation</span>
+              {shortTranscript?.narrative_text ? (
+                <div className="p-5 rounded-xl bg-[#0e1526] border border-slate-800/80 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-indigo-400 font-medium text-xs">
+                      <Clock className="h-4 w-4" />
+                      <span>Chronological Narrative</span>
+                    </div>
+                    {shortTranscript?.model_name && (
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-950/60 text-indigo-300 border border-indigo-800/40">
+                        {shortTranscript.model_name}
+                      </span>
+                    )}
                   </div>
-                  {shortTranscript?.model_name && (
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-900/40 text-indigo-300 border border-indigo-700/50">
-                      {shortTranscript.model_name}
-                    </span>
-                  )}
+                  <p className="text-sm text-slate-200 leading-relaxed font-sans">
+                    {shortTranscript.narrative_text}
+                  </p>
                 </div>
-                <p className="text-sm text-slate-200 leading-relaxed font-sans">
-                  {shortTranscript?.narrative_text || (
-                    isCompleted
-                      ? 'No chronological narrative was generated for this meeting.'
-                      : 'Chronological explanation is being processed by the intelligence engine...'
-                  )}
-                </p>
-              </div>
+              ) : null}
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-white">Event Sequence & Speaker Flow</h3>
+                  <h3 className="text-sm font-semibold text-white">Event Sequence & Flow</h3>
                   <span className="text-xs text-slate-400">
                     {(shortTranscript?.chronological_events || []).length} events recorded
                   </span>
                 </div>
 
                 {(!shortTranscript?.chronological_events || shortTranscript.chronological_events.length === 0) ? (
-                  <div className="p-8 text-center rounded-xl bg-slate-950/40 border border-slate-800 text-slate-400 text-xs">
-                    {isCompleted
-                      ? 'No distinct chronological events detected in this meeting.'
-                      : 'Chronological events will appear here once pipeline finishes.'}
+                  <div className="p-10 text-center rounded-xl bg-[#0e1526]/50 border border-dashed border-slate-800 space-y-2">
+                    <Clock className="h-6 w-6 text-slate-500 mx-auto" />
+                    <p className="text-xs font-medium text-slate-300">
+                      {isCompleted
+                        ? 'No chronological events recorded for this meeting.'
+                        : 'Chronological events will appear here once pipeline completes.'}
+                    </p>
                   </div>
                 ) : (
                   <div className="border-l-2 border-slate-800 pl-4 space-y-6">
@@ -1411,10 +1414,13 @@ export default function MeetingDetailPage() {
               </div>
 
               {decisions.length === 0 ? (
-                <div className="p-8 text-center rounded-xl bg-slate-950/40 border border-slate-800 text-slate-400 text-xs">
-                  {isCompleted
-                    ? 'No explicit decisions extracted from this meeting.'
-                    : 'Decisions are being extracted by the intelligence engine...'}
+                <div className="p-10 text-center rounded-xl bg-[#0e1526]/50 border border-dashed border-slate-800 space-y-2">
+                  <CheckCircle2 className="h-6 w-6 text-slate-500 mx-auto" />
+                  <p className="text-xs font-medium text-slate-300">
+                    {isCompleted
+                      ? 'No explicit decisions extracted from this meeting.'
+                      : 'Decisions are being extracted by the intelligence engine...'}
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -1480,10 +1486,13 @@ export default function MeetingDetailPage() {
               </div>
 
               {actionItems.length === 0 ? (
-                <div className="p-8 text-center rounded-xl bg-slate-950/40 border border-slate-800 text-slate-400 text-xs">
-                  {isCompleted
-                    ? 'No action items extracted from this meeting.'
-                    : 'Action items will appear here once pipeline completes.'}
+                <div className="p-10 text-center rounded-xl bg-[#0e1526]/50 border border-dashed border-slate-800 space-y-2">
+                  <ListTodo className="h-6 w-6 text-slate-500 mx-auto" />
+                  <p className="text-xs font-medium text-slate-300">
+                    {isCompleted
+                      ? 'No action items extracted from this meeting.'
+                      : 'Action items will appear here once pipeline completes.'}
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-3">
