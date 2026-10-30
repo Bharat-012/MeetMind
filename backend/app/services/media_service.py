@@ -17,7 +17,7 @@ class MediaService:
 
     # Supported video and audio extensions
     BROWSER_PLAYABLE_VIDEO_CODECS = {"h264", "vp8", "vp9", "av1"}
-    BROWSER_PLAYABLE_AUDIO_CODECS = {"aac", "opus", "mp3", "vorbis", "pcm_s16le", "flac"}
+    BROWSER_PLAYABLE_AUDIO_CODECS = {"aac", "opus", "mp3", "mp3float", "vorbis", "pcm_s16le", "flac"}
     BROWSER_PLAYABLE_VIDEO_EXTS = {"mp4", "webm"}
     BROWSER_PLAYABLE_AUDIO_EXTS = {"mp3", "wav", "m4a", "aac", "ogg", "webm"}
 
@@ -82,7 +82,7 @@ class MediaService:
 
         return destination_path, total_bytes
 
-    def probe_media(self, file_path: str) -> Dict[str, Any]:
+    def probe_media(self, file_path: str, strict: bool = False) -> Dict[str, Any]:
         """Deeply probe container, streams, codecs, and dimensions using PyAV."""
         if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
             raise HTTPException(
@@ -95,7 +95,7 @@ class MediaService:
         try:
             container = av.open(file_path)
         except Exception as e:
-            if settings.ASR_PROVIDER == "mock" or os.environ.get("PYTEST_CURRENT_TEST"):
+            if not strict and (settings.ASR_PROVIDER == "mock" or os.environ.get("PYTEST_CURRENT_TEST")):
                 return {
                     "duration_seconds": 60.0,
                     "has_video": ext in ["mp4", "webm", "mov", "mkv"],

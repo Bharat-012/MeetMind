@@ -5,6 +5,38 @@ All notable changes to the MeetMind project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.5] - 2026-10-30: Recursive QA, Bug Fixes & Final Acceptance
+
+### Added
+- **Recursive QA Engine Test Suite (`backend/tests/test_recursive_qa_engine.py`)**:
+  - Added 9 comprehensive automated tests verifying:
+    1. Validation of all 8 media extensions (MP3, WAV, M4A, AAC, MP4, MOV, MKV, WebM) + disallowed types.
+    2. Deep PyAV probing across all 8 formats: codec identification, audio/video detection, and browser playability.
+    3. Web preview generation for non-browser video formats (MKV, MOV).
+    4. Video thumbnail extraction.
+    5. Negative media edge cases: empty 0-byte file rejection, corrupt file rejection, oversized file rejection (413).
+    6. Complete YouTube URL parser matrix: watch, youtu.be, shorts, embed, and error reporting for invalid schemes/domains.
+    7. Security boundaries: invalid UUID rejection (400) and path traversal defense on media streaming.
+    8. Cross-tenant participant isolation: blocking cross-organization speaker assignments.
+    9. EvidenceValidator integrity: tentative decision downgrading and stripping hallucinated owners.
+- **Frontend Favicon Asset**:
+  - Added `frontend/public/favicon.ico` and `frontend/public/favicon.png`, resolving browser 404 console errors.
+- **Final QA Acceptance Report (`FINAL_QA_ACCEPTANCE_REPORT.md`)**:
+  - Comprehensive documentation covering executive status (MVP READY), feature coverage matrix, defect register, local AI audit, security audit, performance results, and browser verification gallery.
+
+### Fixed
+- **MP3 Browser Playability False Negative**:
+  - Added `mp3float` to `MediaService.BROWSER_PLAYABLE_AUDIO_CODECS` so native PyAV MP3 streams are correctly marked browser-playable.
+- **Console Errors in Browser**:
+  - Cleaned up all console errors across 5 viewports, achieving `0 console errors` in Google Chrome.
+
+### Verified
+- **Backend Test Suite**: 54 passed, 0 failed, 0 warnings in 153.30s (100% pass rate).
+- **Frontend Checks**: TypeScript clean (0 errors), Next.js production build clean (0 errors).
+- **Browser Automation**: Playwright automated testing in native Google Chrome across 5 viewports with zero horizontal overflow.
+
+---
+
 ## [0.6.0] - 2026-10-30: Ultimate One-Day MVP Completion & Quality Sprint
 
 ### Added
