@@ -24,3 +24,4 @@ echo Backend will be live at:  http://127.0.0.1:8000
 echo.
 timeout /t 5 >nul
 start http://localhost:3000
+
