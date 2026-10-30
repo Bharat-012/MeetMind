@@ -8,12 +8,10 @@ import {
   Calendar,
   User,
   FileText,
-  Clock,
   CheckCircle2,
   ListTodo,
   Users,
   MessageSquare,
-  Activity,
   Play,
   Pause,
   RotateCcw,
@@ -1106,13 +1104,10 @@ export default function MeetingDetailPage() {
           <div className="flex gap-1.5 overflow-x-auto no-scrollbar py-1">
             {[
               { id: 'transcript', label: 'Transcript', icon: FileText },
-              { id: 'short_transcript', label: 'Timeline', icon: Clock },
               { id: 'summary', label: 'Summary', icon: Sparkles },
-              { id: 'decisions', label: 'Decisions', icon: CheckCircle2, badge: decisions.length },
               { id: 'actions', label: 'Action Items', icon: ListTodo, badge: actionItems.length },
               { id: 'speakers', label: 'Speakers', icon: Users, badge: transcriptData?.speakers?.length },
               { id: 'chat', label: 'Chat', icon: MessageSquare },
-              { id: 'voice_emotion', label: 'Voice & Emotion', icon: Activity },
             ].map((tab) => {
               const Icon = tab.icon;
               const active = activeTab === tab.id;
@@ -1224,85 +1219,6 @@ export default function MeetingDetailPage() {
             </div>
           )}
 
-          {/* TAB 2: CHRONOLOGICAL EXPLANATION */}
-          {activeTab === 'short_transcript' && (
-            <div className="max-w-3xl mx-auto space-y-6">
-              {shortTranscript?.narrative_text ? (
-                <div className="p-5 rounded-xl bg-[#0e1526] border border-slate-800/80 space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-indigo-400 font-medium text-xs">
-                      <Clock className="h-4 w-4" />
-                      <span>Chronological Narrative</span>
-                    </div>
-                    {shortTranscript?.model_name && (
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-950/60 text-indigo-300 border border-indigo-800/40">
-                        {shortTranscript.model_name}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-sm text-slate-200 leading-relaxed font-sans">
-                    {shortTranscript.narrative_text}
-                  </p>
-                </div>
-              ) : null}
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-white">Event Sequence & Flow</h3>
-                  <span className="text-xs text-slate-400">
-                    {(shortTranscript?.chronological_events || []).length} events recorded
-                  </span>
-                </div>
-
-                {(!shortTranscript?.chronological_events || shortTranscript.chronological_events.length === 0) ? (
-                  <div className="p-10 text-center rounded-xl bg-[#0e1526]/50 border border-dashed border-slate-800 space-y-2">
-                    <Clock className="h-6 w-6 text-slate-500 mx-auto" />
-                    <p className="text-xs font-medium text-slate-300">
-                      {isCompleted
-                        ? 'No chronological events recorded for this meeting.'
-                        : 'Chronological events will appear here once pipeline completes.'}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="border-l-2 border-slate-800 pl-4 space-y-6">
-                    {shortTranscript.chronological_events.map((ev: any, idx: number) => {
-                      const typeColors: Record<string, string> = {
-                        proposal: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
-                        agreement: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
-                        disagreement: 'bg-rose-500/15 text-rose-400 border-rose-500/30',
-                        question: 'bg-purple-500/15 text-purple-400 border-purple-500/30',
-                        clarification: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30',
-                        conclusion: 'bg-teal-500/15 text-teal-400 border-teal-500/30',
-                        contribution: 'bg-slate-800 text-slate-300 border-slate-700'
-                      };
-                      const badgeClass = typeColors[ev.event_type] || typeColors.contribution;
-
-                      return (
-                        <div key={idx} className="relative group cursor-pointer" onClick={() => seekTo(ev.timestamp)}>
-                          <div className="absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full bg-indigo-500 group-hover:scale-125 transition shadow-sm shadow-indigo-500/50" />
-                          <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                            <span className="text-xs font-mono text-indigo-400 hover:underline">
-                              [{formatTime(ev.timestamp)}]
-                            </span>
-                            <span className="text-xs font-semibold text-white">{ev.speaker}</span>
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider border ${badgeClass}`}>
-                              {ev.event_type || 'contribution'}
-                            </span>
-                          </div>
-                          <p className="text-xs text-slate-300 leading-relaxed">{ev.description}</p>
-                          {ev.evidence_quote && (
-                            <div className="mt-1.5 text-[11px] text-slate-400 italic bg-slate-900/60 p-2 rounded border border-slate-800/80">
-                              "{ev.evidence_quote}"
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
 
           {/* TAB 3: STRUCTURED SUMMARY */}
           {activeTab === 'summary' && (
@@ -1405,77 +1321,6 @@ export default function MeetingDetailPage() {
             </div>
           )}
 
-          {/* TAB 4: DECISIONS */}
-          {activeTab === 'decisions' && (
-            <div className="max-w-4xl mx-auto space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-white">Decision Register</h3>
-                <span className="text-xs text-slate-400">{decisions.length} recorded</span>
-              </div>
-
-              {decisions.length === 0 ? (
-                <div className="p-10 text-center rounded-xl bg-[#0e1526]/50 border border-dashed border-slate-800 space-y-2">
-                  <CheckCircle2 className="h-6 w-6 text-slate-500 mx-auto" />
-                  <p className="text-xs font-medium text-slate-300">
-                    {isCompleted
-                      ? 'No explicit decisions extracted from this meeting.'
-                      : 'Decisions are being extracted by the intelligence engine...'}
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {decisions.map((dec: any) => {
-                    const statusStyles: Record<string, string> = {
-                      CONFIRMED: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
-                      ACTIVE: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
-                      PROPOSED: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
-                      REJECTED: 'bg-red-500/15 text-red-400 border-red-500/30',
-                      SUPERSEDED: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
-                      CANCELLED: 'bg-slate-700 text-slate-400 border-slate-600'
-                    };
-                    const statusClass = statusStyles[dec.status] || statusStyles.CONFIRMED;
-
-                    return (
-                      <div key={dec.id} className="p-4 rounded-xl bg-slate-950/50 border border-slate-800 space-y-2.5">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-semibold text-indigo-400">{dec.title || dec.category || 'General'}</span>
-                          <div className="flex items-center gap-2">
-                            {dec.model_name && (
-                              <span className="text-[10px] font-mono text-slate-500">
-                                {dec.model_name}
-                              </span>
-                            )}
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${statusClass}`}>
-                              {dec.status}
-                            </span>
-                          </div>
-                        </div>
-                        <p className="text-xs text-slate-200 leading-relaxed">{dec.decision_text}</p>
-                        
-                        <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-900 text-xs text-slate-400">
-                          <div className="flex items-center gap-1.5">
-                            <User className="h-3 w-3 text-slate-500" />
-                            <span>Responsible: <strong className="text-slate-300 font-normal">{dec.responsible_person || 'Unassigned'}</strong></span>
-                          </div>
-                          {dec.evidence_quote && (
-                            <button
-                              onClick={() => dec.evidence_timestamp !== null && seekTo(dec.evidence_timestamp)}
-                              className="text-[11px] text-indigo-400 hover:text-indigo-300 flex items-center gap-1 font-mono"
-                            >
-                              <span>Evidence: "{dec.evidence_quote.substring(0, 45)}..."</span>
-                              {dec.evidence_timestamp !== null && (
-                                <span>[{formatTime(dec.evidence_timestamp)}]</span>
-                              )}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
 
           {/* TAB 5: ACTION ITEMS */}
           {activeTab === 'actions' && (
@@ -1866,16 +1711,6 @@ export default function MeetingDetailPage() {
             </div>
           )}
 
-          {/* TAB 8: VOICE EMOTION */}
-          {activeTab === 'voice_emotion' && (
-            <div className="max-w-2xl mx-auto p-8 rounded-2xl bg-slate-950 border border-slate-800 text-center space-y-3">
-              <Activity className="h-8 w-8 text-indigo-400 mx-auto" />
-              <h3 className="text-sm font-semibold text-white">Voice Emotion Analysis (Modular Option)</h3>
-              <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
-                Acoustic pitch, tempo, and tone energy analysis are optional features per ADR-005. Standard local meeting summarization and transcript search remain fully operational without requiring affective inference.
-              </p>
-            </div>
-          )}
         </div>
       </div>
 
