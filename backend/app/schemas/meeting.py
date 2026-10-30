@@ -22,6 +22,7 @@ class URLImportRequest(BaseModel):
     workspace_id: str
     project_id: Optional[str] = None
     title: Optional[str] = None
+    description: Optional[str] = None
     url: str
 
 
