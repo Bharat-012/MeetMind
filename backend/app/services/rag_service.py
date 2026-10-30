@@ -215,7 +215,11 @@ class RAGService:
             return []
 
         intents = self._detect_intent(query)
-        stop_words = {"what", "when", "where", "which", "who", "whom", "this", "that", "these", "those", "is", "are", "was", "were", "the", "a", "an", "for", "did", "team", "about", "from", "with"}
+        stop_words = {
+            "what", "when", "where", "which", "who", "whom", "this", "that", "these", "those",
+            "is", "are", "was", "were", "the", "a", "an", "for", "did", "team", "about", "from", "with",
+            "meeting", "meetings", "during", "there", "their", "they", "have", "been", "tell", "show"
+        }
         query_words = [w.lower() for w in re.findall(r'\b[a-zA-Z]{3,}\b', query) if w.lower() not in stop_words]
 
         scored_results = []

@@ -19,7 +19,7 @@ class MediaService:
     BROWSER_PLAYABLE_VIDEO_CODECS = {"h264", "vp8", "vp9", "av1"}
     BROWSER_PLAYABLE_AUDIO_CODECS = {"aac", "opus", "mp3", "vorbis", "pcm_s16le", "flac"}
     BROWSER_PLAYABLE_VIDEO_EXTS = {"mp4", "webm"}
-    BROWSER_PLAYABLE_AUDIO_EXTS = {"mp3", "wav", "m4a", "ogg", "webm"}
+    BROWSER_PLAYABLE_AUDIO_EXTS = {"mp3", "wav", "m4a", "aac", "ogg", "webm"}
 
     def __init__(self, storage_dir: Optional[str] = None):
         self.storage_dir = storage_dir or settings.MEDIA_STORAGE_DIR
@@ -31,7 +31,7 @@ class MediaService:
         if file_size > settings.MAX_UPLOAD_SIZE_BYTES:
             max_mb = settings.MAX_UPLOAD_SIZE_BYTES // (1024 * 1024)
             raise HTTPException(
-                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                status_code=getattr(status, "HTTP_413_CONTENT_TOO_LARGE", 413),
                 detail=f"File size exceeds maximum permitted limit of {max_mb} MB."
             )
 
@@ -67,7 +67,7 @@ class MediaService:
                         os.remove(destination_path)
                     max_mb = settings.MAX_UPLOAD_SIZE_BYTES // (1024 * 1024)
                     raise HTTPException(
-                        status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                        status_code=getattr(status, "HTTP_413_CONTENT_TOO_LARGE", 413),
                         detail=f"Uploaded file exceeds limit of {max_mb} MB."
                     )
                 out_file.write(content)

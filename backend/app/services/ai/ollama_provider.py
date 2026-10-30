@@ -346,7 +346,11 @@ class OllamaProvider:
         except Exception:
             # Rule-based fallback when Ollama is offline: verify genuine keyword evidence
             # Filter query words to meaningful content words (ignore stop words)
-            stop_words = {"what", "when", "where", "which", "who", "whom", "this", "that", "these", "those", "is", "are", "was", "were", "the", "a", "an", "for", "did", "team"}
+            stop_words = {
+                "what", "when", "where", "which", "who", "whom", "this", "that", "these", "those",
+                "is", "are", "was", "were", "the", "a", "an", "for", "did", "team",
+                "meeting", "meetings", "during", "about", "there", "their", "they", "have", "been", "with", "tell", "show"
+            }
             query_words = [w.lower() for w in re.findall(r'\b[a-zA-Z]{3,}\b', query) if w.lower() not in stop_words]
             matching_chunks = []
             for c in context:

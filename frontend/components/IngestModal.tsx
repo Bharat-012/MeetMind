@@ -219,7 +219,7 @@ export default function IngestModal({
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="audio/*,video/*,.mp4,.mov,.mkv,.webm,.wav,.mp3,.m4a"
+                accept="audio/*,video/*,.mp4,.mov,.mkv,.webm,.wav,.mp3,.m4a,.aac"
                 onChange={(e) => {
                   if (e.target.files && e.target.files.length > 0) {
                     setFile(e.target.files[0]);
@@ -258,7 +258,7 @@ export default function IngestModal({
                       Drop audio or video file here, or <span className="text-indigo-400">browse</span>
                     </p>
                     <p className="text-[11px] text-slate-400 mt-0.5">
-                      Supported: MP4, MOV, MKV, WebM, WAV, MP3, M4A (up to 2GB)
+                      Supported: MP4, MOV, MKV, WebM, WAV, MP3, M4A, AAC (up to 500MB)
                     </p>
                   </div>
                 </div>

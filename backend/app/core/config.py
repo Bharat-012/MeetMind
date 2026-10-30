@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     # Storage Settings
     MEDIA_STORAGE_DIR: str = "./storage/media"
     MAX_UPLOAD_SIZE_BYTES: int = 524288000  # 500 MB
-    ALLOWED_MEDIA_EXTENSIONS: List[str] = ["mp4", "webm", "mov", "mkv", "mp3", "wav", "m4a"]
+    ALLOWED_MEDIA_EXTENSIONS: List[str] = ["mp4", "webm", "mov", "mkv", "mp3", "wav", "m4a", "aac"]
 
     # AI Model Providers
     ASR_PROVIDER: str = "mock"  # mock | faster_whisper | whisper

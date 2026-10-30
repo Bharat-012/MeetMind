@@ -5,6 +5,43 @@ All notable changes to the MeetMind project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-10-30: Ultimate One-Day MVP Completion & Quality Sprint
+
+### Added
+- **Full Media Format Support Expansion**:
+  - Expanded `ALLOWED_MEDIA_EXTENSIONS` across `backend/app/core/config.py`, `backend/.env`, and `frontend/components/IngestModal.tsx` to include `.aac`.
+  - Full matrix of 8 supported formats: MP4, MOV, MKV, WebM, WAV, MP3, M4A, AAC with 500MB size limit enforcement.
+- **Sprint Automated Test Suite (`backend/tests/test_mvp_completion_sprint.py`)**:
+  - 6 dedicated automated tests covering:
+    1. Validation of all 8 media extensions.
+    2. HTTP 413 rejection of oversized media uploads (>500MB).
+    3. Filename sanitization converting whitespace to underscores.
+    4. Path traversal defense preventing directory breakout attacks.
+    5. Pipeline retry idempotency verifying zero duplicate records.
+    6. Grounded vs truthful insufficient evidence fallback verification.
+- **Comprehensive Browser Verification Suite (`scratch/test_mvp_complete_browser.py`)**:
+  - Automated Playwright browser tests executed directly in native Google Chrome across 5 user journeys with 8 high-resolution screenshots (`68_mvp_local_video_player.png` through `75_mvp_speakers_directory.png`).
+
+### Changed
+- **Anti-False-Positive Grounding Defenses**:
+  - Added meta-words (`meeting`, `meetings`, `during`, `about`, `there`, `their`, `they`, `have`, `been`, `with`, `tell`, `show`) to search stop-words in `OllamaProvider` and `RAGService`.
+  - Prevents meta-conversational queries (e.g. 'during the meeting') from triggering false-positive keyword hits on unrelated topics.
+- **Starlette 413 Deprecation Resolution**:
+  - Replaced deprecated `status.HTTP_413_REQUEST_ENTITY_TOO_LARGE` with `getattr(status, 'HTTP_413_CONTENT_TOO_LARGE', 413)` in `MediaService`.
+- **Media Upload Sanitization**:
+  - Ensured uploaded media files with spaces and special characters are safely normalized on disk while preserving user-facing filenames in metadata.
+
+### Verified
+- **Backend Test Suite**:
+  - 45 passed, 0 warnings in 227.09s (100% pass rate).
+- **Frontend Quality Assurance**:
+  - TypeScript compilation: 0 errors (`npx tsc --noEmit`).
+  - Next.js production build: 0 errors (`npm run build`).
+- **Browser End-to-End Verification**:
+  - All 5 critical user journeys passed with zero visual defects or console errors.
+
+---
+
 ## [0.5.0] - 2026-10-30: Phase 5 — Advanced AI Meeting Chat & Knowledge Intelligence
 
 ### Added
