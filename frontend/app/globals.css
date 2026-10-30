@@ -3,26 +3,75 @@
 @tailwind utilities;
 
 :root {
-  --background: #090d16;
-  --surface-primary: #0d131f;
-  --surface-secondary: #121a2b;
-  --surface-card: #0e1526;
-  --border-subtle: #1e293b;
-  --border-muted: rgba(30, 41, 59, 0.6);
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --accent: #6366f1;
-  --accent-hover: #4f46e5;
+  --background: #F3F0FF;
+  --background-secondary: #EAE5FF;
+  --surface: #FFFFFF;
+  --surface-hover: #F8F6FF;
+  --surface-muted: #F9F7FD;
+  --border: #E9E4F2;
+  --border-subtle: #F0ECF8;
+  --text-primary: #252238;
+  --text-secondary: #77738A;
+  --text-muted: #9D99AF;
+  
+  --primary-purple: #8B45D6;
+  --deep-purple: #7135C5;
+  --accent-magenta: #C23DB4;
+  
+  --pastel-blue-bg: #EAF3FD;
+  --pastel-blue-border: #B9D9F8;
+  --pastel-blue-text: #2463EB;
+  
+  --pastel-cyan-bg: #E6F8F9;
+  --pastel-cyan-border: #C8EFF0;
+  --pastel-cyan-text: #0E7490;
+  
+  --pastel-green-bg: #EBF9F0;
+  --pastel-green-border: #D8F3E2;
+  --pastel-green-text: #16A34A;
+  
+  --pastel-purple-bg: #F3ECFE;
+  --pastel-purple-border: #E0CFFC;
+  --pastel-purple-text: #8B45D6;
 }
 
 body {
   color: var(--text-primary);
   background: var(--background);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  letter-spacing: -0.011em;
+  letter-spacing: -0.012em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Gradient Utility */
+.gradient-purple-hero {
+  background: linear-gradient(135deg, #7135C5 0%, #8B45D6 55%, #C23DB4 100%);
+}
+
+.gradient-purple-subtle {
+  background: linear-gradient(135deg, rgba(139, 69, 214, 0.08) 0%, rgba(194, 61, 180, 0.05) 100%);
+}
+
+.gradient-purple-pill {
+  background: linear-gradient(135deg, #8B45D6 0%, #A855F7 100%);
+}
+
+/* Custom Soft Shadows inspired by reference image */
+.shadow-soft-card {
+  box-shadow: 0 4px 20px -2px rgba(139, 69, 214, 0.06), 0 2px 6px -1px rgba(37, 34, 56, 0.03);
+}
+
+.shadow-soft-elevated {
+  box-shadow: 0 12px 32px -4px rgba(113, 53, 197, 0.16), 0 4px 12px -2px rgba(37, 34, 56, 0.04);
+}
+
+.shadow-purple-btn {
+  box-shadow: 0 4px 14px 0 rgba(139, 69, 214, 0.35);
+}
+
+.shadow-purple-btn:hover {
+  box-shadow: 0 6px 20px 0 rgba(139, 69, 214, 0.45);
 }
 
 /* Hide default browser scrollbars completely for horizontal tabs & chips */
@@ -36,7 +85,7 @@ body {
   scrollbar-width: none !important;
 }
 
-/* Subtle, dark scrollbar for vertical content areas (never white/grey) */
+/* Light lavender subtle scrollbar for vertical content areas */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -45,16 +94,16 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: #DDD5FF;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: #C2B3FC;
 }
 
 /* Range input styling for video scrubber and volume */
 input[type="range"] {
-  accent-color: #6366f1;
+  accent-color: #8B45D6;
 }
 
 /* Smooth transitions for interactive elements */

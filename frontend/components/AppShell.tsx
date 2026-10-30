@@ -11,7 +11,8 @@ import {
   Building,
   Menu,
   X,
-  Cpu
+  Cpu,
+  Sparkles
 } from 'lucide-react';
 import IngestModal from '@/components/IngestModal';
 
@@ -55,9 +56,9 @@ export default function AppShell({
   }, []);
 
   const navItems = [
-    { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/workspace', label: 'Meetings Library', icon: Layers },
-    { href: '/speakers', label: 'Speaker Directory', icon: Users },
+    { href: '/', label: 'Overview', icon: LayoutDashboard },
+    { href: '/workspace', label: 'Meetings', icon: Layers },
+    { href: '/speakers', label: 'Speakers', icon: Users },
   ];
 
   const isActive = (href: string) => {
@@ -68,37 +69,37 @@ export default function AppShell({
   const currentOrg = organizations.find((o) => o.id === activeOrgId) || organizations[0];
 
   return (
-    <div className="flex h-screen bg-[#090d16] text-slate-100 overflow-hidden font-sans">
+    <div className="flex h-screen bg-[#F3F0FF] text-[#252238] overflow-hidden font-sans">
       {/* Mobile Drawer Backdrop */}
       {mobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 md:hidden transition-opacity"
+          className="fixed inset-0 bg-[#252238]/40 backdrop-blur-sm z-40 md:hidden transition-opacity"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
 
-      {/* Primary Sidebar */}
+      {/* Primary Sidebar (Premium Lavender / White Surface) */}
       <aside
-        className={`fixed md:static top-0 bottom-0 left-0 z-50 w-64 bg-[#0d131f] border-r border-slate-800/80 flex flex-col justify-between transition-transform duration-200 ease-in-out ${
+        className={`fixed md:static top-0 bottom-0 left-0 z-50 w-64 bg-white border-r border-[#E9E4F2] flex flex-col justify-between transition-transform duration-200 ease-in-out shadow-[4px_0_24px_rgba(139,69,214,0.03)] ${
           mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
         <div className="flex flex-col flex-1 overflow-y-auto">
           {/* Brand Header */}
-          <div className="h-16 px-5 border-b border-slate-800/80 flex items-center justify-between">
+          <div className="h-18 px-5 py-4 border-b border-[#F0ECF8] flex items-center justify-between">
             <Link
               href="/"
               className="flex items-center gap-3 group focus:outline-none"
               onClick={() => setMobileMenuOpen(false)}
             >
-              <div className="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white text-sm shadow-sm group-hover:bg-indigo-500 transition">
+              <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-[#7135C5] via-[#8B45D6] to-[#C23DB4] flex items-center justify-center font-bold text-white text-base shadow-[0_4px_12px_rgba(139,69,214,0.35)] group-hover:scale-105 transition">
                 M
               </div>
               <div className="flex flex-col">
-                <span className="font-semibold text-sm tracking-tight text-white group-hover:text-indigo-300 transition">
+                <span className="font-bold text-base tracking-tight text-[#252238] group-hover:text-[#8B45D6] transition">
                   MeetMind
                 </span>
-                <span className="text-[11px] text-slate-400">
+                <span className="text-[11px] font-medium text-[#77738A]">
                   Meeting Intelligence
                 </span>
               </div>
@@ -107,7 +108,7 @@ export default function AppShell({
             {/* Mobile Close Button */}
             <button
               onClick={() => setMobileMenuOpen(false)}
-              className="md:hidden text-slate-400 hover:text-white p-1 rounded-md"
+              className="md:hidden text-[#77738A] hover:text-[#252238] p-1.5 rounded-lg hover:bg-[#F3F0FF]"
             >
               <X className="h-5 w-5" />
             </button>
@@ -115,16 +116,16 @@ export default function AppShell({
 
           {/* Organization Indicator / Selector */}
           {organizations.length > 0 && (
-            <div className="px-4 py-3 border-b border-slate-800/60 bg-slate-900/30">
-              <label className="text-[10px] uppercase font-mono font-semibold text-slate-400 tracking-wider flex items-center gap-1.5 mb-1.5">
-                <Building className="h-3 w-3 text-indigo-400" />
+            <div className="px-4 py-3 mx-3 my-3 rounded-xl bg-[#FAF8FF] border border-[#EAE5FF]">
+              <label className="text-[10px] uppercase font-bold text-[#8B45D6] tracking-wider flex items-center gap-1.5 mb-1">
+                <Building className="h-3 w-3" />
                 <span>Organization</span>
               </label>
               {onOrgChange && organizations.length > 1 ? (
                 <select
                   value={activeOrgId || currentOrg?.id}
                   onChange={(e) => onOrgChange(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500 font-medium"
+                  className="w-full bg-white border border-[#E9E4F2] rounded-lg px-2.5 py-1.5 text-xs text-[#252238] focus:outline-none focus:border-[#8B45D6] font-medium shadow-xs"
                 >
                   {organizations.map((org) => (
                     <option key={org.id} value={org.id}>
@@ -133,8 +134,8 @@ export default function AppShell({
                   ))}
                 </select>
               ) : (
-                <div className="px-2.5 py-1.5 bg-slate-950/60 rounded-lg border border-slate-800/60 text-xs font-medium text-slate-300 truncate">
-                  {currentOrg?.name || 'Acme Corp'}
+                <div className="text-xs font-semibold text-[#252238] truncate">
+                  {currentOrg?.name || 'Workspace'}
                 </div>
               )}
             </div>
@@ -148,7 +149,7 @@ export default function AppShell({
                   setIsIngestModalOpen(true);
                   setMobileMenuOpen(false);
                 }}
-                className="w-full flex items-center justify-center gap-2 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-medium transition"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#7135C5] to-[#8B45D6] text-white rounded-xl text-xs font-semibold shadow-purple-btn transition"
               >
                 <Plus className="h-3.5 w-3.5" />
                 <span>Import Meeting</span>
@@ -158,7 +159,7 @@ export default function AppShell({
 
           {/* Navigation Links */}
           <nav className="p-3 space-y-1">
-            <span className="px-3 text-[10px] uppercase font-mono font-semibold text-slate-400 tracking-wider block mb-2">
+            <span className="px-3 text-[10px] uppercase font-bold text-[#9D99AF] tracking-wider block mb-2">
               Workspace
             </span>
             {navItems.map((item) => {
@@ -169,14 +170,17 @@ export default function AppShell({
                   key={item.href}
                   href={item.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition ${
+                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium transition ${
                     active
-                      ? 'bg-indigo-600/15 text-indigo-400 border border-indigo-500/20'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/50 border border-transparent'
+                      ? 'bg-[#F3ECFE] text-[#7135C5] font-semibold shadow-xs'
+                      : 'text-[#77738A] hover:text-[#252238] hover:bg-[#FAF8FF]'
                   }`}
                 >
-                  <Icon className={`h-4 w-4 ${active ? 'text-indigo-400' : 'text-slate-400'}`} />
+                  <Icon className={`h-4 w-4 ${active ? 'text-[#8B45D6]' : 'text-[#77738A]'}`} />
                   <span className="flex-1">{item.label}</span>
+                  {active && (
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#8B45D6]" />
+                  )}
                 </Link>
               );
             })}
@@ -184,42 +188,42 @@ export default function AppShell({
         </div>
 
         {/* Sidebar Footer: Hardware Status */}
-        <div className="p-3.5 border-t border-slate-800/80 bg-slate-950/40 text-xs">
+        <div className="p-3.5 mx-3 mb-3 rounded-2xl bg-[#FAF8FF] border border-[#EAE5FF] text-xs">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-[11px] font-mono text-slate-400 flex items-center gap-1.5">
-              <Cpu className="h-3.5 w-3.5 text-indigo-400" />
-              <span>Engine Status</span>
+            <span className="text-[11px] font-semibold text-[#7135C5] flex items-center gap-1.5">
+              <Cpu className="h-3.5 w-3.5 text-[#8B45D6]" />
+              <span>Local AI Engine</span>
             </span>
             <span className="flex items-center gap-1.5">
               <span
                 className={`h-2 w-2 rounded-full ${
                   backendStatus === 'healthy'
-                    ? 'bg-emerald-400'
+                    ? 'bg-[#16A34A]'
                     : backendStatus === 'checking'
                     ? 'bg-amber-400 animate-pulse'
                     : 'bg-rose-500'
                 }`}
               />
-              <span className="text-[10px] font-mono text-slate-400">
+              <span className="text-[10px] font-medium text-[#77738A]">
                 {backendStatus === 'healthy' ? 'Online' : backendStatus === 'checking' ? 'Checking' : 'Offline'}
               </span>
             </span>
           </div>
-          <p className="text-[10px] text-slate-400 font-mono">
+          <p className="text-[10px] text-[#77738A]">
             Nemotron-3 • Faster-Whisper
           </p>
         </div>
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 bg-[#090d16] overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 bg-[#F3F0FF] overflow-hidden">
         {/* Top Header Bar */}
-        <header className="h-16 border-b border-slate-800/80 bg-[#0d131f]/90 px-4 md:px-8 flex items-center justify-between sticky top-0 z-20 backdrop-blur">
+        <header className="h-16 border-b border-[#E9E4F2] bg-white/80 px-4 md:px-8 flex items-center justify-between sticky top-0 z-20 backdrop-blur-md">
           <div className="flex items-center gap-3 min-w-0">
             {/* Hamburger Button (Mobile Only) */}
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="md:hidden text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 border border-slate-700/60"
+              className="md:hidden text-[#77738A] hover:text-[#252238] p-1.5 rounded-lg hover:bg-[#F3F0FF] border border-[#E9E4F2]"
               title="Open Navigation Menu"
             >
               <Menu className="h-5 w-5" />
@@ -227,21 +231,21 @@ export default function AppShell({
 
             {title && (
               <div className="min-w-0">
-                <h1 className="font-semibold text-sm md:text-base text-white truncate">{title}</h1>
+                <h1 className="font-bold text-sm md:text-base text-[#252238] truncate">{title}</h1>
                 {subtitle && (
-                  <p className="text-xs text-slate-400 truncate hidden sm:block">{subtitle}</p>
+                  <p className="text-xs text-[#77738A] truncate hidden sm:block">{subtitle}</p>
                 )}
               </div>
             )}
           </div>
 
           {/* Top Bar Action Area */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-3">
             {actionButton}
             {showIngestButton && (
               <button
                 onClick={() => setIsIngestModalOpen(true)}
-                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-medium shadow-sm transition"
+                className="hidden sm:inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#7135C5] via-[#8B45D6] to-[#C23DB4] text-white rounded-xl text-xs font-semibold shadow-purple-btn hover:opacity-95 transition"
               >
                 <Plus className="h-3.5 w-3.5" />
                 <span>Import Meeting</span>

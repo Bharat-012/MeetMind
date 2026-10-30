@@ -13,7 +13,9 @@ import {
   Calendar,
   Cpu,
   ShieldCheck,
-  HardDrive
+  Plus,
+  Sparkles,
+  ArrowUpRight
 } from 'lucide-react';
 import AppShell from '@/components/AppShell';
 
@@ -79,82 +81,147 @@ export default function Dashboard() {
 
   return (
     <AppShell
-      title="Dashboard"
+      title="Overview"
       subtitle="Institutional memory, intelligence metrics, and recent meetings"
       activeOrgId={selectedOrgId}
       onOrgChange={setSelectedOrgId}
       organizations={organizations}
     >
-      <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-8">
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-slate-800/60">
-          <div>
-            <h2 className="text-xl md:text-2xl font-semibold tracking-tight text-white">
-              {currentOrg ? `${currentOrg.name} Overview` : 'Overview'}
+      <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-7">
+        
+        {/* Prominent Purple-to-Magenta Hero Banner (Inspired by Reference Image) */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#7135C5] via-[#8B45D6] to-[#C23DB4] p-7 md:p-9 text-white shadow-soft-elevated">
+          {/* Subtle Decorative Background Rings */}
+          <div className="absolute -right-12 -top-12 h-64 w-64 rounded-full bg-white/10 blur-2xl pointer-events-none" />
+          <div className="absolute right-32 -bottom-16 h-56 w-56 rounded-full bg-white/10 blur-xl pointer-events-none" />
+          
+          <div className="relative z-10 max-w-2xl space-y-4">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider backdrop-blur-md">
+              <Sparkles className="h-3 w-3 text-white" />
+              <span>Institutional Memory • Local Engine</span>
+            </div>
+            
+            <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight leading-tight">
+              Transform discussions into searchable intelligence
             </h2>
-            <p className="text-xs md:text-sm text-slate-400 mt-1">
-              Verifiable meeting intelligence, speech transcription, and multi-meeting knowledge retrieval.
+            
+            <p className="text-xs md:text-sm text-white/90 leading-relaxed max-w-xl">
+              Import local audio/video recordings or YouTube streams. MeetMind automatically generates speech-to-text transcripts, speaker identification, structured executive summaries, and action items.
             </p>
+
+            <div className="pt-2 flex flex-wrap items-center gap-3">
+              <Link
+                href="/workspace"
+                className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-xs font-bold text-[#7135C5] shadow-md hover:bg-white/95 hover:scale-[1.02] active:scale-[0.98] transition"
+              >
+                <span>Browse Meetings Archive</span>
+                <ChevronRight className="h-3.5 w-3.5" />
+              </Link>
+
+              <span className="text-[11px] font-medium text-white/80">
+                100% On-Device Processing • Zero Cloud APIs
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Metrics Grid */}
+        {/* 4 Pastel Metric Cards (Inspired by Reference Image Top Row) */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="p-4 rounded-xl bg-[#0e1526] border border-slate-800/80 space-y-2">
-            <div className="flex items-center justify-between text-slate-400 text-xs">
-              <span className="font-medium">Total Meetings</span>
-              <Layers className="h-4 w-4 text-slate-400" />
+          {/* Card 1: Total Meetings */}
+          <div className="p-5 rounded-2xl bg-white border border-[#E9E4F2] shadow-soft-card space-y-3 hover:translate-y-[-2px] transition">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-[#77738A]">Total Meetings</span>
+              <div className="h-8 w-8 rounded-xl bg-[#F3ECFE] border border-[#E0CFFC] flex items-center justify-center text-[#8B45D6]">
+                <Layers className="h-4 w-4" />
+              </div>
             </div>
-            <p className="text-2xl font-bold tracking-tight text-white">
-              {loading ? '—' : meetings.length}
-            </p>
-            <span className="text-[11px] text-slate-400 block">Workspace archive</span>
+            <div>
+              <p className="text-2xl md:text-3xl font-extrabold text-[#252238] tracking-tight">
+                {loading ? '—' : meetings.length}
+              </p>
+              <div className="w-full bg-[#FAF8FF] h-1.5 rounded-full mt-2.5 overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-[#7135C5] to-[#8B45D6] rounded-full" style={{ width: '100%' }} />
+              </div>
+            </div>
+            <span className="text-[11px] font-medium text-[#77738A] block">
+              In workspace archive
+            </span>
           </div>
 
-          <div className="p-4 rounded-xl bg-[#0e1526] border border-slate-800/80 space-y-2">
-            <div className="flex items-center justify-between text-slate-400 text-xs">
-              <span className="font-medium">Decisions Logged</span>
-              <CheckCircle2 className="h-4 w-4 text-emerald-400/80" />
+          {/* Card 2: Action Items */}
+          <div className="p-5 rounded-2xl bg-white border border-[#E9E4F2] shadow-soft-card space-y-3 hover:translate-y-[-2px] transition">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-[#77738A]">Action Items</span>
+              <div className="h-8 w-8 rounded-xl bg-[#EBF9F0] border border-[#D8F3E2] flex items-center justify-center text-[#16A34A]">
+                <ListTodo className="h-4 w-4" />
+              </div>
             </div>
-            <p className="text-2xl font-bold tracking-tight text-white">
-              {loading ? '—' : decisions.length}
-            </p>
-            <span className="text-[11px] text-slate-400 block">Extracted with citations</span>
+            <div>
+              <p className="text-2xl md:text-3xl font-extrabold text-[#252238] tracking-tight">
+                {loading ? '—' : actions.length}
+              </p>
+              <div className="w-full bg-[#FAF8FF] h-1.5 rounded-full mt-2.5 overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-[#16A34A] to-emerald-400 rounded-full" style={{ width: actions.length > 0 ? '75%' : '0%' }} />
+              </div>
+            </div>
+            <span className="text-[11px] font-medium text-[#77738A] block">
+              Tracked deliverables
+            </span>
           </div>
 
-          <div className="p-4 rounded-xl bg-[#0e1526] border border-slate-800/80 space-y-2">
-            <div className="flex items-center justify-between text-slate-400 text-xs">
-              <span className="font-medium">Action Items</span>
-              <ListTodo className="h-4 w-4 text-indigo-400/80" />
+          {/* Card 3: Decisions Logged */}
+          <div className="p-5 rounded-2xl bg-white border border-[#E9E4F2] shadow-soft-card space-y-3 hover:translate-y-[-2px] transition">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-[#77738A]">Decisions Logged</span>
+              <div className="h-8 w-8 rounded-xl bg-[#EAF3FD] border border-[#B9D9F8] flex items-center justify-center text-[#2463EB]">
+                <CheckCircle2 className="h-4 w-4" />
+              </div>
             </div>
-            <p className="text-2xl font-bold tracking-tight text-white">
-              {loading ? '—' : actions.length}
-            </p>
-            <span className="text-[11px] text-slate-400 block">Tracked deliverables</span>
+            <div>
+              <p className="text-2xl md:text-3xl font-extrabold text-[#252238] tracking-tight">
+                {loading ? '—' : decisions.length}
+              </p>
+              <div className="w-full bg-[#FAF8FF] h-1.5 rounded-full mt-2.5 overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-[#2463EB] to-cyan-400 rounded-full" style={{ width: decisions.length > 0 ? '60%' : '0%' }} />
+              </div>
+            </div>
+            <span className="text-[11px] font-medium text-[#77738A] block">
+              Extracted with citations
+            </span>
           </div>
 
-          <div className="p-4 rounded-xl bg-[#0e1526] border border-slate-800/80 space-y-2">
-            <div className="flex items-center justify-between text-slate-400 text-xs">
-              <span className="font-medium">Participants</span>
-              <Users className="h-4 w-4 text-slate-400" />
+          {/* Card 4: Participants */}
+          <div className="p-5 rounded-2xl bg-white border border-[#E9E4F2] shadow-soft-card space-y-3 hover:translate-y-[-2px] transition">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-[#77738A]">Participants</span>
+              <div className="h-8 w-8 rounded-xl bg-[#E6F8F9] border border-[#C8EFF0] flex items-center justify-center text-[#0E7490]">
+                <Users className="h-4 w-4" />
+              </div>
             </div>
-            <p className="text-2xl font-bold tracking-tight text-white">
-              {loading ? '—' : speakers.length}
-            </p>
-            <span className="text-[11px] text-slate-400 block">Directory profiles</span>
+            <div>
+              <p className="text-2xl md:text-3xl font-extrabold text-[#252238] tracking-tight">
+                {loading ? '—' : speakers.length}
+              </p>
+              <div className="w-full bg-[#FAF8FF] h-1.5 rounded-full mt-2.5 overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-[#0E7490] to-teal-400 rounded-full" style={{ width: speakers.length > 0 ? '80%' : '0%' }} />
+              </div>
+            </div>
+            <span className="text-[11px] font-medium text-[#77738A] block">
+              Directory profiles
+            </span>
           </div>
         </div>
 
-        {/* Recent Meetings Table */}
-        <div className="space-y-3">
+        {/* Recent Meetings Table Surface (Pure White with Soft Lavender Border) */}
+        <div className="p-6 rounded-3xl bg-white border border-[#E9E4F2] shadow-soft-card space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-semibold text-sm text-white">Recent Meetings</h3>
-              <p className="text-xs text-slate-400">Processed recordings and intelligence artifacts</p>
+              <h3 className="font-bold text-base text-[#252238]">Recent Meetings</h3>
+              <p className="text-xs text-[#77738A]">Processed recordings, speech transcripts, and summaries</p>
             </div>
             <Link
               href="/workspace"
-              className="text-xs text-indigo-400 hover:text-indigo-300 font-medium flex items-center gap-1 transition"
+              className="text-xs text-[#8B45D6] hover:text-[#7135C5] font-semibold flex items-center gap-1 transition"
             >
               <span>View all</span>
               <ChevronRight className="h-3.5 w-3.5" />
@@ -162,114 +229,114 @@ export default function Dashboard() {
           </div>
 
           {loading ? (
-            <div className="p-12 text-center rounded-xl border border-slate-800/80 bg-[#0e1526]">
-              <p className="text-xs text-slate-400">Loading meeting library...</p>
+            <div className="p-12 text-center rounded-2xl bg-[#FAF8FF] border border-[#F0ECF8]">
+              <p className="text-xs text-[#77738A]">Loading meeting library...</p>
             </div>
           ) : recentMeetings.length === 0 ? (
-            <div className="p-12 text-center rounded-xl border border-dashed border-slate-800 bg-[#0e1526]/50 space-y-3">
-              <Video className="h-8 w-8 text-slate-500 mx-auto" />
-              <p className="text-sm font-medium text-white">No meetings recorded yet</p>
-              <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                Upload a video or audio recording to generate transcripts, chronological explanations, and action items.
+            <div className="p-12 text-center rounded-2xl border border-dashed border-[#DDD5FF] bg-[#FAF8FF] space-y-3">
+              <Video className="h-8 w-8 text-[#8B45D6]/60 mx-auto" />
+              <p className="text-sm font-semibold text-[#252238]">No meetings recorded yet</p>
+              <p className="text-xs text-[#77738A] max-w-sm mx-auto">
+                Upload a video/audio recording or import a YouTube URL to automatically generate transcripts, summaries, and action items.
               </p>
             </div>
           ) : (
-            <div className="border border-slate-800/80 rounded-xl bg-[#0e1526] overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-900/60 border-b border-slate-800/80 text-slate-400 font-medium text-[11px]">
-                    <tr>
-                      <th className="px-5 py-3">Title</th>
-                      <th className="px-4 py-3">Source</th>
-                      <th className="px-4 py-3">Duration</th>
-                      <th className="px-4 py-3">Date</th>
-                      <th className="px-4 py-3">Status</th>
-                      <th className="px-5 py-3 text-right">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800/60">
-                    {recentMeetings.map((m) => {
-                      const isCompleted = m.status === 'COMPLETED';
-                      const isFailed = m.status === 'FAILED';
-                      const isYouTube = m.source_type === 'YOUTUBE';
+            <div className="overflow-x-auto rounded-2xl border border-[#F0ECF8]">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-[#FAF8FF] border-b border-[#F0ECF8] text-[#77738A] font-semibold text-[11px]">
+                  <tr>
+                    <th className="px-5 py-3.5">Title</th>
+                    <th className="px-4 py-3.5">Source</th>
+                    <th className="px-4 py-3.5">Duration</th>
+                    <th className="px-4 py-3.5">Date</th>
+                    <th className="px-4 py-3.5">Status</th>
+                    <th className="px-5 py-3.5 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#F0ECF8]">
+                  {recentMeetings.map((m) => {
+                    const isCompleted = m.status === 'COMPLETED';
+                    const isFailed = m.status === 'FAILED';
+                    const isYouTube = m.source_type === 'YOUTUBE';
 
-                      return (
-                        <tr key={m.id} className="hover:bg-slate-900/40 transition group">
-                          <td className="px-5 py-3.5">
-                            <Link href={`/meetings/${m.id}`} className="block">
-                              <span className="font-medium text-white group-hover:text-indigo-300 transition block truncate max-w-xs md:max-w-md">
-                                {m.title}
+                    return (
+                      <tr key={m.id} className="hover:bg-[#FAF8FF] transition group">
+                        <td className="px-5 py-4">
+                          <Link href={`/meetings/${m.id}`} className="block">
+                            <span className="font-semibold text-sm text-[#252238] group-hover:text-[#8B45D6] transition block truncate max-w-xs md:max-w-md">
+                              {m.title}
+                            </span>
+                            {m.description && (
+                              <span className="text-[11px] text-[#77738A] truncate block max-w-xs md:max-w-md mt-0.5">
+                                {m.description}
                               </span>
-                              {m.description && (
-                                <span className="text-[11px] text-slate-400 truncate block max-w-xs md:max-w-md">
-                                  {m.description}
-                                </span>
-                              )}
-                            </Link>
-                          </td>
-                          <td className="px-4 py-3.5">
-                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] bg-slate-900/80 text-slate-300 border border-slate-800">
-                              {isYouTube ? (
-                                <>
-                                  <Tv className="h-3 w-3 text-red-400" />
-                                  <span>YouTube</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Video className="h-3 w-3 text-indigo-400" />
-                                  <span>Upload</span>
-                                </>
-                              )}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3.5 text-slate-400 font-mono text-[11px]">
-                            {m.duration_seconds ? formatDuration(m.duration_seconds) : '—'}
-                          </td>
-                          <td className="px-4 py-3.5 text-slate-400 text-[11px]">
-                            {new Date(m.created_at).toLocaleDateString()}
-                          </td>
-                          <td className="px-4 py-3.5">
-                            <span
-                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border ${
-                                isCompleted
-                                  ? 'bg-emerald-950/40 text-emerald-400 border-emerald-800/30'
-                                  : isFailed
-                                  ? 'bg-rose-950/40 text-rose-400 border-rose-800/30'
-                                  : 'bg-indigo-950/40 text-indigo-300 border-indigo-800/30'
-                              }`}
-                            >
-                              {m.status}
-                            </span>
-                          </td>
-                          <td className="px-5 py-3.5 text-right">
-                            <Link
-                              href={`/meetings/${m.id}`}
-                              className="inline-flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300 font-medium transition"
-                            >
-                              <span>Open</span>
-                              <ChevronRight className="h-3.5 w-3.5" />
-                            </Link>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                            )}
+                          </Link>
+                        </td>
+                        <td className="px-4 py-4">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold">
+                            {isYouTube ? (
+                              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[#FDF0F4] text-[#BE123C] border border-[#FBCDD9]">
+                                <Tv className="h-3 w-3" />
+                                <span>YouTube</span>
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[#F3ECFE] text-[#8B45D6] border border-[#E0CFFC]">
+                                <Video className="h-3 w-3" />
+                                <span>Upload</span>
+                              </span>
+                            )}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 text-[#77738A] font-mono text-[11px]">
+                          {m.duration_seconds ? formatDuration(m.duration_seconds) : '—'}
+                        </td>
+                        <td className="px-4 py-4 text-[#77738A] text-[11px]">
+                          {new Date(m.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-4">
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                              isCompleted
+                                ? 'bg-[#EBF9F0] text-[#16A34A] border-[#D8F3E2]'
+                                : isFailed
+                                ? 'bg-[#FDF0F4] text-[#BE123C] border-[#FBCDD9]'
+                                : 'bg-[#FEF7EA] text-[#B45309] border-[#FDE3B7]'
+                            }`}
+                          >
+                            {m.status}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4 text-right">
+                          <Link
+                            href={`/meetings/${m.id}`}
+                            className="inline-flex items-center gap-1 text-xs text-[#8B45D6] hover:text-[#7135C5] font-semibold transition"
+                          >
+                            <span>Open</span>
+                            <ChevronRight className="h-3.5 w-3.5" />
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
 
-        {/* Clean System Telemetry Strip */}
-        <div className="p-4 rounded-xl bg-[#0e1526] border border-slate-800/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-slate-400">
+        {/* System Architecture Strip */}
+        <div className="p-4 rounded-2xl bg-white border border-[#E9E4F2] shadow-soft-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-[#77738A]">
           <div className="flex items-center gap-3">
-            <ShieldCheck className="h-4 w-4 text-emerald-400 flex-shrink-0" />
+            <div className="h-6 w-6 rounded-lg bg-[#EBF9F0] text-[#16A34A] flex items-center justify-center flex-shrink-0">
+              <ShieldCheck className="h-3.5 w-3.5" />
+            </div>
             <div>
-              <span className="text-white font-medium">Local-First Architecture: </span>
-              <span>All speech-to-text, speaker diarization, and vector retrieval run strictly on host hardware.</span>
+              <span className="text-[#252238] font-semibold">Local-First Architecture: </span>
+              <span>All speech recognition, diarization, and QA vector retrieval run strictly on host hardware.</span>
             </div>
           </div>
-          <div className="flex items-center gap-3 font-mono text-[11px] text-slate-400">
+          <div className="flex items-center gap-2.5 font-medium text-[11px] text-[#8B45D6]">
             <span>Faster-Whisper</span>
             <span>•</span>
             <span>Nemotron-3</span>
@@ -277,6 +344,7 @@ export default function Dashboard() {
             <span>Local RAG</span>
           </div>
         </div>
+
       </div>
     </AppShell>
   );

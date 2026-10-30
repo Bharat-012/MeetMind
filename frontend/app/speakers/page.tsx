@@ -223,9 +223,9 @@ export default function SpeakersDirectoryPage() {
             setFormError('');
             setIsCreateModalOpen(true);
           }}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold shadow-sm transition"
+          className="flex items-center gap-2 px-5 py-2.5 gradient-purple-hero text-white rounded-full text-xs font-semibold shadow-purple-btn hover:opacity-95 transition"
         >
-          <UserPlus className="h-3.5 w-3.5" />
+          <UserPlus className="h-4 w-4" />
           <span>New Speaker</span>
         </button>
       }
@@ -234,17 +234,18 @@ export default function SpeakersDirectoryPage() {
         {/* Search & Actions Bar */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
+            <Search className="absolute left-3.5 top-3 h-4 w-4 text-[#77738A]" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search speakers by name, email, or role..."
-              className="w-full pl-9 pr-3 py-2 bg-[#0e1526] border border-slate-800 rounded-lg text-xs text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500"
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E9E4F2] rounded-2xl text-xs text-[#252238] placeholder-[#9D99AF] focus:outline-none focus:border-[#8B45D6] shadow-sm transition"
             />
           </div>
 
-          <div className="flex items-center gap-3 text-xs text-slate-400 font-mono">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-[#E9E4F2] text-xs text-[#77738A] font-medium shadow-sm">
+            <Users className="h-3.5 w-3.5 text-[#8B45D6]" />
             <span>{speakers.length} confirmed profiles</span>
           </div>
         </div>
@@ -254,14 +255,17 @@ export default function SpeakersDirectoryPage() {
           {/* Left Column: Speaker Cards Grid */}
           <div className="flex-1 w-full">
             {loading ? (
-              <div className="p-12 text-center rounded-xl border border-slate-800 bg-[#0e1526] text-xs text-slate-400">
-                Loading speakers...
+              <div className="p-12 text-center rounded-3xl border border-[#E9E4F2] bg-white text-xs text-[#77738A] shadow-soft-card">
+                <Loader2 className="h-6 w-6 animate-spin text-[#8B45D6] mx-auto mb-2" />
+                <span>Loading speakers...</span>
               </div>
             ) : speakers.length === 0 ? (
-              <div className="p-12 text-center rounded-xl border border-dashed border-slate-800 bg-[#0e1526]/40 space-y-3">
-                <Users className="h-8 w-8 text-slate-400 mx-auto" />
-                <p className="text-sm font-semibold text-white">No speakers found</p>
-                <p className="text-xs text-slate-400 max-w-xs mx-auto">
+              <div className="p-12 text-center rounded-3xl border border-dashed border-[#DDD5FF] bg-white shadow-soft-card space-y-3">
+                <div className="h-12 w-12 rounded-2xl bg-[#F3ECFE] text-[#8B45D6] flex items-center justify-center mx-auto">
+                  <Users className="h-6 w-6" />
+                </div>
+                <p className="text-sm font-bold text-[#252238]">No speakers found</p>
+                <p className="text-xs text-[#77738A] max-w-xs mx-auto">
                   {searchQuery
                     ? 'No speakers matched your query.'
                     : 'Create your first speaker profile to attribute transcript turns across meetings.'}
@@ -283,26 +287,26 @@ export default function SpeakersDirectoryPage() {
                   return (
                     <div
                       key={spk.id}
-                      className={`p-5 rounded-xl bg-[#0e1526] border transition flex flex-col justify-between space-y-4 ${
+                      className={`p-6 rounded-3xl bg-white border transition flex flex-col justify-between space-y-4 shadow-soft-card ${
                         isSelected
-                          ? 'border-indigo-500/80 shadow-md shadow-indigo-950/40 bg-slate-900/70'
-                          : 'border-slate-800 hover:border-slate-700 hover:bg-slate-900/40'
+                          ? 'border-[#8B45D6] shadow-soft-elevated ring-2 ring-[#8B45D6]/20'
+                          : 'border-[#E9E4F2] hover:border-[#DDD5FF] hover:shadow-soft-elevated'
                       }`}
                     >
                       <div className="space-y-3">
                         <div className="flex items-start justify-between">
                           <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center font-bold text-xs text-indigo-300">
+                            <div className="h-12 w-12 rounded-2xl bg-[#F3ECFE] border border-[#E5D7FD] flex items-center justify-center font-bold text-sm text-[#8B45D6] shadow-sm">
                               {initials}
                             </div>
                             <div className="min-w-0">
-                              <h3 className="font-semibold text-sm text-white truncate max-w-[160px] sm:max-w-xs">
+                              <h3 className="font-bold text-sm text-[#252238] truncate max-w-[160px] sm:max-w-xs">
                                 {spk.name}
                               </h3>
                               {spk.email ? (
-                                <p className="text-[11px] text-slate-400 truncate font-mono">{spk.email}</p>
+                                <p className="text-xs text-[#77738A] truncate font-mono">{spk.email}</p>
                               ) : (
-                                <p className="text-[11px] text-slate-400 italic">No email registered</p>
+                                <p className="text-xs text-[#9D99AF] italic">No email registered</p>
                               )}
                             </div>
                           </div>
@@ -310,39 +314,42 @@ export default function SpeakersDirectoryPage() {
                           <div className="flex items-center gap-1">
                             <button
                               onClick={() => openEditModal(spk)}
-                              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                              className="p-2 rounded-xl text-[#77738A] hover:text-[#252238] hover:bg-[#F3F0FF] transition"
                               title="Edit profile"
                             >
-                              <Edit2 className="h-3.5 w-3.5" />
+                              <Edit2 className="h-4 w-4" />
                             </button>
                             <button
                               onClick={() => handleDeleteSpeaker(spk.id, spk.name)}
-                              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition"
+                              className="p-2 rounded-xl text-[#77738A] hover:text-[#BE123C] hover:bg-[#FDF0F4] transition"
                               title="Delete profile"
                             >
-                              <Trash2 className="h-3.5 w-3.5" />
+                              <Trash2 className="h-4 w-4" />
                             </button>
                           </div>
                         </div>
 
                         {spk.description && (
-                          <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
+                          <p className="text-xs text-[#77738A] line-clamp-2 leading-relaxed bg-[#FAF8FF] p-2.5 rounded-xl border border-[#E9E4F2]">
                             {spk.description}
                           </p>
                         )}
                       </div>
 
-                      <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px]">
-                        <div className="flex items-center gap-3 text-slate-400 font-mono">
-                          <span title="Total Meetings Attended">{spk.total_meetings || 0} meetings</span>
-                          <span>•</span>
-                          <span title="Speaking Time">{formatSeconds(spk.total_talk_time_seconds)}</span>
+                      <div className="pt-3 border-t border-[#E9E4F2] flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2 text-[#77738A]">
+                          <span className="px-2 py-0.5 rounded-lg bg-[#F3F0FF] text-[#252238] font-medium" title="Total Meetings Attended">
+                            {spk.total_meetings || 0} meetings
+                          </span>
+                          <span className="px-2 py-0.5 rounded-lg bg-[#F3ECFE] text-[#8B45D6] font-medium" title="Speaking Time">
+                            {formatSeconds(spk.total_talk_time_seconds)}
+                          </span>
                         </div>
 
                         <button
                           onClick={() => handleViewHistory(spk)}
-                          className={`flex items-center gap-1 font-semibold transition ${
-                            isSelected ? 'text-indigo-300' : 'text-indigo-400 hover:text-indigo-300'
+                          className={`flex items-center gap-1 font-semibold text-xs transition ${
+                            isSelected ? 'text-[#8B45D6]' : 'text-[#8B45D6] hover:text-[#7135C5]'
                           }`}
                         >
                           <span>Appearances</span>
@@ -357,76 +364,76 @@ export default function SpeakersDirectoryPage() {
           </div>
 
           {/* Right Column: Speaker Detail & History Drawer */}
-          <div className="w-full lg:w-96 flex-shrink-0 bg-[#0e1526] border border-slate-800 rounded-xl overflow-hidden flex flex-col">
+          <div className="w-full lg:w-96 flex-shrink-0 bg-white border border-[#E9E4F2] rounded-3xl shadow-soft-card overflow-hidden flex flex-col">
             {selectedSpeakerHistory ? (
               <div className="flex flex-col">
                 {/* Drawer Header */}
-                <div className="p-4 border-b border-slate-800 bg-slate-900/60 flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="h-8 w-8 rounded-lg bg-indigo-600/30 border border-indigo-500/40 flex items-center justify-center text-indigo-300 font-bold text-xs">
+                <div className="p-5 border-b border-[#E9E4F2] bg-gradient-to-r from-white via-[#FAF8FF] to-white flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-2xl bg-[#F3ECFE] border border-[#E5D7FD] flex items-center justify-center text-[#8B45D6] font-bold text-sm shadow-sm">
                       {selectedSpeakerHistory.participant.name.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <h4 className="font-semibold text-xs text-white">
+                      <h4 className="font-bold text-sm text-[#252238]">
                         {selectedSpeakerHistory.participant.name}
                       </h4>
-                      <p className="text-[10px] text-slate-400">Participation History</p>
+                      <p className="text-xs text-[#77738A]">Participation History</p>
                     </div>
                   </div>
 
                   <button
                     onClick={() => setSelectedSpeakerHistory(null)}
-                    className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                    className="p-1.5 rounded-xl text-[#77738A] hover:text-[#252238] hover:bg-[#F3F0FF] transition"
                   >
                     <X className="h-4 w-4" />
                   </button>
                 </div>
 
                 {/* Drawer Body */}
-                <div className="p-4 space-y-4 max-h-[600px] overflow-y-auto">
+                <div className="p-5 space-y-5 max-h-[600px] overflow-y-auto">
                   {/* Stats Summary */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 text-center">
-                      <span className="text-[10px] text-slate-400 uppercase font-mono">Meetings</span>
-                      <p className="text-base font-bold text-white mt-0.5">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-4 rounded-2xl bg-[#F3F0FF] border border-[#E9E4F2] text-center">
+                      <span className="text-[11px] text-[#77738A] uppercase font-semibold">Meetings</span>
+                      <p className="text-xl font-bold text-[#252238] mt-0.5">
                         {selectedSpeakerHistory.participant.total_meetings}
                       </p>
                     </div>
-                    <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 text-center">
-                      <span className="text-[10px] text-slate-400 uppercase font-mono">Speaking Time</span>
-                      <p className="text-base font-bold text-indigo-400 mt-0.5">
+                    <div className="p-4 rounded-2xl bg-[#F3ECFE] border border-[#E5D7FD] text-center">
+                      <span className="text-[11px] text-[#8B45D6] uppercase font-semibold">Speaking Time</span>
+                      <p className="text-xl font-bold text-[#8B45D6] mt-0.5">
                         {formatSeconds(selectedSpeakerHistory.participant.total_talk_time_seconds)}
                       </p>
                     </div>
                   </div>
 
                   {/* Meetings List */}
-                  <div className="space-y-2">
-                    <h5 className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                      <Calendar className="h-3.5 w-3.5 text-indigo-400" />
+                  <div className="space-y-3">
+                    <h5 className="text-xs font-bold text-[#252238] flex items-center gap-1.5">
+                      <Calendar className="h-4 w-4 text-[#8B45D6]" />
                       <span>Meeting Appearances</span>
                     </h5>
                     {selectedSpeakerHistory.appearances.length === 0 ? (
-                      <p className="text-xs text-slate-400 italic">No appearances recorded yet.</p>
+                      <p className="text-xs text-[#77738A] italic">No appearances recorded yet.</p>
                     ) : (
                       <div className="space-y-2">
                         {selectedSpeakerHistory.appearances.map((app: any) => (
                           <Link
                             key={app.meeting_id}
                             href={`/meetings/${app.meeting_id}`}
-                            className="block p-3 rounded-lg bg-slate-950 border border-slate-800 hover:border-indigo-500/50 transition group"
+                            className="block p-3.5 rounded-2xl bg-[#FAF8FF] border border-[#E9E4F2] hover:border-[#8B45D6] transition group"
                           >
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="text-xs font-medium text-slate-200 group-hover:text-white truncate max-w-[180px]">
+                            <div className="flex items-center justify-between mb-1.5">
+                              <span className="text-xs font-semibold text-[#252238] group-hover:text-[#8B45D6] truncate max-w-[180px]">
                                 {app.meeting_title}
                               </span>
-                              <span className="text-[10px] font-mono text-indigo-300 bg-indigo-950/60 px-1.5 py-0.5 rounded border border-indigo-800/40">
+                              <span className="text-[10px] font-mono text-[#8B45D6] bg-[#F3ECFE] px-2 py-0.5 rounded-full border border-[#E5D7FD]">
                                 {app.speaker_label}
                               </span>
                             </div>
-                            <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono">
+                            <div className="flex items-center justify-between text-xs text-[#77738A]">
                               <span>{app.segment_count} turns</span>
-                              <span>{formatSeconds(app.talk_time_seconds)}</span>
+                              <span className="font-medium text-[#252238]">{formatSeconds(app.talk_time_seconds)}</span>
                             </div>
                           </Link>
                         ))}
@@ -435,24 +442,24 @@ export default function SpeakersDirectoryPage() {
                   </div>
 
                   {/* Recent Spoken Segments */}
-                  <div className="space-y-2">
-                    <h5 className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                      <FileText className="h-3.5 w-3.5 text-indigo-400" />
+                  <div className="space-y-3">
+                    <h5 className="text-xs font-bold text-[#252238] flex items-center gap-1.5">
+                      <FileText className="h-4 w-4 text-[#8B45D6]" />
                       <span>Recent Spoken Turns</span>
                     </h5>
                     {selectedSpeakerHistory.recent_segments.length === 0 ? (
-                      <p className="text-xs text-slate-400 italic">No transcript segments recorded.</p>
+                      <p className="text-xs text-[#77738A] italic">No transcript segments recorded.</p>
                     ) : (
-                      <div className="space-y-2">
+                      <div className="space-y-2.5">
                         {selectedSpeakerHistory.recent_segments.slice(0, 8).map((seg: any) => (
-                          <div key={seg.id} className="p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-xs">
-                            <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1 font-mono">
-                              <span className="text-indigo-400">
+                          <div key={seg.id} className="p-3.5 rounded-2xl bg-[#FAF8FF] border border-[#E9E4F2] text-xs space-y-1">
+                            <div className="flex items-center justify-between text-[11px] text-[#77738A] font-mono">
+                              <span className="text-[#8B45D6] font-semibold">
                                 [{Math.floor(seg.start_time / 60)}:{(Math.floor(seg.start_time % 60)).toString().padStart(2, '0')}]
                               </span>
                               <span>{seg.speaker_label}</span>
                             </div>
-                            <p className="text-slate-300 leading-relaxed text-[11px] font-sans">{seg.text}</p>
+                            <p className="text-[#252238] leading-relaxed text-xs">{seg.text}</p>
                           </div>
                         ))}
                       </div>
@@ -461,10 +468,12 @@ export default function SpeakersDirectoryPage() {
                 </div>
               </div>
             ) : (
-              <div className="p-8 text-center text-slate-400 space-y-2 my-auto">
-                <Activity className="h-8 w-8 text-slate-700 mx-auto" />
-                <p className="text-xs font-semibold text-slate-300">Select a speaker profile</p>
-                <p className="text-[11px] text-slate-400 leading-relaxed max-w-xs mx-auto">
+              <div className="p-10 text-center text-[#77738A] space-y-3 my-auto">
+                <div className="h-12 w-12 rounded-2xl bg-[#F3ECFE] text-[#8B45D6] flex items-center justify-center mx-auto">
+                  <Activity className="h-6 w-6" />
+                </div>
+                <p className="text-sm font-bold text-[#252238]">Select a speaker profile</p>
+                <p className="text-xs text-[#77738A] leading-relaxed max-w-xs mx-auto">
                   Click 'Appearances' on any speaker card to inspect meeting history, speaking time, and verified dialogue quotes.
                 </p>
               </div>
@@ -475,78 +484,78 @@ export default function SpeakersDirectoryPage() {
 
       {/* CREATE SPEAKER MODAL */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-[#0e1526] border border-slate-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col text-slate-100">
-            <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/60">
-              <h3 className="font-semibold text-sm text-white">Create Speaker Profile</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#252238]/40 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-white border border-[#E9E4F2] rounded-3xl w-full max-w-md shadow-soft-elevated overflow-hidden flex flex-col text-[#252238]">
+            <div className="px-6 py-5 border-b border-[#E9E4F2] flex items-center justify-between bg-gradient-to-r from-white via-[#FAF8FF] to-white">
+              <h3 className="font-bold text-base text-[#252238]">Create Speaker Profile</h3>
               <button
                 onClick={() => setIsCreateModalOpen(false)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition"
+                className="text-[#77738A] hover:text-[#252238] p-2 rounded-xl hover:bg-[#F3F0FF] transition"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
             {formError && (
-              <div className="mx-6 mt-4 p-3 rounded-lg bg-rose-950/40 border border-rose-800/40 text-rose-300 text-xs">
+              <div className="mx-6 mt-4 p-3 rounded-2xl bg-[#FDF0F4] border border-[#FBCFE8] text-[#BE123C] text-xs">
                 {formError}
               </div>
             )}
 
             <form onSubmit={handleCreateSpeaker} className="p-6 space-y-4">
               <div>
-                <label className="text-xs font-medium text-slate-300 block mb-1">
-                  Full Name <span className="text-rose-400">*</span>
+                <label className="text-xs font-semibold text-[#252238] block mb-1">
+                  Full Name <span className="text-[#BE123C]">*</span>
                 </label>
                 <input
                   type="text"
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
                   placeholder="e.g. Sarah Connor"
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-xs text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500"
+                  className="w-full px-4 py-2.5 bg-[#FAF8FF] border border-[#E9E4F2] rounded-2xl text-xs text-[#252238] placeholder-[#9D99AF] focus:outline-none focus:border-[#8B45D6] focus:bg-white transition"
                   required
                 />
               </div>
 
               <div>
-                <label className="text-xs font-medium text-slate-300 block mb-1">
-                  Email Address <span className="text-slate-400 font-normal">(optional)</span>
+                <label className="text-xs font-semibold text-[#252238] block mb-1">
+                  Email Address <span className="text-[#9D99AF] font-normal">(optional)</span>
                 </label>
                 <input
                   type="email"
                   value={formEmail}
                   onChange={(e) => setFormEmail(e.target.value)}
                   placeholder="e.g. sarah@acme.com"
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-xs text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 font-mono"
+                  className="w-full px-4 py-2.5 bg-[#FAF8FF] border border-[#E9E4F2] rounded-2xl text-xs text-[#252238] placeholder-[#9D99AF] focus:outline-none focus:border-[#8B45D6] focus:bg-white font-mono transition"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-medium text-slate-300 block mb-1">
-                  Title or Description <span className="text-slate-400 font-normal">(optional)</span>
+                <label className="text-xs font-semibold text-[#252238] block mb-1">
+                  Title or Description <span className="text-[#9D99AF] font-normal">(optional)</span>
                 </label>
                 <input
                   type="text"
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
                   placeholder="e.g. Staff Platform Architect"
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-xs text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500"
+                  className="w-full px-4 py-2.5 bg-[#FAF8FF] border border-[#E9E4F2] rounded-2xl text-xs text-[#252238] placeholder-[#9D99AF] focus:outline-none focus:border-[#8B45D6] focus:bg-white transition"
                 />
               </div>
 
-              <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-800">
+              <div className="pt-3 flex items-center justify-end gap-2.5 border-t border-[#E9E4F2]">
                 <button
                   type="button"
                   onClick={() => setIsCreateModalOpen(false)}
                   disabled={formSubmitting}
-                  className="px-3.5 py-2 text-xs font-medium text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition"
+                  className="px-4 py-2 text-xs font-semibold text-[#77738A] hover:text-[#252238] rounded-xl hover:bg-[#F3F0FF] transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={formSubmitting || !formName.trim()}
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-lg text-xs font-semibold shadow-sm transition flex items-center gap-1.5"
+                  className="px-5 py-2.5 gradient-purple-hero text-white rounded-2xl text-xs font-semibold shadow-purple-btn disabled:opacity-50 transition flex items-center gap-2"
                 >
                   {formSubmitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                   <span>Create Profile</span>
@@ -559,75 +568,75 @@ export default function SpeakersDirectoryPage() {
 
       {/* EDIT SPEAKER MODAL */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-[#0e1526] border border-slate-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col text-slate-100">
-            <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/60">
-              <h3 className="font-semibold text-sm text-white">Edit Speaker Profile</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#252238]/40 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-white border border-[#E9E4F2] rounded-3xl w-full max-w-md shadow-soft-elevated overflow-hidden flex flex-col text-[#252238]">
+            <div className="px-6 py-5 border-b border-[#E9E4F2] flex items-center justify-between bg-gradient-to-r from-white via-[#FAF8FF] to-white">
+              <h3 className="font-bold text-base text-[#252238]">Edit Speaker Profile</h3>
               <button
                 onClick={() => setIsEditModalOpen(false)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition"
+                className="text-[#77738A] hover:text-[#252238] p-2 rounded-xl hover:bg-[#F3F0FF] transition"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
             {formError && (
-              <div className="mx-6 mt-4 p-3 rounded-lg bg-rose-950/40 border border-rose-800/40 text-rose-300 text-xs">
+              <div className="mx-6 mt-4 p-3 rounded-2xl bg-[#FDF0F4] border border-[#FBCFE8] text-[#BE123C] text-xs">
                 {formError}
               </div>
             )}
 
             <form onSubmit={handleEditSpeaker} className="p-6 space-y-4">
               <div>
-                <label className="text-xs font-medium text-slate-300 block mb-1">
-                  Full Name <span className="text-rose-400">*</span>
+                <label className="text-xs font-semibold text-[#252238] block mb-1">
+                  Full Name <span className="text-[#BE123C]">*</span>
                 </label>
                 <input
                   type="text"
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-xs text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500"
+                  className="w-full px-4 py-2.5 bg-[#FAF8FF] border border-[#E9E4F2] rounded-2xl text-xs text-[#252238] placeholder-[#9D99AF] focus:outline-none focus:border-[#8B45D6] focus:bg-white transition"
                   required
                 />
               </div>
 
               <div>
-                <label className="text-xs font-medium text-slate-300 block mb-1">
-                  Email Address <span className="text-slate-400 font-normal">(optional)</span>
+                <label className="text-xs font-semibold text-[#252238] block mb-1">
+                  Email Address <span className="text-[#9D99AF] font-normal">(optional)</span>
                 </label>
                 <input
                   type="email"
                   value={formEmail}
                   onChange={(e) => setFormEmail(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-xs text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 font-mono"
+                  className="w-full px-4 py-2.5 bg-[#FAF8FF] border border-[#E9E4F2] rounded-2xl text-xs text-[#252238] placeholder-[#9D99AF] focus:outline-none focus:border-[#8B45D6] focus:bg-white font-mono transition"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-medium text-slate-300 block mb-1">
-                  Title or Description <span className="text-slate-400 font-normal">(optional)</span>
+                <label className="text-xs font-semibold text-[#252238] block mb-1">
+                  Title or Description <span className="text-[#9D99AF] font-normal">(optional)</span>
                 </label>
                 <input
                   type="text"
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-xs text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500"
+                  className="w-full px-4 py-2.5 bg-[#FAF8FF] border border-[#E9E4F2] rounded-2xl text-xs text-[#252238] placeholder-[#9D99AF] focus:outline-none focus:border-[#8B45D6] focus:bg-white transition"
                 />
               </div>
 
-              <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-800">
+              <div className="pt-3 flex items-center justify-end gap-2.5 border-t border-[#E9E4F2]">
                 <button
                   type="button"
                   onClick={() => setIsEditModalOpen(false)}
                   disabled={formSubmitting}
-                  className="px-3.5 py-2 text-xs font-medium text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition"
+                  className="px-4 py-2 text-xs font-semibold text-[#77738A] hover:text-[#252238] rounded-xl hover:bg-[#F3F0FF] transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={formSubmitting || !formName.trim()}
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-lg text-xs font-semibold shadow-sm transition flex items-center gap-1.5"
+                  className="px-5 py-2.5 gradient-purple-hero text-white rounded-2xl text-xs font-semibold shadow-purple-btn disabled:opacity-50 transition flex items-center gap-2"
                 >
                   {formSubmitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                   <span>Save Changes</span>

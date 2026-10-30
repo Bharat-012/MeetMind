@@ -19,8 +19,6 @@ import {
   Send,
   Loader2,
   Filter,
-  UserCheck,
-  Building,
   RotateCcw,
   Square,
   Bot
@@ -193,7 +191,7 @@ export default function WorkspacePage() {
                   }
                   return updated;
                 });
-              } else if (event.type === 'done') {
+              } else if (event.type === 'end') {
                 setChatMessages((prev) => {
                   const updated = [...prev];
                   const lastIdx = updated.length - 1;
@@ -322,16 +320,17 @@ export default function WorkspacePage() {
 
   return (
     <AppShell
-      title="Meetings Library & Organizational Memory"
-      subtitle="Searchable archive, historical decision register, and cross-meeting intelligence"
+      title="Meetings Archive"
+      subtitle="Searchable library, decisions register, and cross-meeting intelligence"
       activeOrgId={selectedOrgId}
       onOrgChange={setSelectedOrgId}
       organizations={organizations}
     >
       <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-6">
-        {/* Navigation Tabs Bar */}
-        <div className="border-b border-slate-800 pb-3 flex items-center justify-between flex-wrap gap-3">
-          <div className="flex gap-1.5 p-1 bg-slate-900/60 rounded-xl border border-slate-800/80 no-scrollbar overflow-x-auto">
+        
+        {/* Navigation Tabs Bar (Inspired by Reference Image Pills) */}
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex gap-1.5 p-1.5 bg-white rounded-2xl border border-[#E9E4F2] shadow-soft-card no-scrollbar overflow-x-auto">
             {[
               { id: 'meetings', label: 'All Meetings', icon: Layers, badge: meetings.length },
               { id: 'chat', label: 'Cross-Meeting Chat', icon: MessageSquare },
@@ -344,17 +343,17 @@ export default function WorkspacePage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-medium flex items-center gap-2 transition whitespace-nowrap ${
+                  className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition whitespace-nowrap ${
                     active
-                      ? 'bg-indigo-600 text-white shadow-sm'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                      ? 'bg-gradient-to-r from-[#7135C5] via-[#8B45D6] to-[#C23DB4] text-white shadow-purple-btn'
+                      : 'text-[#77738A] hover:text-[#252238] hover:bg-[#FAF8FF]'
                   }`}
                 >
                   <Icon className="h-3.5 w-3.5" />
                   <span>{tab.label}</span>
                   {tab.badge !== undefined && tab.badge > 0 && (
-                    <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-semibold ${
-                      active ? 'bg-indigo-800 text-indigo-100' : 'bg-slate-800 text-slate-300'
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                      active ? 'bg-white/20 text-white' : 'bg-[#F3ECFE] text-[#8B45D6]'
                     }`}>
                       {tab.badge}
                     </span>
@@ -369,24 +368,24 @@ export default function WorkspacePage() {
         {activeTab === 'meetings' && (
           <div className="space-y-4">
             {/* Search and Filters Bar */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-4 rounded-2xl bg-white border border-[#E9E4F2] shadow-soft-card">
               <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
+                <Search className="absolute left-3.5 top-3 h-3.5 w-3.5 text-[#9D99AF]" />
                 <input
                   type="text"
                   value={searchFilter}
                   onChange={(e) => setSearchFilter(e.target.value)}
                   placeholder="Search meetings by title or description..."
-                  className="w-full pl-9 pr-3 py-2 bg-[#0e1526] border border-slate-800 rounded-lg text-xs text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500"
+                  className="w-full pl-9 pr-3 py-2 bg-[#FAF8FF] border border-[#E9E4F2] rounded-xl text-xs text-[#252238] placeholder-[#9D99AF] focus:outline-none focus:border-[#8B45D6] focus:bg-white transition"
                 />
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-400 font-medium">Status:</span>
+                <span className="text-xs text-[#77738A] font-semibold">Status:</span>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="bg-[#0e1526] border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  className="bg-[#FAF8FF] border border-[#E9E4F2] rounded-xl px-3 py-2 text-xs text-[#252238] font-medium focus:outline-none focus:border-[#8B45D6] shadow-xs"
                 >
                   <option value="ALL">All Statuses</option>
                   <option value="COMPLETED">Completed</option>
@@ -399,21 +398,21 @@ export default function WorkspacePage() {
             </div>
 
             {loading ? (
-              <div className="p-12 text-center rounded-xl border border-slate-800 bg-[#0e1526]">
-                <p className="text-xs text-slate-400">Loading meetings...</p>
+              <div className="p-12 text-center rounded-3xl border border-[#E9E4F2] bg-white shadow-soft-card">
+                <p className="text-xs text-[#77738A]">Loading meetings...</p>
               </div>
             ) : filteredMeetings.length === 0 ? (
-              <div className="p-12 text-center rounded-xl border border-dashed border-slate-800 bg-[#0e1526]/40 space-y-3">
-                <Video className="h-8 w-8 text-slate-400 mx-auto" />
-                <p className="text-sm font-semibold text-white">No matching meetings found</p>
-                <p className="text-xs text-slate-400 max-w-sm mx-auto">
+              <div className="p-12 text-center rounded-3xl border border-dashed border-[#DDD5FF] bg-white shadow-soft-card space-y-3">
+                <Video className="h-8 w-8 text-[#8B45D6]/60 mx-auto" />
+                <p className="text-sm font-bold text-[#252238]">No matching meetings found</p>
+                <p className="text-xs text-[#77738A] max-w-sm mx-auto">
                   {searchFilter || statusFilter !== 'ALL'
                     ? 'Try adjusting your search query or status filter.'
                     : 'Get started by uploading an audio/video recording or importing a YouTube URL.'}
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {filteredMeetings.map((m) => {
                   const isCompleted = m.status === 'COMPLETED';
                   const isFailed = m.status === 'FAILED';
@@ -423,31 +422,31 @@ export default function WorkspacePage() {
                     <Link
                       key={m.id}
                       href={`/meetings/${m.id}`}
-                      className="p-5 rounded-xl bg-[#0e1526] border border-slate-800 hover:border-indigo-500/50 hover:bg-slate-900/60 transition group flex flex-col justify-between"
+                      className="p-6 rounded-3xl bg-white border border-[#E9E4F2] hover:border-[#8B45D6] shadow-soft-card hover:shadow-soft-elevated hover:translate-y-[-2px] transition-all group flex flex-col justify-between"
                     >
-                      <div className="space-y-2.5">
+                      <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-semibold uppercase font-mono bg-slate-900 text-slate-300 border border-slate-800">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold">
                             {isYouTube ? (
-                              <>
-                                <Tv className="h-3 w-3 text-red-400" />
+                              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[#FDF0F4] text-[#BE123C] border border-[#FBCDD9]">
+                                <Tv className="h-3 w-3" />
                                 <span>YouTube</span>
-                              </>
+                              </span>
                             ) : (
-                              <>
-                                <Video className="h-3 w-3 text-indigo-400" />
+                              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[#F3ECFE] text-[#8B45D6] border border-[#E0CFFC]">
+                                <Video className="h-3 w-3" />
                                 <span>Local Video</span>
-                              </>
+                              </span>
                             )}
                           </span>
 
                           <span
-                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold border ${
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
                               isCompleted
-                                ? 'bg-emerald-950/60 text-emerald-400 border-emerald-800/40'
+                                ? 'bg-[#EBF9F0] text-[#16A34A] border-[#D8F3E2]'
                                 : isFailed
-                                ? 'bg-rose-950/60 text-rose-400 border-rose-800/40'
-                                : 'bg-indigo-950/60 text-indigo-300 border-indigo-800/40 animate-pulse'
+                                ? 'bg-[#FDF0F4] text-[#BE123C] border-[#FBCDD9]'
+                                : 'bg-[#FEF7EA] text-[#B45309] border-[#FDE3B7]'
                             }`}
                           >
                             {m.status}
@@ -455,27 +454,27 @@ export default function WorkspacePage() {
                         </div>
 
                         <div>
-                          <h3 className="font-semibold text-sm text-white group-hover:text-indigo-300 transition line-clamp-1">
+                          <h3 className="font-bold text-sm text-[#252238] group-hover:text-[#8B45D6] transition line-clamp-1">
                             {m.title}
                           </h3>
-                          <p className="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                          <p className="text-xs text-[#77738A] mt-1.5 line-clamp-2 leading-relaxed">
                             {m.description || 'Spoken dialogue transcribed and attributed with local Faster-Whisper and Nemotron-3.'}
                           </p>
                         </div>
                       </div>
 
-                      <div className="pt-4 mt-4 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+                      <div className="pt-4 mt-4 border-t border-[#F0ECF8] flex items-center justify-between text-[11px] text-[#77738A]">
                         <div className="flex items-center gap-2">
                           <span>{new Date(m.created_at).toLocaleDateString()}</span>
                           {m.duration_seconds && (
                             <>
                               <span>•</span>
-                              <span>{formatDuration(m.duration_seconds)}</span>
+                              <span className="font-mono">{formatDuration(m.duration_seconds)}</span>
                             </>
                           )}
                         </div>
 
-                        <span className="text-indigo-400 font-sans font-medium flex items-center gap-1 group-hover:translate-x-0.5 transition">
+                        <span className="text-[#8B45D6] font-semibold flex items-center gap-1 group-hover:translate-x-0.5 transition">
                           <span>Open</span>
                           <ChevronRight className="h-3.5 w-3.5" />
                         </span>
@@ -490,23 +489,23 @@ export default function WorkspacePage() {
 
         {/* TAB 2: CROSS-MEETING CHAT */}
         {activeTab === 'chat' && (
-          <div className="max-w-4xl mx-auto flex flex-col h-[680px] bg-[#0c1220] border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+          <div className="max-w-4xl mx-auto flex flex-col h-[680px] bg-white border border-[#E9E4F2] rounded-3xl overflow-hidden shadow-soft-card">
             {/* Header */}
-            <div className="px-5 py-3.5 border-b border-slate-800 bg-[#0e1526] flex items-center justify-between">
+            <div className="px-6 py-4 border-b border-[#F0ECF8] bg-[#FAF8FF] flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                <div className="h-9 w-9 rounded-xl bg-[#F3ECFE] border border-[#E0CFFC] flex items-center justify-center text-[#8B45D6]">
                   <Sparkles className="h-4 w-4" />
                 </div>
                 <div>
-                  <h3 className="text-xs font-semibold text-white flex items-center gap-2">
-                    <span>Multi-Meeting Synthesizer</span>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full border border-indigo-800/50 bg-indigo-950/60 text-indigo-300 flex items-center gap-1.5 font-normal">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <h3 className="text-sm font-bold text-[#252238] flex items-center gap-2">
+                    <span>Cross-Meeting Knowledge Assistant</span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full border border-[#D8F3E2] bg-[#EBF9F0] text-[#16A34A] flex items-center gap-1.5 font-semibold">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#16A34A] animate-pulse" />
                       <span>{activeModelName}</span>
                     </span>
                   </h3>
-                  <span className="text-[11px] font-mono text-slate-400">
-                    {meetings.length} meetings indexed in organizational scope
+                  <span className="text-[11px] text-[#77738A]">
+                    {meetings.length} meetings indexed in organizational memory
                   </span>
                 </div>
               </div>
@@ -514,7 +513,7 @@ export default function WorkspacePage() {
               <button
                 type="button"
                 onClick={handleClearChat}
-                className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white px-3 py-1.5 rounded-xl border border-slate-800 hover:border-slate-700 bg-slate-900/80 transition"
+                className="flex items-center gap-1.5 text-xs text-[#77738A] hover:text-[#252238] px-3 py-1.5 rounded-xl border border-[#E9E4F2] hover:bg-white bg-white/60 transition"
                 title="Clear cross-meeting chat history"
               >
                 <RotateCcw className="h-3 w-3" />
@@ -524,10 +523,10 @@ export default function WorkspacePage() {
 
             {/* Suggested Questions */}
             {suggestedQuestions.length > 0 && (
-              <div className="px-5 py-2.5 border-b border-slate-800/80 bg-slate-900/40">
+              <div className="px-6 py-3 border-b border-[#F0ECF8] bg-[#FAF8FF]/60">
                 <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
-                  <span className="text-[10px] uppercase font-mono font-semibold tracking-wider text-slate-400 flex-shrink-0 flex items-center gap-1">
-                    <Sparkles className="h-2.5 w-2.5 text-indigo-400" />
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-[#8B45D6] flex-shrink-0 flex items-center gap-1">
+                    <Sparkles className="h-2.5 w-2.5 text-[#8B45D6]" />
                     <span>Suggested:</span>
                   </span>
                   {suggestedQuestions.map((q, idx) => (
@@ -536,7 +535,7 @@ export default function WorkspacePage() {
                       type="button"
                       onClick={() => handleSuggestedQuestionClick(q)}
                       disabled={chatLoading || isStreaming}
-                      className="text-[11px] text-indigo-300 hover:text-white bg-indigo-950/40 hover:bg-indigo-900/60 border border-indigo-800/40 hover:border-indigo-600/50 px-3 py-1 rounded-full whitespace-nowrap transition flex-shrink-0 disabled:opacity-50"
+                      className="text-[11px] text-[#7135C5] hover:text-white bg-[#F3ECFE] hover:bg-[#8B45D6] border border-[#E0CFFC] px-3.5 py-1 rounded-full whitespace-nowrap transition flex-shrink-0 disabled:opacity-50 font-medium"
                     >
                       {q}
                     </button>
@@ -546,21 +545,21 @@ export default function WorkspacePage() {
             )}
 
             {/* Messages Scroll Area */}
-            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
               {chatMessages.map((msg, idx) => {
                 const isUser = msg.role === 'user';
                 return (
                   <div key={idx} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
                     <div
-                      className={`max-w-2xl p-4 rounded-2xl text-xs leading-relaxed ${
+                      className={`max-w-2xl p-4.5 rounded-2xl text-xs leading-relaxed ${
                         isUser
-                          ? 'bg-indigo-600 text-white rounded-br-none shadow-md'
-                          : 'bg-slate-900/90 text-slate-200 border border-slate-800 rounded-bl-none shadow-sm'
+                          ? 'bg-gradient-to-r from-[#7135C5] to-[#8B45D6] text-white rounded-br-none shadow-purple-btn'
+                          : 'bg-[#FAF8FF] text-[#252238] border border-[#EAE5FF] rounded-bl-none shadow-soft-card'
                       }`}
                     >
                       {!isUser && msg.model_name && (
-                        <div className="flex items-center gap-1 text-[10px] font-mono text-slate-400 mb-2 pb-1.5 border-b border-slate-800/80">
-                          <Bot className="h-3 w-3 text-indigo-400" />
+                        <div className="flex items-center gap-1 text-[10px] font-mono text-[#77738A] mb-2 pb-1.5 border-b border-[#E9E4F2]">
+                          <Bot className="h-3 w-3 text-[#8B45D6]" />
                           <span>{msg.model_name}</span>
                         </div>
                       )}
@@ -568,14 +567,14 @@ export default function WorkspacePage() {
                       <div className="whitespace-pre-wrap leading-relaxed">
                         {msg.content}
                         {msg.isStreaming && (
-                          <span className="inline-block w-2 h-3.5 bg-indigo-400 ml-1 animate-pulse align-middle" />
+                          <span className="inline-block w-2 h-3.5 bg-[#8B45D6] ml-1 animate-pulse align-middle" />
                         )}
                       </div>
 
                       {/* Evidence Citations */}
                       {msg.citations && msg.citations.length > 0 && (
-                        <div className="mt-3.5 pt-3 border-t border-slate-800/80 space-y-2">
-                          <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block font-semibold">
+                        <div className="mt-3.5 pt-3 border-t border-[#E9E4F2] space-y-2">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-[#8B45D6] block">
                             Verifiable Meeting Citations:
                           </span>
                           <div className="space-y-1.5">
@@ -583,20 +582,20 @@ export default function WorkspacePage() {
                               <Link
                                 key={ci}
                                 href={`/meetings/${c.meeting_id}`}
-                                className="block p-2.5 rounded-xl bg-slate-950/80 border border-slate-800/80 hover:border-indigo-500/50 hover:bg-indigo-950/20 transition group"
+                                className="block p-3 rounded-xl bg-white border border-[#E9E4F2] hover:border-[#8B45D6] shadow-xs hover:shadow-soft-card transition group"
                               >
-                                <div className="flex items-center justify-between text-[11px] text-indigo-400 font-medium">
+                                <div className="flex items-center justify-between text-[11px] text-[#7135C5] font-semibold">
                                   <span className="group-hover:underline truncate max-w-sm flex items-center gap-1.5">
                                     <Video className="h-3 w-3 flex-shrink-0" />
                                     <span>{c.meeting_title || 'Meeting Record'}</span>
                                   </span>
                                   {c.timestamp_start !== undefined && c.timestamp_start !== null && (
-                                    <span className="font-mono text-slate-400 group-hover:text-indigo-300">
+                                    <span className="font-mono text-[#77738A] group-hover:text-[#8B45D6]">
                                       [{formatDuration(c.timestamp_start)}]
                                     </span>
                                   )}
                                 </div>
-                                <p className="text-[11px] text-slate-300 italic mt-1 line-clamp-2">
+                                <p className="text-[11px] text-[#77738A] italic mt-1 line-clamp-2">
                                   "{c.quote}"
                                 </p>
                               </Link>
@@ -610,22 +609,22 @@ export default function WorkspacePage() {
               })}
 
               {chatLoading && !isStreaming && (
-                <div className="p-3.5 bg-slate-900 border border-slate-800 text-slate-400 rounded-xl text-xs flex items-center gap-2.5 max-w-xs animate-pulse">
-                  <Loader2 className="h-4 w-4 animate-spin text-indigo-400" />
+                <div className="p-3.5 bg-[#FAF8FF] border border-[#EAE5FF] text-[#77738A] rounded-2xl text-xs flex items-center gap-2.5 max-w-xs animate-pulse">
+                  <Loader2 className="h-4 w-4 animate-spin text-[#8B45D6]" />
                   <span>Synthesizing answers across meetings...</span>
                 </div>
               )}
             </div>
 
             {/* Chat Input */}
-            <form onSubmit={handleOrgChatSubmit} className="p-3.5 border-t border-slate-800 bg-slate-900/60 flex items-center gap-2">
+            <form onSubmit={handleOrgChatSubmit} className="p-4 border-t border-[#F0ECF8] bg-[#FAF8FF]/60 flex items-center gap-2">
               <input
                 type="text"
                 value={chatQuery}
                 onChange={(e) => setChatQuery(e.target.value)}
                 disabled={isStreaming}
                 placeholder="Ask any question across all authorized meetings (e.g. What did we decide about postgres migration?)..."
-                className="flex-1 px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 disabled:opacity-60"
+                className="flex-1 px-4 py-2.5 bg-white border border-[#E9E4F2] rounded-xl text-xs text-[#252238] placeholder-[#9D99AF] focus:outline-none focus:border-[#8B45D6] shadow-xs disabled:opacity-60"
               />
 
               {isStreaming ? (
@@ -641,7 +640,7 @@ export default function WorkspacePage() {
                 <button
                   type="submit"
                   disabled={chatLoading || !chatQuery.trim()}
-                  className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-xl text-xs font-semibold shadow-sm transition flex items-center gap-1.5"
+                  className="px-5 py-2.5 bg-gradient-to-r from-[#7135C5] to-[#8B45D6] hover:opacity-95 disabled:opacity-50 text-white rounded-xl text-xs font-semibold shadow-purple-btn transition flex items-center gap-1.5"
                 >
                   <Send className="h-3.5 w-3.5" />
                   <span>Ask</span>
@@ -653,33 +652,33 @@ export default function WorkspacePage() {
 
         {/* TAB 3: DECISIONS REGISTER */}
         {activeTab === 'decisions' && (
-          <div className="space-y-3 max-w-4xl mx-auto">
-            <div className="p-4 rounded-xl bg-[#0e1526] border border-slate-800 flex items-center justify-between">
+          <div className="space-y-4 max-w-4xl mx-auto">
+            <div className="p-5 rounded-2xl bg-white border border-[#E9E4F2] shadow-soft-card flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-semibold text-white">Historical Decisions Register</h3>
-                <p className="text-xs text-slate-400">Chronological record of approved technical and product decisions</p>
+                <h3 className="text-sm font-bold text-[#252238]">Historical Decisions Register</h3>
+                <p className="text-xs text-[#77738A]">Chronological record of approved technical and product decisions</p>
               </div>
-              <span className="text-xs font-mono px-2.5 py-1 rounded bg-slate-900 text-slate-300 border border-slate-800">
+              <span className="text-xs font-bold px-3 py-1 rounded-full bg-[#EBF9F0] text-[#16A34A] border border-[#D8F3E2]">
                 {orgDecisions.length} recorded
               </span>
             </div>
 
             {orgDecisions.length === 0 ? (
-              <div className="p-12 text-center rounded-xl border border-dashed border-slate-800 bg-[#0e1526]/40 text-xs text-slate-400">
+              <div className="p-12 text-center rounded-3xl border border-dashed border-[#DDD5FF] bg-white text-xs text-[#77738A] shadow-soft-card">
                 No decisions recorded in this organization yet.
               </div>
             ) : (
-              <div className="space-y-2.5">
+              <div className="space-y-3">
                 {orgDecisions.map((dec) => (
-                  <div key={dec.id} className="p-5 rounded-xl bg-[#0e1526] border border-slate-800 space-y-2">
+                  <div key={dec.id} className="p-5 rounded-2xl bg-white border border-[#E9E4F2] shadow-soft-card space-y-2">
                     <div className="flex items-start justify-between gap-4">
                       <div className="space-y-0.5">
-                        <span className="font-semibold text-sm text-white">{dec.title}</span>
-                        <div className="flex items-center gap-2 text-xs text-slate-400 font-mono">
+                        <span className="font-bold text-sm text-[#252238]">{dec.title}</span>
+                        <div className="flex items-center gap-2 text-xs text-[#77738A]">
                           <span>Origin:</span>
                           <Link
                             href={`/meetings/${dec.meeting_id}`}
-                            className="text-indigo-400 hover:underline font-sans"
+                            className="text-[#8B45D6] font-semibold hover:underline"
                           >
                             {dec.meeting_title || 'Meeting'}
                           </Link>
@@ -687,11 +686,11 @@ export default function WorkspacePage() {
                           <span>{dec.meeting_date ? new Date(dec.meeting_date).toLocaleDateString() : 'Recent'}</span>
                         </div>
                       </div>
-                      <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-emerald-950/60 text-emerald-400 border border-emerald-800/40">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#EBF9F0] text-[#16A34A] border border-[#D8F3E2]">
                         {dec.status || 'APPROVED'}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-300 leading-relaxed font-sans">{dec.decision_text}</p>
+                    <p className="text-xs text-[#77738A] leading-relaxed">{dec.decision_text}</p>
                   </div>
                 ))}
               </div>
@@ -701,50 +700,50 @@ export default function WorkspacePage() {
 
         {/* TAB 4: ACTION ITEMS */}
         {activeTab === 'actions' && (
-          <div className="space-y-3 max-w-4xl mx-auto">
-            <div className="p-4 rounded-xl bg-[#0e1526] border border-slate-800 flex items-center justify-between">
+          <div className="space-y-4 max-w-4xl mx-auto">
+            <div className="p-5 rounded-2xl bg-white border border-[#E9E4F2] shadow-soft-card flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-semibold text-white">Organization Action Items</h3>
-                <p className="text-xs text-slate-400">Comprehensive task tracking across all team meetings</p>
+                <h3 className="text-sm font-bold text-[#252238]">Organization Action Items</h3>
+                <p className="text-xs text-[#77738A]">Comprehensive task tracking across all team meetings</p>
               </div>
-              <span className="text-xs font-mono px-2.5 py-1 rounded bg-slate-900 text-slate-300 border border-slate-800">
+              <span className="text-xs font-bold px-3 py-1 rounded-full bg-[#F3ECFE] text-[#8B45D6] border border-[#E0CFFC]">
                 {orgActions.length} recorded
               </span>
             </div>
 
             {orgActions.length === 0 ? (
-              <div className="p-12 text-center rounded-xl border border-dashed border-slate-800 bg-[#0e1526]/40 text-xs text-slate-400">
+              <div className="p-12 text-center rounded-3xl border border-dashed border-[#DDD5FF] bg-white text-xs text-[#77738A] shadow-soft-card">
                 No action items recorded in this organization yet.
               </div>
             ) : (
-              <div className="space-y-2.5">
+              <div className="space-y-3">
                 {orgActions.map((item) => (
                   <div
                     key={item.id}
-                    className="p-4 rounded-xl bg-[#0e1526] border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                    className="p-5 rounded-2xl bg-white border border-[#E9E4F2] shadow-soft-card flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                   >
                     <div className="space-y-1">
-                      <span className="text-xs font-semibold text-white block">{item.task_description}</span>
-                      <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
-                        <span className="text-slate-300">Owner: {item.owner_name || 'Unassigned'}</span>
+                      <span className="text-xs font-bold text-[#252238] block">{item.task_description}</span>
+                      <div className="flex flex-wrap items-center gap-2 text-[11px] text-[#77738A]">
+                        <span>Owner: <strong className="text-[#252238] font-semibold">{item.owner_name || 'Unassigned'}</strong></span>
                         <span>•</span>
                         <span>Meeting:</span>
                         <Link
                           href={`/meetings/${item.meeting_id}`}
-                          className="text-indigo-400 hover:underline"
+                          className="text-[#8B45D6] font-semibold hover:underline"
                         >
                           {item.meeting_title || 'Meeting'}
                         </Link>
                         {item.due_date && (
                           <>
                             <span>•</span>
-                            <span className="font-mono text-slate-400">Due: {item.due_date}</span>
+                            <span className="font-mono text-[#77738A]">Due: {item.due_date}</span>
                           </>
                         )}
                       </div>
                     </div>
 
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-indigo-950/60 text-indigo-300 border border-indigo-800/40 self-start sm:self-center">
+                    <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-[#F3ECFE] text-[#8B45D6] border border-[#E0CFFC] self-start sm:self-center">
                       {item.status || 'PENDING'}
                     </span>
                   </div>

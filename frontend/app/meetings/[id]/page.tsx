@@ -655,51 +655,51 @@ export default function MeetingDetailPage() {
   });
 
   return (
-    <div className="flex h-screen bg-[#090d16] text-slate-100 overflow-hidden font-sans">
-      <div className="flex-1 flex flex-col min-w-0 bg-[#090d16] overflow-y-auto">
+    <div className="flex h-screen bg-[#F3F0FF] text-[#252238] overflow-hidden font-sans">
+      <div className="flex-1 flex flex-col min-w-0 bg-[#F3F0FF] overflow-y-auto">
 
         {/* TOP HEADER */}
-        <header className="h-16 border-b border-slate-800 bg-[#0d121f]/90 px-6 flex items-center justify-between sticky top-0 z-20 backdrop-blur">
+        <header className="h-16 border-b border-[#E9E4F2] bg-white/90 px-6 flex items-center justify-between sticky top-0 z-20 backdrop-blur shadow-sm">
           <div className="flex items-center gap-3 min-w-0">
             <Link
               href="/workspace"
-              className="text-slate-400 hover:text-white px-2.5 py-1.5 rounded-lg hover:bg-slate-800/80 transition flex items-center gap-1.5 text-xs font-medium border border-slate-800/80 flex-shrink-0"
+              className="text-[#77738A] hover:text-[#252238] px-3 py-1.5 rounded-xl hover:bg-[#F3F0FF] transition flex items-center gap-1.5 text-xs font-semibold border border-[#E9E4F2] flex-shrink-0 shadow-sm"
             >
               <ChevronLeft className="h-4 w-4" />
               <span>Workspace</span>
             </Link>
 
-            <span className="text-slate-600 text-xs hidden sm:inline">/</span>
+            <span className="text-[#DDD5FF] text-xs hidden sm:inline">/</span>
 
-            <h1 className="font-semibold text-sm text-white truncate max-w-sm sm:max-w-md" title={meeting?.title}>
+            <h1 className="font-bold text-sm text-[#252238] truncate max-w-sm sm:max-w-md" title={meeting?.title}>
               {meeting?.title || 'Meeting Details'}
             </h1>
 
             {/* Status Badge */}
-            <span className={`text-[11px] font-mono px-2.5 py-0.5 rounded-full border flex-shrink-0 ${
+            <span className={`text-xs font-semibold px-3 py-1 rounded-full border flex-shrink-0 ${
               isCompleted
-                ? 'bg-emerald-950/60 text-emerald-400 border-emerald-800/40'
+                ? 'bg-[#EBF9F0] text-[#16A34A] border-[#D1F2DC]'
                 : isFailed
-                ? 'bg-rose-950/60 text-rose-400 border-rose-800/40'
-                : 'bg-indigo-950/60 text-indigo-300 border-indigo-800/40 animate-pulse'
+                ? 'bg-[#FDF0F4] text-[#BE123C] border-[#FBCFE8]'
+                : 'bg-[#F3ECFE] text-[#8B45D6] border-[#E5D7FD] animate-pulse'
             }`}>
               {status}
             </span>
 
             {/* Source Badge */}
             {isYouTube ? (
-              <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded bg-red-950/60 text-red-400 border border-red-800/40">
-                <Tv className="h-3 w-3" />
+              <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#FDF0F4] text-[#BE123C] border border-[#FBCFE8]">
+                <Tv className="h-3.5 w-3.5" />
                 <span>YouTube</span>
               </span>
             ) : hasVideo ? (
-              <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded bg-indigo-950/60 text-indigo-400 border border-indigo-800/40">
-                <Video className="h-3 w-3" />
+              <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#F3ECFE] text-[#8B45D6] border border-[#E5D7FD]">
+                <Video className="h-3.5 w-3.5" />
                 <span>Video MP4</span>
               </span>
             ) : (
-              <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
-                <Music className="h-3 w-3" />
+              <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#EAF3FD] text-[#2463EB] border border-[#D3E5FA]">
+                <Music className="h-3.5 w-3.5" />
                 <span>Audio Recording</span>
               </span>
             )}
@@ -710,7 +710,7 @@ export default function MeetingDetailPage() {
               <button
                 onClick={handleRetryProcessing}
                 disabled={isRetrying}
-                className="flex items-center gap-1.5 text-xs text-rose-300 hover:text-white font-medium px-3 py-1.5 rounded-lg border border-rose-800/60 bg-rose-950/60 hover:bg-rose-900/60 transition disabled:opacity-50"
+                className="flex items-center gap-1.5 text-xs text-[#BE123C] hover:text-white font-semibold px-3.5 py-2 rounded-xl border border-[#FBCFE8] bg-[#FDF0F4] hover:bg-[#BE123C] transition disabled:opacity-50 shadow-sm"
               >
                 <RefreshCw className={`h-3.5 w-3.5 ${isRetrying ? 'animate-spin' : ''}`} />
                 <span>Retry Processing</span>
@@ -720,18 +720,18 @@ export default function MeetingDetailPage() {
             <button
               onClick={handleRegenerateIntelligence}
               disabled={isRegenerating || isProcessing}
-              className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white font-medium px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-900 hover:bg-slate-800 transition disabled:opacity-50 shadow-sm"
+              className="flex items-center gap-1.5 text-xs text-[#252238] hover:text-[#8B45D6] font-semibold px-3.5 py-2 rounded-xl border border-[#E9E4F2] bg-white hover:bg-[#FAF8FF] transition disabled:opacity-50 shadow-sm"
               title="Regenerate summary, decisions, and action items from transcript"
             >
-              <Sparkles className={`h-3.5 w-3.5 text-indigo-400 ${isRegenerating ? 'animate-spin' : ''}`} />
+              <Sparkles className={`h-3.5 w-3.5 text-[#8B45D6] ${isRegenerating ? 'animate-spin' : ''}`} />
               <span className="hidden md:inline">{isRegenerating ? 'Regenerating...' : 'Regenerate Intelligence'}</span>
             </button>
 
             <Link
               href="/speakers"
-              className="flex items-center gap-1.5 text-xs text-indigo-300 hover:text-white font-medium px-3 py-1.5 rounded-lg border border-indigo-900/40 bg-indigo-950/40 hover:bg-indigo-900/50 transition shadow-sm"
+              className="flex items-center gap-1.5 text-xs text-[#8B45D6] font-semibold px-3.5 py-2 rounded-xl border border-[#E5D7FD] bg-[#F3ECFE] hover:bg-[#EAE2FD] transition shadow-sm"
             >
-              <Users className="h-3.5 w-3.5 text-indigo-400" />
+              <Users className="h-3.5 w-3.5 text-[#8B45D6]" />
               <span className="hidden md:inline">Speaker Directory</span>
             </Link>
           </div>
@@ -739,20 +739,20 @@ export default function MeetingDetailPage() {
 
         {/* PROCESSING IN PROGRESS BANNER */}
         {isProcessing && (
-          <div className="bg-gradient-to-r from-indigo-950/90 via-slate-900 to-indigo-950/90 border-b border-indigo-800/40 px-6 py-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+          <div className="bg-white border-b border-[#E9E4F2] px-6 py-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-sm">
             <div className="flex items-center gap-3">
-              <RefreshCw className="h-4 w-4 text-indigo-400 animate-spin flex-shrink-0" />
+              <RefreshCw className="h-4 w-4 text-[#8B45D6] animate-spin flex-shrink-0" />
               <div>
-                <span className="font-semibold text-white">Pipeline Processing: </span>
-                <span className="text-indigo-300 font-medium">{currentStageInfo.label}</span>
-                <span className="text-slate-400 block sm:inline sm:ml-2 text-[11px]">
+                <span className="font-bold text-[#252238]">Pipeline Processing: </span>
+                <span className="text-[#8B45D6] font-semibold">{currentStageInfo.label}</span>
+                <span className="text-[#77738A] block sm:inline sm:ml-2 text-xs">
                   (Live updating automatically · {currentStageInfo.percent}% complete)
                 </span>
               </div>
             </div>
-            <div className="w-full sm:w-48 bg-slate-800 rounded-full h-2 overflow-hidden border border-slate-700">
+            <div className="w-full sm:w-48 bg-[#F3F0FF] rounded-full h-2 overflow-hidden border border-[#E9E4F2]">
               <div
-                className="bg-indigo-500 h-full rounded-full transition-all duration-500 animate-pulse"
+                className="gradient-purple-hero h-full rounded-full transition-all duration-500 animate-pulse"
                 style={{ width: `${currentStageInfo.percent}%` }}
               />
             </div>
@@ -761,18 +761,18 @@ export default function MeetingDetailPage() {
 
         {/* PROCESSING FAILED ALERT BANNER */}
         {isFailed && (
-          <div className="bg-rose-950/80 border-b border-rose-800/40 px-6 py-3 flex items-center justify-between gap-4 text-xs">
+          <div className="bg-[#FDF0F4] border-b border-[#FBCFE8] px-6 py-3.5 flex items-center justify-between gap-4 text-xs">
             <div className="flex items-center gap-3">
-              <AlertTriangle className="h-4 w-4 text-rose-400 flex-shrink-0" />
+              <AlertTriangle className="h-4 w-4 text-[#BE123C] flex-shrink-0" />
               <div>
-                <span className="font-semibold text-rose-200">Pipeline Failed: </span>
-                <span className="text-slate-300">{meeting?.error_message || 'An error halted media processing.'}</span>
+                <span className="font-bold text-[#9F1239]">Pipeline Failed: </span>
+                <span className="text-[#BE123C]">{meeting?.error_message || 'An error halted media processing.'}</span>
               </div>
             </div>
             <button
               onClick={handleRetryProcessing}
               disabled={isRetrying}
-              className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-medium flex items-center gap-1.5 transition flex-shrink-0 disabled:opacity-50"
+              className="px-3.5 py-1.5 rounded-xl bg-[#BE123C] hover:bg-[#9F1239] text-white font-semibold flex items-center gap-1.5 transition flex-shrink-0 disabled:opacity-50 shadow-sm"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${isRetrying ? 'animate-spin' : ''}`} />
               <span>Retry</span>
@@ -781,7 +781,7 @@ export default function MeetingDetailPage() {
         )}
 
         {/* REDESIGNED MEDIA AREA */}
-        <section className="bg-[#0b101d] border-b border-slate-800/80 p-6 flex flex-col items-center">
+        <section className="bg-white/60 border-b border-[#E9E4F2] p-6 flex flex-col items-center">
           <div className="w-full max-w-4xl space-y-4">
 
             {/* 1. LOCAL VIDEO OR YOUTUBE WITH REAL VIDEO FRAMES */}
@@ -789,7 +789,7 @@ export default function MeetingDetailPage() {
               <div className="flex flex-col items-center space-y-3">
                 <div
                   ref={videoContainerRef}
-                  className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden border border-slate-800 shadow-2xl flex items-center justify-center group"
+                  className="relative w-full aspect-video bg-black rounded-3xl overflow-hidden border border-[#E9E4F2] shadow-soft-card flex items-center justify-center group"
                 >
                   <video
                     ref={videoRef}
@@ -809,7 +809,7 @@ export default function MeetingDetailPage() {
                   {!isPlaying && (
                     <button
                       onClick={togglePlay}
-                      className="absolute inset-0 m-auto h-16 w-16 rounded-full bg-indigo-600/90 hover:bg-indigo-500 text-white flex items-center justify-center shadow-xl shadow-indigo-900/50 transition transform hover:scale-110"
+                      className="absolute inset-0 m-auto h-16 w-16 rounded-full gradient-purple-hero text-white flex items-center justify-center shadow-purple-btn transition transform hover:scale-110"
                       title="Play Video"
                     >
                       <Play className="h-8 w-8 ml-1" />
@@ -817,13 +817,13 @@ export default function MeetingDetailPage() {
                   )}
 
                   {/* Top Video Badges */}
-                  <div className="absolute top-3 left-3 flex items-center gap-2">
-                    <span className="px-2.5 py-1 rounded-md text-[11px] font-mono font-semibold bg-black/70 backdrop-blur text-indigo-300 border border-indigo-500/30 flex items-center gap-1.5 shadow">
-                      <Video className="h-3.5 w-3.5 text-indigo-400" />
+                  <div className="absolute top-4 left-4 flex items-center gap-2">
+                    <span className="px-3 py-1 rounded-full text-xs font-semibold bg-white/90 backdrop-blur text-[#8B45D6] border border-[#E9E4F2] flex items-center gap-1.5 shadow-sm">
+                      <Video className="h-3.5 w-3.5 text-[#8B45D6]" />
                       <span>{mediaInfo?.video_codec?.toUpperCase() || 'MP4 VIDEO'}</span>
                     </span>
                     {mediaInfo?.is_youtube && (
-                      <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-red-600/90 text-white shadow">
+                      <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#BE123C] text-white shadow-sm">
                         YouTube
                       </span>
                     )}
@@ -831,7 +831,7 @@ export default function MeetingDetailPage() {
                 </div>
 
                 {mediaInfo?.codec_warning && (
-                  <div className="w-full p-2.5 rounded-lg bg-amber-950/40 border border-amber-800/40 text-amber-400 text-xs flex items-center gap-2">
+                  <div className="w-full p-3 rounded-2xl bg-[#FEF7EA] border border-[#FDE68A] text-[#B45309] text-xs flex items-center gap-2 shadow-sm">
                     <AlertTriangle className="h-4 w-4 flex-shrink-0" />
                     <span>{mediaInfo.codec_warning}</span>
                   </div>
@@ -844,31 +844,31 @@ export default function MeetingDetailPage() {
               <div className="w-full flex flex-col space-y-3">
                 <div className="flex items-center justify-between px-1">
                   <div className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-red-500" />
-                    <span className="text-xs font-medium text-white">YouTube Media</span>
-                    <span className="text-[11px] text-slate-400">
+                    <span className="h-2.5 w-2.5 rounded-full bg-[#BE123C]" />
+                    <span className="text-xs font-bold text-[#252238]">YouTube Media</span>
+                    <span className="text-xs text-[#77738A]">
                       Synchronized audio & transcript
                     </span>
                   </div>
 
                   {mediaInfo?.video_id && (
-                    <div className="flex items-center gap-1.5 bg-slate-900 p-1 rounded-lg border border-slate-800">
+                    <div className="flex items-center gap-1 bg-[#F3F0FF] p-1 rounded-2xl border border-[#E9E4F2]">
                       <button
                         onClick={() => setYoutubeMode('audio')}
-                        className={`px-3 py-1 rounded text-xs font-medium transition ${
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition ${
                           youtubeMode === 'audio'
-                            ? 'bg-indigo-600 text-white shadow'
-                            : 'text-slate-400 hover:text-white'
+                            ? 'gradient-purple-hero text-white shadow-sm'
+                            : 'text-[#77738A] hover:text-[#252238]'
                         }`}
                       >
                         Synced Audio Player
                       </button>
                       <button
                         onClick={() => setYoutubeMode('embed')}
-                        className={`px-3 py-1 rounded text-xs font-medium transition ${
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition ${
                           youtubeMode === 'embed'
-                            ? 'bg-indigo-600 text-white shadow'
-                            : 'text-slate-400 hover:text-white'
+                            ? 'gradient-purple-hero text-white shadow-sm'
+                            : 'text-[#77738A] hover:text-[#252238]'
                         }`}
                       >
                         Watch on YouTube
@@ -878,7 +878,7 @@ export default function MeetingDetailPage() {
                 </div>
 
                 {youtubeMode === 'embed' && mediaInfo?.video_id ? (
-                  <div className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden border border-slate-800 shadow-2xl">
+                  <div className="relative w-full aspect-video bg-black rounded-3xl overflow-hidden border border-[#E9E4F2] shadow-soft-card">
                     <iframe
                       src={`https://www.youtube-nocookie.com/embed/${mediaInfo.video_id}?start=${Math.floor(currentTime)}&autoplay=1`}
                       title={meeting?.title || 'YouTube Player'}
@@ -888,23 +888,23 @@ export default function MeetingDetailPage() {
                     />
                   </div>
                 ) : (
-                  <div className="rounded-2xl border border-slate-800 bg-gradient-to-r from-slate-900 via-slate-900/90 to-indigo-950/40 p-5 shadow-xl flex flex-col sm:flex-row items-center gap-5">
+                  <div className="rounded-3xl border border-[#E9E4F2] bg-white p-6 shadow-soft-card flex flex-col sm:flex-row items-center gap-5">
                     {/* Thumbnail Artwork with Play Trigger */}
-                    <div className="relative w-full sm:w-56 aspect-video rounded-xl overflow-hidden border border-slate-700/60 shadow-lg flex-shrink-0 bg-black flex items-center justify-center group">
+                    <div className="relative w-full sm:w-56 aspect-video rounded-2xl overflow-hidden border border-[#E9E4F2] shadow-sm flex-shrink-0 bg-black flex items-center justify-center group">
                       {mediaInfo?.thumbnail_url ? (
                         <img
                           src={mediaInfo.thumbnail_url}
                           alt={meeting?.title || 'YouTube Thumbnail'}
-                          className="w-full h-full object-cover opacity-85 group-hover:opacity-100 transition"
+                          className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-slate-950 text-slate-600">
+                        <div className="w-full h-full flex items-center justify-center bg-[#F3F0FF] text-[#8B45D6]">
                           <Tv className="h-10 w-10" />
                         </div>
                       )}
                       <button
                         onClick={togglePlay}
-                        className="absolute inset-0 m-auto h-12 w-12 rounded-full bg-indigo-600/95 hover:bg-indigo-500 text-white flex items-center justify-center shadow-lg transition transform group-hover:scale-110"
+                        className="absolute inset-0 m-auto h-12 w-12 rounded-full gradient-purple-hero text-white flex items-center justify-center shadow-purple-btn transition transform group-hover:scale-110"
                         title={isPlaying ? 'Pause' : 'Play Audio'}
                       >
                         {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
@@ -912,20 +912,20 @@ export default function MeetingDetailPage() {
                     </div>
 
                     {/* Metadata details */}
-                    <div className="flex-1 w-full space-y-1.5 text-center sm:text-left">
+                    <div className="flex-1 w-full space-y-2 text-center sm:text-left">
                       <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-red-600/20 text-red-400 border border-red-500/30">
+                        <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#FDF0F4] text-[#BE123C] border border-[#FBCFE8]">
                           YouTube Audio Extracted
                         </span>
                         {mediaInfo?.channel && (
-                          <span className="text-xs text-slate-400">Channel: {mediaInfo.channel}</span>
+                          <span className="text-xs text-[#77738A] font-medium">Channel: {mediaInfo.channel}</span>
                         )}
-                        <span className="text-xs text-slate-500 font-mono">
+                        <span className="text-xs text-[#77738A] font-mono">
                           Duration: {formatTime(duration)}
                         </span>
                       </div>
-                      <h3 className="text-base font-semibold text-white line-clamp-1">{meeting?.title}</h3>
-                      <p className="text-xs text-slate-400 leading-relaxed">
+                      <h3 className="text-base font-bold text-[#252238] line-clamp-1">{meeting?.title}</h3>
+                      <p className="text-xs text-[#77738A] leading-relaxed">
                         Extracted audio track is synchronized with speech transcript turns. Click any transcript timestamp to jump to that moment in the recording.
                       </p>
                       {mediaInfo?.source_url && (
@@ -933,10 +933,10 @@ export default function MeetingDetailPage() {
                           href={mediaInfo.source_url}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 font-medium pt-1 transition"
+                          className="inline-flex items-center gap-1.5 text-xs text-[#8B45D6] hover:text-[#7135C5] font-semibold pt-1 transition"
                         >
                           <span>Open original YouTube stream</span>
-                          <ExternalLink className="h-3 w-3" />
+                          <ExternalLink className="h-3.5 w-3.5" />
                         </a>
                       )}
                     </div>
@@ -947,21 +947,21 @@ export default function MeetingDetailPage() {
 
             {/* 3. AUDIO-ONLY RECORDING (LOCAL WAV/MP3) */}
             {isAudioOnly && (
-              <div className="p-6 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900/90 to-indigo-950/40 border border-slate-800 shadow-xl flex flex-col sm:flex-row items-center gap-6">
-                <div className="h-20 w-20 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center flex-shrink-0 text-indigo-400 shadow-inner">
+              <div className="p-6 rounded-3xl bg-white border border-[#E9E4F2] shadow-soft-card flex flex-col sm:flex-row items-center gap-6">
+                <div className="h-20 w-20 rounded-2xl bg-[#F3ECFE] border border-[#E5D7FD] flex items-center justify-center flex-shrink-0 text-[#8B45D6] shadow-sm">
                   <Music className="h-9 w-9" />
                 </div>
-                <div className="flex-1 w-full space-y-1.5 text-center sm:text-left">
+                <div className="flex-1 w-full space-y-2 text-center sm:text-left">
                   <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                    <span className="px-2.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-indigo-950/80 text-indigo-300 border border-indigo-800/50">
+                    <span className="px-3 py-0.5 rounded-full text-xs font-mono font-semibold bg-[#F3ECFE] text-[#8B45D6] border border-[#E5D7FD]">
                       AUDIO RECORDING · {mediaInfo?.audio_codec?.toUpperCase() || 'WAV'}
                     </span>
-                    <span className="text-xs text-slate-400 font-mono">
+                    <span className="text-xs text-[#77738A] font-mono">
                       Duration: {formatTime(duration)}
                     </span>
                   </div>
-                  <h3 className="text-base font-semibold text-white truncate">{meeting?.title}</h3>
-                  <p className="text-xs text-slate-400">
+                  <h3 className="text-base font-bold text-[#252238] truncate">{meeting?.title}</h3>
+                  <p className="text-xs text-[#77738A]">
                     High-fidelity 16kHz audio processed by local Faster-Whisper and NVIDIA Nemotron-3-Diarization.
                   </p>
                 </div>
@@ -983,125 +983,125 @@ export default function MeetingDetailPage() {
 
             {/* UNIFIED CONTROLS BAR (Hidden when watching native YouTube embed) */}
             {(!isYouTubeAudioOnly || youtubeMode === 'audio') && (
-            <div className="p-4 rounded-xl bg-[#0e1526] border border-slate-800/80 shadow-md flex flex-col gap-3">
-              {/* Scrubber slider and time display */}
-              <div className="flex items-center gap-3">
-                <span className="text-xs font-mono text-indigo-300 w-12 text-right">
-                  {formatTime(currentTime)}
-                </span>
-                <div className="flex-1 relative flex items-center">
-                  <input
-                    type="range"
-                    min="0"
-                    max={duration || 100}
-                    step="0.1"
-                    value={currentTime}
-                    onChange={handleSliderChange}
-                    className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 hover:accent-indigo-400 transition"
-                  />
-                </div>
-                <span className="text-xs font-mono text-slate-400 w-12">
-                  {formatTime(duration)}
-                </span>
-              </div>
-
-              {/* Controls row */}
-              <div className="flex items-center justify-between pt-1 border-t border-slate-800/60">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <button
-                    onClick={togglePlay}
-                    className="h-9 w-9 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center transition shadow-md shadow-indigo-600/30"
-                    title={isPlaying ? 'Pause' : 'Play'}
-                  >
-                    {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
-                  </button>
-
-                  <button
-                    onClick={() => seekTo(Math.max(0, currentTime - 5))}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition text-xs flex items-center gap-0.5"
-                    title="Rewind 5s"
-                  >
-                    <RotateCcw className="h-3.5 w-3.5" />
-                    <span className="text-[11px]">-5s</span>
-                  </button>
-
-                  <button
-                    onClick={() => seekTo(Math.min(duration, currentTime + 5))}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition text-xs flex items-center gap-0.5"
-                    title="Forward 5s"
-                  >
-                    <RotateCcw className="h-3.5 w-3.5 transform rotate-180" />
-                    <span className="text-[11px]">+5s</span>
-                  </button>
-
-                  {/* Volume Slider */}
-                  <div className="flex items-center gap-1.5 ml-2 pl-2 border-l border-slate-800">
-                    <button
-                      onClick={toggleMute}
-                      className="text-slate-400 hover:text-white transition"
-                      title={isMuted ? 'Unmute' : 'Mute'}
-                    >
-                      {isMuted || volume === 0 ? (
-                        <VolumeX className="h-4 w-4 text-rose-400" />
-                      ) : volume < 0.5 ? (
-                        <Volume1 className="h-4 w-4" />
-                      ) : (
-                        <Volume2 className="h-4 w-4" />
-                      )}
-                    </button>
+              <div className="p-5 rounded-3xl bg-white border border-[#E9E4F2] shadow-soft-card flex flex-col gap-3.5">
+                {/* Scrubber slider and time display */}
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-mono font-semibold text-[#8B45D6] w-12 text-right">
+                    {formatTime(currentTime)}
+                  </span>
+                  <div className="flex-1 relative flex items-center">
                     <input
                       type="range"
                       min="0"
-                      max="1"
-                      step="0.05"
-                      value={isMuted ? 0 : volume}
-                      onChange={handleVolumeChange}
-                      className="w-16 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 hidden sm:block"
-                      title={`Volume: ${Math.round((isMuted ? 0 : volume) * 100)}%`}
+                      max={duration || 100}
+                      step="0.1"
+                      value={currentTime}
+                      onChange={handleSliderChange}
+                      className="w-full h-2 bg-[#F3F0FF] rounded-lg appearance-none cursor-pointer accent-[#8B45D6] transition"
                     />
                   </div>
+                  <span className="text-xs font-mono text-[#77738A] w-12">
+                    {formatTime(duration)}
+                  </span>
                 </div>
 
-                <div className="flex items-center gap-2 sm:gap-3">
-                  {/* Playback Speed Buttons */}
-                  <div className="flex items-center gap-1">
-                    <span className="text-slate-500 text-[10px] hidden sm:inline">Speed:</span>
-                    {[1.0, 1.25, 1.5, 2.0].map((rate) => (
+                {/* Controls row */}
+                <div className="flex items-center justify-between pt-2 border-t border-[#E9E4F2]">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <button
+                      onClick={togglePlay}
+                      className="h-10 w-10 rounded-full gradient-purple-hero hover:opacity-95 text-white flex items-center justify-center transition shadow-purple-btn"
+                      title={isPlaying ? 'Pause' : 'Play'}
+                    >
+                      {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
+                    </button>
+
+                    <button
+                      onClick={() => seekTo(Math.max(0, currentTime - 5))}
+                      className="p-2 rounded-xl text-[#77738A] hover:text-[#252238] hover:bg-[#F3F0FF] transition text-xs flex items-center gap-0.5 font-medium"
+                      title="Rewind 5s"
+                    >
+                      <RotateCcw className="h-3.5 w-3.5" />
+                      <span className="text-xs">-5s</span>
+                    </button>
+
+                    <button
+                      onClick={() => seekTo(Math.min(duration, currentTime + 5))}
+                      className="p-2 rounded-xl text-[#77738A] hover:text-[#252238] hover:bg-[#F3F0FF] transition text-xs flex items-center gap-0.5 font-medium"
+                      title="Forward 5s"
+                    >
+                      <RotateCcw className="h-3.5 w-3.5 transform rotate-180" />
+                      <span className="text-xs">+5s</span>
+                    </button>
+
+                    {/* Volume Slider */}
+                    <div className="flex items-center gap-2 ml-2 pl-2 border-l border-[#E9E4F2]">
                       <button
-                        key={rate}
-                        onClick={() => handlePlaybackRateChange(rate)}
-                        className={`px-2 py-0.5 rounded text-[11px] font-mono transition ${
-                          playbackRate === rate
-                            ? 'bg-indigo-600 text-white font-bold'
-                            : 'text-slate-400 hover:text-white hover:bg-slate-800'
-                        }`}
+                        onClick={toggleMute}
+                        className="text-[#77738A] hover:text-[#252238] transition"
+                        title={isMuted ? 'Unmute' : 'Mute'}
                       >
-                        {rate}x
+                        {isMuted || volume === 0 ? (
+                          <VolumeX className="h-4 w-4 text-[#BE123C]" />
+                        ) : volume < 0.5 ? (
+                          <Volume1 className="h-4 w-4 text-[#8B45D6]" />
+                        ) : (
+                          <Volume2 className="h-4 w-4 text-[#8B45D6]" />
+                        )}
                       </button>
-                    ))}
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.05"
+                        value={isMuted ? 0 : volume}
+                        onChange={handleVolumeChange}
+                        className="w-16 h-1.5 bg-[#F3F0FF] rounded-lg appearance-none cursor-pointer accent-[#8B45D6] hidden sm:block"
+                        title={`Volume: ${Math.round((isMuted ? 0 : volume) * 100)}%`}
+                      />
+                    </div>
                   </div>
 
-                  {/* Fullscreen Button (if Video) */}
-                  {hasVideo && (
-                    <button
-                      onClick={handleToggleFullscreen}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
-                      title="Fullscreen"
-                    >
-                      <Maximize className="h-4 w-4" />
-                    </button>
-                  )}
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    {/* Playback Speed Buttons */}
+                    <div className="flex items-center gap-1 bg-[#F3F0FF] p-1 rounded-xl border border-[#E9E4F2]">
+                      <span className="text-[#77738A] text-[11px] font-semibold px-1.5 hidden sm:inline">Speed:</span>
+                      {[1.0, 1.25, 1.5, 2.0].map((rate) => (
+                        <button
+                          key={rate}
+                          onClick={() => handlePlaybackRateChange(rate)}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-mono font-semibold transition ${
+                            playbackRate === rate
+                              ? 'gradient-purple-hero text-white shadow-sm'
+                              : 'text-[#77738A] hover:text-[#252238]'
+                          }`}
+                        >
+                          {rate}x
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Fullscreen Button (if Video) */}
+                    {hasVideo && (
+                      <button
+                        onClick={handleToggleFullscreen}
+                        className="p-2 rounded-xl text-[#77738A] hover:text-[#252238] hover:bg-[#F3F0FF] transition border border-[#E9E4F2]"
+                        title="Fullscreen"
+                      >
+                        <Maximize className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
             )}
 
           </div>
         </section>
 
-        {/* RESPONSIVE NAVIGATION TABS BAR */}
-        <div className="border-b border-slate-800/80 bg-[#0d131f]/95 px-6 py-2 sticky top-16 z-10 backdrop-blur">
-          <div className="flex gap-1.5 overflow-x-auto no-scrollbar py-1">
+        {/* RESPONSIVE NAVIGATION TABS BAR (STRICTLY 5 ESSENTIAL TABS) */}
+        <div className="border-b border-[#E9E4F2] bg-white/90 px-6 py-2.5 sticky top-16 z-10 backdrop-blur shadow-sm">
+          <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
             {[
               { id: 'transcript', label: 'Transcript', icon: FileText },
               { id: 'summary', label: 'Summary', icon: Sparkles },
@@ -1115,16 +1115,18 @@ export default function MeetingDetailPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`py-2 px-3.5 rounded-lg text-xs font-medium flex items-center gap-2 whitespace-nowrap transition ${
+                  className={`py-2 px-4 rounded-xl text-xs font-semibold flex items-center gap-2 whitespace-nowrap transition ${
                     active
-                      ? 'bg-indigo-600/20 text-indigo-400 border border-indigo-500/40 shadow-sm'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900 border border-transparent'
+                      ? 'gradient-purple-hero text-white shadow-purple-btn'
+                      : 'text-[#77738A] hover:text-[#252238] hover:bg-[#F3F0FF]'
                   }`}
                 >
-                  <Icon className="h-3.5 w-3.5" />
+                  <Icon className="h-4 w-4" />
                   <span>{tab.label}</span>
                   {tab.badge !== undefined && tab.badge > 0 && (
-                    <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-indigo-500/20 text-indigo-300 font-semibold">
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                      active ? 'bg-white/30 text-white' : 'bg-[#F3ECFE] text-[#8B45D6]'
+                    }`}>
                       {tab.badge}
                     </span>
                   )}
@@ -1139,24 +1141,24 @@ export default function MeetingDetailPage() {
           {/* TAB 1: FULL TRANSCRIPT */}
           {activeTab === 'transcript' && (
             <div className="space-y-4 max-w-4xl mx-auto">
-              <div className="flex items-center justify-between gap-4 mb-4">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-4">
                 <div className="relative flex-1 max-w-md">
-                  <Search className="h-4 w-4 absolute left-3 top-2.5 text-slate-500" />
+                  <Search className="h-4 w-4 absolute left-3.5 top-3 text-[#77738A]" />
                   <input
                     type="text"
                     value={transcriptSearch}
                     onChange={(e) => setTranscriptSearch(e.target.value)}
                     placeholder="Search spoken words in transcript..."
-                    className="w-full pl-9 pr-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E9E4F2] rounded-2xl text-xs text-[#252238] placeholder-[#9D99AF] focus:outline-none focus:border-[#8B45D6] shadow-sm transition"
                   />
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-400">Speaker:</span>
+                  <span className="text-xs font-semibold text-[#77738A]">Speaker:</span>
                   <select
                     value={speakerFilter}
                     onChange={(e) => setSpeakerFilter(e.target.value)}
-                    className="bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-300 px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
+                    className="bg-white border border-[#E9E4F2] rounded-2xl text-xs text-[#252238] px-3.5 py-2.5 focus:outline-none focus:border-[#8B45D6] shadow-sm font-medium"
                   >
                     <option value="ALL">All Speakers</option>
                     {(transcriptData?.speakers || []).map((spk: any) => (
@@ -1169,7 +1171,7 @@ export default function MeetingDetailPage() {
               </div>
 
               {filteredSegments.length === 0 ? (
-                <div className="p-12 text-center rounded-2xl border border-dashed border-slate-800 bg-slate-950/40 text-slate-400 text-xs">
+                <div className="p-12 text-center rounded-3xl border border-dashed border-[#DDD5FF] bg-white text-[#77738A] text-xs shadow-soft-card">
                   {isProcessing
                     ? 'Transcribing audio turns with Faster-Whisper... transcript will appear once completed.'
                     : 'No transcript segments found matching your filters.'}
@@ -1182,35 +1184,35 @@ export default function MeetingDetailPage() {
                       <div
                         key={seg.id}
                         onClick={() => seekTo(seg.start_time)}
-                        className={`p-4 rounded-xl border transition cursor-pointer ${
+                        className={`p-5 rounded-2xl border transition cursor-pointer ${
                           isCurrent
-                            ? 'bg-indigo-950/50 border-indigo-500/60 shadow-lg shadow-indigo-950/50'
-                            : 'bg-slate-950/40 border-slate-800 hover:border-slate-700'
+                            ? 'bg-[#FAF7FF] border-[#8B45D6] shadow-soft-elevated ring-2 ring-[#8B45D6]/20'
+                            : 'bg-white border-[#E9E4F2] hover:border-[#DDD5FF] shadow-soft-card'
                         }`}
                       >
-                        <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
-                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold ${
+                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
                               seg.is_confirmed
-                                ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/40'
-                                : 'bg-slate-800 text-indigo-300 border border-slate-700'
+                                ? 'bg-[#EBF9F0] text-[#16A34A] border border-[#D1F2DC]'
+                                : 'bg-[#F3ECFE] text-[#8B45D6] border border-[#E5D7FD]'
                             }`}>
-                              {seg.is_confirmed ? <ShieldCheck className="h-3 w-3 text-emerald-400" /> : null}
+                              {seg.is_confirmed ? <ShieldCheck className="h-3.5 w-3.5 text-[#16A34A]" /> : null}
                               <span>{seg.speaker_name || seg.speaker_label || 'Speaker'}</span>
                             </span>
 
                             {seg.speaker_label && seg.speaker_name !== seg.speaker_label && (
-                              <span className="text-[10px] font-mono text-slate-500">
+                              <span className="text-[11px] font-mono text-[#77738A]">
                                 ({seg.speaker_label})
                               </span>
                             )}
                           </div>
 
-                          <span className="text-xs font-mono text-slate-500">
+                          <span className="text-xs font-mono font-medium text-[#77738A]">
                             {formatTime(seg.start_time)} - {formatTime(seg.end_time)}
                           </span>
                         </div>
-                        <p className="text-sm text-slate-200 leading-relaxed">{seg.text}</p>
+                        <p className="text-sm text-[#252238] leading-relaxed font-sans">{seg.text}</p>
                       </div>
                     );
                   })}
@@ -1219,20 +1221,19 @@ export default function MeetingDetailPage() {
             </div>
           )}
 
-
-          {/* TAB 3: STRUCTURED SUMMARY */}
+          {/* TAB 2: STRUCTURED SUMMARY */}
           {activeTab === 'summary' && (
             <div className="max-w-4xl mx-auto space-y-6">
-              <div className="p-6 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-3">
+              <div className="p-7 rounded-3xl bg-white border border-[#E9E4F2] space-y-3 shadow-soft-card">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs uppercase tracking-wider text-indigo-400 font-bold">Executive Summary</h3>
+                  <h3 className="text-xs uppercase tracking-wider text-[#8B45D6] font-bold">Executive Summary</h3>
                   {summaryData?.model_name && (
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-800/50">
+                    <span className="text-[11px] font-mono px-3 py-1 rounded-full bg-[#F3ECFE] text-[#8B45D6] border border-[#E5D7FD] font-semibold">
                       {summaryData.model_name}
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-slate-200 leading-relaxed font-sans">
+                <p className="text-sm text-[#252238] leading-relaxed font-sans">
                   {summaryData?.executive_summary || (
                     isCompleted
                       ? 'No executive summary was generated for this meeting.'
@@ -1242,18 +1243,20 @@ export default function MeetingDetailPage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-5 rounded-xl bg-slate-950/40 border border-slate-800 space-y-3">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-indigo-400" />
+                <div className="p-6 rounded-3xl bg-white border border-[#E9E4F2] space-y-3 shadow-soft-card">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#252238] flex items-center gap-2">
+                    <div className="h-7 w-7 rounded-xl bg-[#EBF9F0] text-[#16A34A] flex items-center justify-center">
+                      <CheckCircle2 className="h-4 w-4" />
+                    </div>
                     <span>Key Takeaways</span>
                   </h4>
                   {(!summaryData?.key_points || summaryData.key_points.length === 0) ? (
-                    <p className="text-xs text-slate-500 italic">No key points extracted.</p>
+                    <p className="text-xs text-[#77738A] italic">No key points extracted.</p>
                   ) : (
-                    <ul className="space-y-2">
+                    <ul className="space-y-2.5">
                       {summaryData.key_points.map((pt: string, i: number) => (
-                        <li key={i} className="text-xs text-slate-300 flex items-start gap-2">
-                          <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 mt-1.5 flex-shrink-0" />
+                        <li key={i} className="text-xs text-[#252238] flex items-start gap-2.5 leading-relaxed">
+                          <span className="h-2 w-2 rounded-full bg-[#16A34A] mt-1.5 flex-shrink-0" />
                           <span>{pt}</span>
                         </li>
                       ))}
@@ -1261,18 +1264,20 @@ export default function MeetingDetailPage() {
                   )}
                 </div>
 
-                <div className="p-5 rounded-xl bg-slate-950/40 border border-slate-800 space-y-3">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                    <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+                <div className="p-6 rounded-3xl bg-white border border-[#E9E4F2] space-y-3 shadow-soft-card">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#252238] flex items-center gap-2">
+                    <div className="h-7 w-7 rounded-xl bg-[#FEF7EA] text-[#B45309] flex items-center justify-center">
+                      <AlertTriangle className="h-4 w-4" />
+                    </div>
                     <span>Risks & Blockers</span>
                   </h4>
                   {(!summaryData?.risks || summaryData.risks.length === 0) ? (
-                    <p className="text-xs text-slate-500 italic">No specific risks flagged.</p>
+                    <p className="text-xs text-[#77738A] italic">No specific risks flagged.</p>
                   ) : (
-                    <ul className="space-y-2">
+                    <ul className="space-y-2.5">
                       {summaryData.risks.map((risk: string, i: number) => (
-                        <li key={i} className="text-xs text-slate-300 flex items-start gap-2">
-                          <AlertTriangle className="h-3.5 w-3.5 text-amber-500 mt-0.5 flex-shrink-0" />
+                        <li key={i} className="text-xs text-[#252238] flex items-start gap-2.5 leading-relaxed">
+                          <AlertTriangle className="h-3.5 w-3.5 text-[#B45309] mt-0.5 flex-shrink-0" />
                           <span>{risk}</span>
                         </li>
                       ))}
@@ -1280,18 +1285,20 @@ export default function MeetingDetailPage() {
                   )}
                 </div>
 
-                <div className="p-5 rounded-xl bg-slate-950/40 border border-slate-800 space-y-3">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                    <HelpCircle className="h-3.5 w-3.5 text-purple-400" />
+                <div className="p-6 rounded-3xl bg-white border border-[#E9E4F2] space-y-3 shadow-soft-card">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#252238] flex items-center gap-2">
+                    <div className="h-7 w-7 rounded-xl bg-[#F3ECFE] text-[#8B45D6] flex items-center justify-center">
+                      <HelpCircle className="h-4 w-4" />
+                    </div>
                     <span>Open Questions & Unresolved Issues</span>
                   </h4>
                   {(!summaryData?.open_questions || summaryData.open_questions.length === 0) ? (
-                    <p className="text-xs text-slate-500 italic">No unresolved questions detected.</p>
+                    <p className="text-xs text-[#77738A] italic">No unresolved questions detected.</p>
                   ) : (
-                    <ul className="space-y-2">
+                    <ul className="space-y-2.5">
                       {summaryData.open_questions.map((q: string, i: number) => (
-                        <li key={i} className="text-xs text-slate-300 flex items-start gap-2">
-                          <span className="h-1.5 w-1.5 rounded-full bg-purple-500 mt-1.5 flex-shrink-0" />
+                        <li key={i} className="text-xs text-[#252238] flex items-start gap-2.5 leading-relaxed">
+                          <span className="h-2 w-2 rounded-full bg-[#8B45D6] mt-1.5 flex-shrink-0" />
                           <span>{q}</span>
                         </li>
                       ))}
@@ -1299,18 +1306,20 @@ export default function MeetingDetailPage() {
                   )}
                 </div>
 
-                <div className="p-5 rounded-xl bg-slate-950/40 border border-slate-800 space-y-3">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                    <ArrowRight className="h-3.5 w-3.5 text-emerald-400" />
+                <div className="p-6 rounded-3xl bg-white border border-[#E9E4F2] space-y-3 shadow-soft-card">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#252238] flex items-center gap-2">
+                    <div className="h-7 w-7 rounded-xl bg-[#EAF3FD] text-[#2463EB] flex items-center justify-center">
+                      <ArrowRight className="h-4 w-4" />
+                    </div>
                     <span>Next Steps</span>
                   </h4>
                   {(!summaryData?.next_steps || summaryData.next_steps.length === 0) ? (
-                    <p className="text-xs text-slate-500 italic">No next steps defined.</p>
+                    <p className="text-xs text-[#77738A] italic">No next steps defined.</p>
                   ) : (
-                    <ul className="space-y-2">
+                    <ul className="space-y-2.5">
                       {summaryData.next_steps.map((step: string, i: number) => (
-                        <li key={i} className="text-xs text-slate-300 flex items-start gap-2">
-                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0" />
+                        <li key={i} className="text-xs text-[#252238] flex items-start gap-2.5 leading-relaxed">
+                          <span className="h-2 w-2 rounded-full bg-[#2463EB] mt-1.5 flex-shrink-0" />
                           <span>{step}</span>
                         </li>
                       ))}
@@ -1321,19 +1330,22 @@ export default function MeetingDetailPage() {
             </div>
           )}
 
-
-          {/* TAB 5: ACTION ITEMS */}
+          {/* TAB 3: ACTION ITEMS */}
           {activeTab === 'actions' && (
             <div className="max-w-4xl mx-auto space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-white">Action Item Tracker</h3>
-                <span className="text-xs text-slate-400">{actionItems.length} items</span>
+                <h3 className="text-sm font-bold text-[#252238]">Action Item Tracker</h3>
+                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-white border border-[#E9E4F2] text-[#77738A] shadow-sm">
+                  {actionItems.length} items
+                </span>
               </div>
 
               {actionItems.length === 0 ? (
-                <div className="p-10 text-center rounded-xl bg-[#0e1526]/50 border border-dashed border-slate-800 space-y-2">
-                  <ListTodo className="h-6 w-6 text-slate-500 mx-auto" />
-                  <p className="text-xs font-medium text-slate-300">
+                <div className="p-12 text-center rounded-3xl bg-white border border-dashed border-[#DDD5FF] shadow-soft-card space-y-3">
+                  <div className="h-12 w-12 rounded-2xl bg-[#F3ECFE] text-[#8B45D6] flex items-center justify-center mx-auto">
+                    <ListTodo className="h-6 w-6" />
+                  </div>
+                  <p className="text-xs font-semibold text-[#77738A]">
                     {isCompleted
                       ? 'No action items extracted from this meeting.'
                       : 'Action items will appear here once pipeline completes.'}
@@ -1344,59 +1356,59 @@ export default function MeetingDetailPage() {
                   {actionItems.map((item: any) => {
                     const isDone = item.status === 'COMPLETED';
                     const priorityStyles: Record<string, string> = {
-                      URGENT: 'bg-rose-500/20 text-rose-400 border-rose-500/30',
-                      HIGH: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-                      MEDIUM: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-                      LOW: 'bg-slate-800 text-slate-400 border-slate-700'
+                      URGENT: 'bg-[#FDF0F4] text-[#BE123C] border-[#FBCFE8]',
+                      HIGH: 'bg-[#FEF7EA] text-[#B45309] border-[#FDE68A]',
+                      MEDIUM: 'bg-[#EAF3FD] text-[#2463EB] border-[#D3E5FA]',
+                      LOW: 'bg-[#F3F0FF] text-[#77738A] border-[#E9E4F2]'
                     };
                     const priorityClass = priorityStyles[item.priority] || priorityStyles.MEDIUM;
 
                     return (
                       <div
                         key={item.id}
-                        className={`p-4 rounded-xl border flex flex-col gap-3 transition ${
-                          isDone ? 'bg-slate-950/20 border-slate-900 opacity-60' : 'bg-slate-950/50 border-slate-800'
+                        className={`p-5 rounded-3xl border flex flex-col gap-3 transition shadow-soft-card ${
+                          isDone ? 'bg-[#FAF8FF] border-[#E9E4F2] opacity-60' : 'bg-white border-[#E9E4F2]'
                         }`}
                       >
                         <div className="flex items-center justify-between gap-4">
                           <div className="flex items-center gap-3">
                             <button
                               onClick={() => handleActionItemToggle(item.id, item.status)}
-                              className={`h-5 w-5 rounded border flex items-center justify-center transition ${
-                                isDone ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-700 hover:border-indigo-500'
+                              className={`h-5 w-5 rounded-lg border flex items-center justify-center transition ${
+                                isDone ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm' : 'border-[#DDD5FF] hover:border-[#8B45D6] bg-white'
                               }`}
                             >
-                              {isDone && <Check className="h-3 w-3" />}
+                              {isDone && <Check className="h-3.5 w-3.5" />}
                             </button>
-                            <p className={`text-sm font-medium ${isDone ? 'line-through text-slate-500' : 'text-slate-200'}`}>
+                            <p className={`text-sm font-semibold ${isDone ? 'line-through text-[#9D99AF]' : 'text-[#252238]'}`}>
                               {item.task_description}
                             </p>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-900 text-slate-300 border border-slate-800">
+                            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#F3F0FF] text-[#77738A] border border-[#E9E4F2]">
                               {item.status}
                             </span>
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${priorityClass}`}>
+                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${priorityClass}`}>
                               {item.priority}
                             </span>
                           </div>
                         </div>
 
-                        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-900 text-xs text-slate-400">
+                        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#E9E4F2] text-xs text-[#77738A]">
                           <div className="flex items-center gap-4">
                             <span className="flex items-center gap-1.5">
-                              <User className="h-3 w-3 text-slate-500" />
-                              <span>Owner: <strong className="text-slate-300 font-normal">{item.owner_name || 'Unassigned'}</strong></span>
+                              <User className="h-3.5 w-3.5 text-[#8B45D6]" />
+                              <span>Owner: <strong className="text-[#252238] font-semibold">{item.owner_name || 'Unassigned'}</strong></span>
                             </span>
                             <span className="flex items-center gap-1.5">
-                              <Calendar className="h-3 w-3 text-slate-500" />
-                              <span>Due: <strong className="text-slate-300 font-normal">{item.due_date || 'No deadline'}</strong></span>
+                              <Calendar className="h-3.5 w-3.5 text-[#8B45D6]" />
+                              <span>Due: <strong className="text-[#252238] font-semibold">{item.due_date || 'No deadline'}</strong></span>
                             </span>
                           </div>
                           {item.evidence_quote && (
                             <button
                               onClick={() => item.evidence_timestamp !== null && seekTo(item.evidence_timestamp)}
-                              className="text-[11px] text-indigo-400 hover:text-indigo-300 flex items-center gap-1 font-mono"
+                              className="text-xs text-[#8B45D6] hover:text-[#7135C5] flex items-center gap-1 font-mono font-semibold"
                             >
                               <span>Evidence: "{item.evidence_quote.substring(0, 45)}..."</span>
                               {item.evidence_timestamp !== null && (
@@ -1413,19 +1425,21 @@ export default function MeetingDetailPage() {
             </div>
           )}
 
-          {/* TAB 6: SPEAKERS & ATTRIBUTION */}
+          {/* TAB 4: SPEAKERS & ATTRIBUTION */}
           {activeTab === 'speakers' && (
             <div className="max-w-4xl mx-auto space-y-6">
               {speakerStats.length > 0 && (
-                <div className="p-5 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-4">
-                  <h3 className="text-xs uppercase tracking-wider text-slate-400 font-bold flex items-center gap-2">
-                    <BarChart3 className="h-4 w-4 text-indigo-400" />
+                <div className="p-6 rounded-3xl bg-white border border-[#E9E4F2] space-y-4 shadow-soft-card">
+                  <h3 className="text-xs uppercase tracking-wider text-[#252238] font-bold flex items-center gap-2">
+                    <div className="h-7 w-7 rounded-xl bg-[#F3ECFE] text-[#8B45D6] flex items-center justify-center">
+                      <BarChart3 className="h-4 w-4" />
+                    </div>
                     <span>Meeting Talk-Time Distribution</span>
                   </h3>
 
-                  <div className="h-3 w-full bg-slate-800 rounded-full overflow-hidden flex">
+                  <div className="h-3 w-full bg-[#F3F0FF] rounded-full overflow-hidden flex border border-[#E9E4F2]">
                     {speakerStats.map((s, idx) => {
-                      const colors = ['bg-indigo-500', 'bg-violet-500', 'bg-cyan-500', 'bg-emerald-500', 'bg-amber-500', 'bg-rose-500'];
+                      const colors = ['bg-[#8B45D6]', 'bg-[#C23DB4]', 'bg-[#2463EB]', 'bg-[#0E7490]', 'bg-[#16A34A]', 'bg-[#B45309]'];
                       return (
                         <div
                           key={s.speaker_id}
@@ -1439,12 +1453,12 @@ export default function MeetingDetailPage() {
 
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
                     {speakerStats.map((s, idx) => (
-                      <div key={s.speaker_id} className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 text-xs">
+                      <div key={s.speaker_id} className="p-3.5 rounded-2xl bg-[#FAF8FF] border border-[#E9E4F2] text-xs">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="font-semibold text-slate-200 truncate">{s.display_name}</span>
-                          <span className="font-mono text-indigo-400 font-bold">{s.percentage}%</span>
+                          <span className="font-bold text-[#252238] truncate">{s.display_name}</span>
+                          <span className="font-mono text-[#8B45D6] font-bold">{s.percentage}%</span>
                         </div>
-                        <div className="text-[11px] text-slate-500 flex justify-between">
+                        <div className="text-[11px] text-[#77738A] flex justify-between">
                           <span>{s.segment_count} segments</span>
                           <span>{formatTime(s.total_seconds)}</span>
                         </div>
@@ -1456,8 +1470,8 @@ export default function MeetingDetailPage() {
 
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-white">Diarized Speaker Turns & Confirmations</h3>
-                  <span className="text-xs text-slate-500">
+                  <h3 className="text-sm font-bold text-[#252238]">Diarized Speaker Turns & Confirmations</h3>
+                  <span className="text-xs text-[#77738A]">
                     Diarization IDs remain meeting-scoped until linked to an organization profile.
                   </span>
                 </div>
@@ -1465,35 +1479,35 @@ export default function MeetingDetailPage() {
                 {(transcriptData?.speakers || []).map((spk: any) => (
                   <div
                     key={spk.id}
-                    className="p-4 rounded-xl bg-slate-950/50 border border-slate-800 flex items-center justify-between gap-4"
+                    className="p-5 rounded-3xl bg-white border border-[#E9E4F2] shadow-soft-card flex items-center justify-between gap-4"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm ${
+                    <div className="flex items-center gap-3.5">
+                      <div className={`h-12 w-12 rounded-2xl flex items-center justify-center font-bold text-sm shadow-sm ${
                         spk.is_confirmed
-                          ? 'bg-emerald-950/60 border border-emerald-700/50 text-emerald-300'
-                          : 'bg-slate-800 border border-slate-700 text-slate-300'
+                          ? 'bg-[#EBF9F0] border border-[#D1F2DC] text-[#16A34A]'
+                          : 'bg-[#F3ECFE] border border-[#E5D7FD] text-[#8B45D6]'
                       }`}>
                         {(spk.confirmed_name || spk.speaker_label).charAt(0).toUpperCase()}
                       </div>
 
                       <div>
                         <div className="flex items-center gap-2">
-                          <h4 className="font-semibold text-sm text-white">
+                          <h4 className="font-bold text-sm text-[#252238]">
                             {spk.confirmed_name || 'Unassigned Speaker'}
                           </h4>
-                          <span className="text-xs font-mono text-slate-500">
+                          <span className="text-xs font-mono text-[#77738A]">
                             ({spk.speaker_label})
                           </span>
-                          <span className={`px-2 py-0.2 rounded text-[10px] font-semibold ${
+                          <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                             spk.is_confirmed
-                              ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/40'
-                              : 'bg-amber-950/60 text-amber-400 border border-amber-800/40'
+                              ? 'bg-[#EBF9F0] text-[#16A34A] border border-[#D1F2DC]'
+                              : 'bg-[#FEF7EA] text-[#B45309] border border-[#FDE68A]'
                           }`}>
                             {spk.is_confirmed ? 'Confirmed' : 'Unassigned'}
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-3 text-xs text-slate-400 mt-1">
+                        <div className="flex items-center gap-3 text-xs text-[#77738A] mt-1 font-medium">
                           <span>{spk.segment_count || 0} segments</span>
                           <span>•</span>
                           <span>{formatTime(spk.total_talk_time_seconds || 0)}</span>
@@ -1506,7 +1520,7 @@ export default function MeetingDetailPage() {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleOpenAuditHistory(spk)}
-                        className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                        className="p-2 rounded-xl text-[#77738A] hover:text-[#252238] hover:bg-[#F3F0FF] transition border border-[#E9E4F2]"
                         title="View Attribution Audit Trail"
                       >
                         <History className="h-4 w-4" />
@@ -1514,7 +1528,7 @@ export default function MeetingDetailPage() {
 
                       <button
                         onClick={() => openAssignModal(spk)}
-                        className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 border border-indigo-700/40 transition"
+                        className="flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-xl gradient-purple-hero text-white shadow-purple-btn hover:opacity-95 transition"
                       >
                         <UserCheck className="h-3.5 w-3.5" />
                         <span>{spk.is_confirmed ? 'Change' : 'Assign'}</span>
@@ -1523,7 +1537,7 @@ export default function MeetingDetailPage() {
                       {spk.is_confirmed && (
                         <button
                           onClick={() => handleUnassignSpeaker(spk.id)}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-slate-800 transition"
+                          className="p-2 rounded-xl text-[#77738A] hover:text-[#BE123C] hover:bg-[#FDF0F4] transition border border-[#E9E4F2]"
                           title="Revert to Anonymous Speaker"
                         >
                           <UserX className="h-4 w-4" />
@@ -1536,24 +1550,24 @@ export default function MeetingDetailPage() {
             </div>
           )}
 
-          {/* TAB 7: CHAT */}
+          {/* TAB 5: CHAT */}
           {activeTab === 'chat' && (
-            <div className="max-w-4xl mx-auto flex flex-col h-[680px] bg-[#0c1220] rounded-2xl border border-slate-800 shadow-2xl overflow-hidden">
+            <div className="max-w-4xl mx-auto flex flex-col h-[700px] bg-white rounded-3xl border border-[#E9E4F2] shadow-soft-card overflow-hidden">
               {/* Chat Header Bar */}
-              <div className="px-5 py-3.5 border-b border-slate-800 bg-[#0f172a] flex items-center justify-between">
+              <div className="px-6 py-4 border-b border-[#E9E4F2] bg-gradient-to-r from-white via-[#FAF8FF] to-white flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                  <div className="h-9 w-9 rounded-2xl bg-[#F3ECFE] border border-[#E5D7FD] flex items-center justify-center text-[#8B45D6] shadow-sm">
                     <Sparkles className="h-4 w-4" />
                   </div>
                   <div>
-                    <h3 className="text-xs font-semibold text-white flex items-center gap-2">
+                    <h3 className="text-xs font-bold text-[#252238] flex items-center gap-2">
                       <span>Meeting Conversational Intelligence</span>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full border border-indigo-800/50 bg-indigo-950/60 text-indigo-300 flex items-center gap-1.5 font-normal">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full border border-[#E5D7FD] bg-[#F3ECFE] text-[#8B45D6] flex items-center gap-1.5 font-semibold">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                         <span>{activeModelName}</span>
                       </span>
                     </h3>
-                    <p className="text-[11px] text-slate-400">
+                    <p className="text-[11px] text-[#77738A]">
                       Grounded strictly in transcribed dialogue, verified decisions, and assigned action items.
                     </p>
                   </div>
@@ -1562,20 +1576,20 @@ export default function MeetingDetailPage() {
                 <button
                   type="button"
                   onClick={handleClearChat}
-                  className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white px-3 py-1.5 rounded-xl border border-slate-800 hover:border-slate-700 bg-slate-900/80 transition"
+                  className="flex items-center gap-1.5 text-xs text-[#77738A] hover:text-[#252238] px-3.5 py-2 rounded-xl border border-[#E9E4F2] hover:bg-[#F3F0FF] font-semibold transition shadow-sm"
                   title="Clear conversation and reset context"
                 >
-                  <RotateCcw className="h-3 w-3" />
+                  <RotateCcw className="h-3.5 w-3.5" />
                   <span>New Chat</span>
                 </button>
               </div>
 
               {/* Suggested Questions Pills */}
               {suggestedQuestions.length > 0 && (
-                <div className="px-5 py-2.5 border-b border-slate-800/80 bg-slate-900/40">
+                <div className="px-6 py-3 border-b border-[#E9E4F2] bg-[#FAF8FF]">
                   <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
-                    <span className="text-[10px] uppercase font-mono font-semibold tracking-wider text-slate-400 flex-shrink-0 flex items-center gap-1">
-                      <Sparkles className="h-2.5 w-2.5 text-indigo-400" />
+                    <span className="text-[11px] font-semibold text-[#8B45D6] flex-shrink-0 flex items-center gap-1">
+                      <Sparkles className="h-3 w-3 text-[#8B45D6]" />
                       <span>Suggested:</span>
                     </span>
                     {suggestedQuestions.map((q, idx) => (
@@ -1584,7 +1598,7 @@ export default function MeetingDetailPage() {
                         type="button"
                         onClick={() => handleSuggestedQuestionClick(q)}
                         disabled={chatLoading || isStreaming}
-                        className="text-[11px] text-indigo-300 hover:text-white bg-indigo-950/40 hover:bg-indigo-900/60 border border-indigo-800/40 hover:border-indigo-600/50 px-3 py-1 rounded-full whitespace-nowrap transition flex-shrink-0 disabled:opacity-50"
+                        className="text-xs text-[#8B45D6] hover:text-[#7135C5] bg-[#F3ECFE] hover:bg-[#EAE2FD] border border-[#E5D7FD] px-3.5 py-1.5 rounded-full whitespace-nowrap transition flex-shrink-0 font-medium disabled:opacity-50"
                       >
                         {q}
                       </button>
@@ -1594,7 +1608,7 @@ export default function MeetingDetailPage() {
               )}
 
               {/* Messages Scroll Area */}
-              <div className="flex-1 overflow-y-auto p-5 space-y-4">
+              <div className="flex-1 overflow-y-auto p-6 space-y-4">
                 {chatMessages.map((msg, i) => {
                   const isUser = msg.role === 'user';
                   return (
@@ -1603,16 +1617,16 @@ export default function MeetingDetailPage() {
                       className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}
                     >
                       <div
-                        className={`max-w-[85%] rounded-2xl p-4 text-xs leading-relaxed ${
+                        className={`max-w-[85%] rounded-3xl p-5 text-xs leading-relaxed ${
                           isUser
-                            ? 'bg-indigo-600 text-white rounded-br-none shadow-md'
-                            : 'bg-slate-900/90 border border-slate-800 text-slate-200 rounded-bl-none shadow-sm'
+                            ? 'gradient-purple-hero text-white rounded-br-none shadow-purple-btn font-medium'
+                            : 'bg-[#FAF8FF] border border-[#E9E4F2] text-[#252238] rounded-bl-none shadow-sm'
                         }`}
                       >
                         {/* Model tag for assistant */}
                         {!isUser && msg.model_name && (
-                          <div className="flex items-center gap-1 text-[10px] font-mono text-slate-400 mb-2 pb-1.5 border-b border-slate-800/80">
-                            <Bot className="h-3 w-3 text-indigo-400" />
+                          <div className="flex items-center gap-1.5 text-[11px] font-mono font-semibold text-[#8B45D6] mb-2 pb-1.5 border-b border-[#E9E4F2]">
+                            <Bot className="h-3.5 w-3.5 text-[#8B45D6]" />
                             <span>{msg.model_name}</span>
                           </div>
                         )}
@@ -1621,17 +1635,17 @@ export default function MeetingDetailPage() {
                         <div className="whitespace-pre-wrap leading-relaxed">
                           {msg.content}
                           {msg.isStreaming && (
-                            <span className="inline-block w-2 h-3.5 bg-indigo-400 ml-1 animate-pulse align-middle" />
+                            <span className="inline-block w-2 h-3.5 bg-[#8B45D6] ml-1 animate-pulse align-middle" />
                           )}
                         </div>
 
                         {/* Evidence Citations */}
                         {msg.citations && msg.citations.length > 0 && (
-                          <div className="mt-3.5 pt-3 border-t border-slate-800/90 space-y-2">
-                            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-indigo-400 block">
+                          <div className="mt-4 pt-3.5 border-t border-[#E9E4F2] space-y-2.5">
+                            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#8B45D6] block">
                               Verifiable Evidence Citations (Click to Seek Media Player):
                             </span>
-                            <div className="space-y-1.5">
+                            <div className="space-y-2">
                               {msg.citations.map((c: any, ci: number) => {
                                 const ts = c.timestamp_start !== undefined && c.timestamp_start !== null ? c.timestamp_start : c.timestamp;
                                 return (
@@ -1643,18 +1657,18 @@ export default function MeetingDetailPage() {
                                         seekTo(ts);
                                       }
                                     }}
-                                    className="w-full text-left text-[11px] text-slate-300 bg-slate-950/80 hover:bg-indigo-950/30 p-2.5 rounded-xl border border-slate-800/80 hover:border-indigo-500/50 transition flex items-start justify-between gap-3 group"
+                                    className="w-full text-left text-xs text-[#252238] bg-white hover:bg-[#F3ECFE]/50 p-3.5 rounded-2xl border border-[#E9E4F2] hover:border-[#8B45D6] transition flex items-start justify-between gap-3 shadow-sm group"
                                   >
                                     <div className="min-w-0 flex-1">
-                                      <span className="font-semibold text-indigo-300">
+                                      <span className="font-bold text-[#8B45D6]">
                                         {c.speaker_name || c.speaker_label || 'Speaker'}:
                                       </span>{' '}
-                                      <span className="italic text-slate-300">"{c.quote}"</span>
+                                      <span className="italic text-[#252238]">"{c.quote}"</span>
                                     </div>
 
                                     {ts !== null && ts !== undefined && (
-                                      <span className="font-mono text-indigo-400 group-hover:text-indigo-300 flex-shrink-0 bg-indigo-950/90 border border-indigo-800/60 px-2 py-0.5 rounded text-[10px] flex items-center gap-1 shadow-sm">
-                                        <Play className="h-2.5 w-2.5 fill-indigo-400" />
+                                      <span className="font-mono font-semibold text-[#8B45D6] group-hover:text-white group-hover:bg-[#8B45D6] flex-shrink-0 bg-[#F3ECFE] border border-[#E5D7FD] px-2.5 py-1 rounded-xl text-xs flex items-center gap-1 transition shadow-sm">
+                                        <Play className="h-3 w-3 fill-current" />
                                         <span>[{formatTime(ts)}]</span>
                                       </span>
                                     )}
@@ -1670,29 +1684,29 @@ export default function MeetingDetailPage() {
                 })}
 
                 {chatLoading && !isStreaming && (
-                  <div className="p-3 bg-slate-900 border border-slate-800 text-slate-400 rounded-xl text-xs flex items-center gap-2 max-w-xs animate-pulse">
-                    <Loader2 className="h-4 w-4 animate-spin text-indigo-400" />
-                    <span>Synthesizing grounded answer...</span>
+                  <div className="p-3.5 bg-white border border-[#E9E4F2] text-[#77738A] rounded-2xl text-xs flex items-center gap-2 max-w-xs shadow-sm animate-pulse">
+                    <Loader2 className="h-4 w-4 animate-spin text-[#8B45D6]" />
+                    <span className="font-semibold text-[#252238]">Synthesizing grounded answer...</span>
                   </div>
                 )}
               </div>
 
               {/* Chat Form */}
-              <form onSubmit={handleChatSubmit} className="p-3.5 border-t border-slate-800 bg-slate-900/60 flex items-center gap-2">
+              <form onSubmit={handleChatSubmit} className="p-4 border-t border-[#E9E4F2] bg-white flex items-center gap-2.5">
                 <input
                   type="text"
                   placeholder="Ask a question about this meeting (e.g. What were the key decisions?)..."
                   value={chatQuery}
                   onChange={(e) => setChatQuery(e.target.value)}
                   disabled={isStreaming}
-                  className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 disabled:opacity-60"
+                  className="flex-1 bg-[#FAF8FF] border border-[#E9E4F2] rounded-2xl px-4 py-3 text-xs text-[#252238] placeholder-[#9D99AF] focus:outline-none focus:border-[#8B45D6] focus:bg-white transition disabled:opacity-60"
                 />
 
                 {isStreaming ? (
                   <button
                     type="button"
                     onClick={handleCancelStream}
-                    className="bg-rose-600 hover:bg-rose-500 text-white text-xs px-4 py-2.5 rounded-xl font-medium transition flex items-center gap-1.5 shadow-sm"
+                    className="bg-[#BE123C] hover:bg-[#9F1239] text-white text-xs px-5 py-3 rounded-2xl font-semibold transition flex items-center gap-1.5 shadow-sm"
                   >
                     <Square className="h-3.5 w-3.5 fill-white" />
                     <span>Stop</span>
@@ -1701,7 +1715,7 @@ export default function MeetingDetailPage() {
                   <button
                     type="submit"
                     disabled={chatLoading || !chatQuery.trim()}
-                    className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs px-4 py-2.5 rounded-xl font-medium transition flex items-center gap-1.5 shadow-sm"
+                    className="gradient-purple-hero hover:opacity-95 disabled:opacity-50 text-white text-xs px-5 py-3 rounded-2xl font-semibold transition flex items-center gap-1.5 shadow-purple-btn"
                   >
                     <Send className="h-3.5 w-3.5" />
                     <span>Ask</span>
@@ -1716,32 +1730,32 @@ export default function MeetingDetailPage() {
 
       {/* ASSIGN PARTICIPANT MODAL */}
       {assignModalOpen && selectedSpeaker && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 bg-[#252238]/40 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="bg-white border border-[#E9E4F2] rounded-3xl max-w-md w-full p-6 shadow-soft-elevated space-y-4 text-[#252238]">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <UserCheck className="h-4 w-4 text-indigo-400" />
+                <h3 className="text-base font-bold text-[#252238] flex items-center gap-2">
+                  <UserCheck className="h-4 w-4 text-[#8B45D6]" />
                   <span>Assign Speaker Identity</span>
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Mapping diarized turn <span className="font-mono text-indigo-300 font-bold">[{selectedSpeaker.speaker_label}]</span>
+                <p className="text-xs text-[#77738A] mt-0.5">
+                  Mapping diarized turn <span className="font-mono text-[#8B45D6] font-bold">[{selectedSpeaker.speaker_label}]</span>
                 </p>
               </div>
-              <button onClick={() => setAssignModalOpen(false)} className="text-slate-400 hover:text-white">
+              <button onClick={() => setAssignModalOpen(false)} className="text-[#77738A] hover:text-[#252238] p-1.5 rounded-xl hover:bg-[#F3F0FF]">
                 <X className="h-4 w-4" />
               </button>
             </div>
 
             <form onSubmit={handleSaveAssignment} className="space-y-4">
               {assignError && (
-                <div className="p-2.5 rounded-lg bg-red-950/50 border border-red-800/50 text-red-300 text-xs">
+                <div className="p-3 rounded-2xl bg-[#FDF0F4] border border-[#FBCFE8] text-[#BE123C] text-xs">
                   {assignError}
                 </div>
               )}
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                <label className="block text-xs font-semibold text-[#252238] mb-1.5">
                   Select from Organization Speaker Directory
                 </label>
                 <select
@@ -1754,7 +1768,7 @@ export default function MeetingDetailPage() {
                       if (match) setCustomConfirmedName(match.name);
                     }
                   }}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-[#FAF8FF] border border-[#E9E4F2] rounded-2xl px-4 py-2.5 text-xs text-[#252238] focus:outline-none focus:border-[#8B45D6]"
                 >
                   <option value="">-- Choose Profile or Enter Custom Name Below --</option>
                   {orgParticipants.map((p) => (
@@ -1766,7 +1780,7 @@ export default function MeetingDetailPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                <label className="block text-xs font-semibold text-[#252238] mb-1.5">
                   Confirmed Display Name *
                 </label>
                 <input
@@ -1775,12 +1789,12 @@ export default function MeetingDetailPage() {
                   placeholder="e.g. Dr. Sarah Chen"
                   value={customConfirmedName}
                   onChange={(e) => setCustomConfirmedName(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-[#FAF8FF] border border-[#E9E4F2] rounded-2xl px-4 py-2.5 text-xs text-[#252238] placeholder-[#9D99AF] focus:outline-none focus:border-[#8B45D6]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                <label className="block text-xs font-semibold text-[#252238] mb-1.5">
                   Assignment Note / Reason (Optional)
                 </label>
                 <input
@@ -1788,21 +1802,21 @@ export default function MeetingDetailPage() {
                   placeholder="e.g. Verified by project lead from agenda"
                   value={assignNotes}
                   onChange={(e) => setAssignNotes(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-[#FAF8FF] border border-[#E9E4F2] rounded-2xl px-4 py-2.5 text-xs text-[#252238] placeholder-[#9D99AF] focus:outline-none focus:border-[#8B45D6]"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-2">
+              <div className="flex justify-end gap-2.5 pt-3 border-t border-[#E9E4F2]">
                 <button
                   type="button"
                   onClick={() => setAssignModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-[#77738A] hover:text-[#252238] hover:bg-[#F3F0FF] transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white transition shadow-md shadow-indigo-600/30"
+                  className="px-5 py-2.5 rounded-2xl text-xs font-semibold gradient-purple-hero text-white shadow-purple-btn hover:opacity-95 transition"
                 >
                   Confirm Assignment
                 </button>
@@ -1814,59 +1828,59 @@ export default function MeetingDetailPage() {
 
       {/* AUDIT TRAIL MODAL */}
       {auditModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 bg-[#252238]/40 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="bg-white border border-[#E9E4F2] rounded-3xl max-w-lg w-full p-6 shadow-soft-elevated space-y-4 text-[#252238]">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <History className="h-4 w-4 text-indigo-400" />
+                <h3 className="text-base font-bold text-[#252238] flex items-center gap-2">
+                  <History className="h-4 w-4 text-[#8B45D6]" />
                   <span>Attribution Audit History</span>
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Audit changes for speaker <span className="font-mono text-indigo-300">[{auditSpeakerLabel}]</span>
+                <p className="text-xs text-[#77738A] mt-0.5">
+                  Audit changes for speaker <span className="font-mono text-[#8B45D6] font-bold">[{auditSpeakerLabel}]</span>
                 </p>
               </div>
-              <button onClick={() => setAuditModalOpen(false)} className="text-slate-400 hover:text-white">
+              <button onClick={() => setAuditModalOpen(false)} className="text-[#77738A] hover:text-[#252238] p-1.5 rounded-xl hover:bg-[#F3F0FF]">
                 <X className="h-4 w-4" />
               </button>
             </div>
 
             <div className="max-h-80 overflow-y-auto space-y-3 pr-1">
               {auditLogs.length === 0 ? (
-                <p className="text-xs text-slate-500 italic text-center py-6">
+                <p className="text-xs text-[#77738A] italic text-center py-6">
                   No attribution modifications recorded for this speaker yet.
                 </p>
               ) : (
                 auditLogs.map((log) => (
-                  <div key={log.id} className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5 text-xs">
+                  <div key={log.id} className="p-4 rounded-2xl bg-[#FAF8FF] border border-[#E9E4F2] space-y-1.5 text-xs">
                     <div className="flex items-center justify-between">
-                      <span className="font-semibold text-indigo-400 uppercase text-[10px] tracking-wider">
+                      <span className="font-bold text-[#8B45D6] uppercase text-[10px] tracking-wider">
                         {log.action}
                       </span>
-                      <span className="text-[11px] text-slate-500 font-mono">
+                      <span className="text-[11px] text-[#77738A] font-mono">
                         {new Date(log.created_at).toLocaleString()}
                       </span>
                     </div>
 
                     {log.previous_name || log.new_name ? (
-                      <div className="text-slate-300">
-                        {log.previous_name && <span className="line-through text-slate-500 mr-2">{log.previous_name}</span>}
-                        {log.new_name && <span className="text-emerald-400 font-semibold">{log.new_name}</span>}
+                      <div className="text-[#252238]">
+                        {log.previous_name && <span className="line-through text-[#9D99AF] mr-2">{log.previous_name}</span>}
+                        {log.new_name && <span className="text-[#16A34A] font-bold">{log.new_name}</span>}
                       </div>
                     ) : null}
 
                     {log.notes && (
-                      <p className="text-[11px] text-slate-400 italic">"{log.notes}"</p>
+                      <p className="text-xs text-[#77738A] italic">"{log.notes}"</p>
                     )}
                   </div>
                 ))
               )}
             </div>
 
-            <div className="flex justify-end pt-2">
+            <div className="flex justify-end pt-3 border-t border-[#E9E4F2]">
               <button
                 onClick={() => setAuditModalOpen(false)}
-                className="px-4 py-2 rounded-xl text-xs font-medium bg-slate-800 hover:bg-slate-700 text-white transition"
+                className="px-5 py-2.5 rounded-2xl text-xs font-semibold bg-[#F3F0FF] hover:bg-[#EAE5FF] text-[#252238] transition"
               >
                 Close
               </button>
