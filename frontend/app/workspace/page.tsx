@@ -10,7 +10,8 @@ import {
   Tv,
   Calendar,
   Layers,
-  Sparkles
+  Sparkles,
+  Trash2
 } from 'lucide-react';
 import AppShell from '@/components/AppShell';
 
@@ -69,6 +70,22 @@ export default function WorkspacePage() {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleDeleteMeeting = async (meetingId: string, title?: string) => {
+    if (!confirm(`Are you sure you want to delete "${title || 'this meeting'}"? This will permanently remove its audio/video file, speech transcript, summary, and action items.`)) {
+      return;
+    }
+    try {
+      const res = await fetch(`http://localhost:8000/api/meetings/${meetingId}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        setMeetings((prev) => prev.filter((m) => m.id !== meetingId));
+      }
+    } catch (err) {
+      console.error('Failed to delete meeting:', err);
+    }
   };
 
   const filteredMeetings = meetings.filter((m) => {
@@ -218,10 +235,24 @@ export default function WorkspacePage() {
                       )}
                     </div>
 
-                    <span className="text-[#8B45D6] font-semibold flex items-center gap-1 group-hover:translate-x-0.5 transition">
-                      <span>Open</span>
-                      <ChevronRight className="h-3.5 w-3.5" />
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleDeleteMeeting(m.id, m.title);
+                        }}
+                        className="p-1 text-[#77738A] hover:text-[#BE123C] hover:bg-[#FDF0F4] rounded-lg transition"
+                        title="Delete meeting"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                      <span className="text-[#8B45D6] font-semibold flex items-center gap-1 group-hover:translate-x-0.5 transition">
+                        <span>Open</span>
+                        <ChevronRight className="h-3.5 w-3.5" />
+                      </span>
+                    </div>
                   </div>
                 </Link>
               );

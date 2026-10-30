@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
-from app.models.meeting import Meeting, ProcessingStatus, SourceType
+from app.models.meeting import Meeting, ProcessingStatus, SourceType, MediaAsset
 from app.models.organization import AuditLog
 from app.models.transcript import TranscriptSegment, Speaker, SpeakerAssignment, MeetingParticipant
 from app.models.intelligence import (
@@ -94,6 +94,33 @@ async def get_meeting(meeting_id: str, db: AsyncSession = Depends(get_db)):
     if not meeting:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Meeting not found")
     return meeting
+
+
+@router.delete("/{meeting_id}", status_code=status.HTTP_200_OK)
+async def delete_meeting(meeting_id: str, db: AsyncSession = Depends(get_db)):
+    """Delete a meeting and all its associated deliverables, transcript, and media files."""
+    stmt = select(Meeting).where(Meeting.id == meeting_id)
+    result = await db.execute(stmt)
+    meeting = result.scalar_one_or_none()
+    if not meeting:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Meeting not found")
+
+    # Clean up media asset files from disk if present
+    media_stmt = select(MediaAsset).where(MediaAsset.meeting_id == meeting_id)
+    media_res = await db.execute(media_stmt)
+    media = media_res.scalar_one_or_none()
+    if media:
+        import os
+        for p in [media.file_path, media.audio_path]:
+            if p and os.path.exists(p):
+                try:
+                    os.remove(p)
+                except Exception:
+                    pass
+
+    await db.delete(meeting)
+    await db.commit()
+    return {"status": "deleted", "id": meeting_id}
 
 
 @router.get("/{meeting_id}/status", response_model=ProcessingStatusResponse)

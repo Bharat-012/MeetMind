@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import {
   HelpCircle,
   Calendar,
@@ -39,11 +39,13 @@ import {
   Send,
   Square,
   Bot,
-  Loader2
+  Loader2,
+  Trash2
 } from 'lucide-react';
 
 export default function MeetingDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const meetingId = params?.id as string;
 
   const [activeTab, setActiveTab] = useState<string>('transcript');
@@ -59,6 +61,25 @@ export default function MeetingDetailPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [isRegenerating, setIsRegenerating] = useState<boolean>(false);
   const [isRetrying, setIsRetrying] = useState<boolean>(false);
+
+  const handleDeleteMeeting = async () => {
+    if (!confirm(`Are you sure you want to permanently delete "${meeting?.title || 'this meeting'}"? This will remove the audio/video file, speech transcript, and intelligence summary.`)) {
+      return;
+    }
+    try {
+      const res = await fetch(`http://localhost:8000/api/meetings/${meetingId}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        router.push('/workspace');
+      } else {
+        alert('Failed to delete meeting. Please try again.');
+      }
+    } catch (err) {
+      console.error('Error deleting meeting:', err);
+      alert('Error connecting to backend to delete meeting.');
+    }
+  };
 
   // Playback & Media state
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -725,6 +746,15 @@ export default function MeetingDetailPage() {
             >
               <Sparkles className={`h-3.5 w-3.5 text-[#8B45D6] ${isRegenerating ? 'animate-spin' : ''}`} />
               <span className="hidden md:inline">{isRegenerating ? 'Regenerating...' : 'Regenerate Intelligence'}</span>
+            </button>
+
+            <button
+              onClick={handleDeleteMeeting}
+              className="flex items-center gap-1.5 text-xs text-[#BE123C] hover:text-white font-semibold px-3.5 py-2 rounded-xl border border-[#FBCFE8] bg-[#FDF0F4] hover:bg-[#BE123C] transition shadow-sm"
+              title="Permanently delete this meeting"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              <span className="hidden md:inline">Delete Meeting</span>
             </button>
           </div>
         </header>

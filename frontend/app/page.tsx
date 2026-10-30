@@ -15,7 +15,8 @@ import {
   ShieldCheck,
   Plus,
   Sparkles,
-  ArrowUpRight
+  ArrowUpRight,
+  Trash2
 } from 'lucide-react';
 import AppShell from '@/components/AppShell';
 
@@ -70,6 +71,22 @@ export default function Dashboard() {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleDeleteMeeting = async (meetingId: string, title?: string) => {
+    if (!confirm(`Are you sure you want to delete "${title || 'this meeting'}"? This will permanently remove its audio/video file, speech transcript, summary, and action items.`)) {
+      return;
+    }
+    try {
+      const res = await fetch(`http://localhost:8000/api/meetings/${meetingId}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        setMeetings((prev) => prev.filter((m) => m.id !== meetingId));
+      }
+    } catch (err) {
+      console.error('Failed to delete meeting:', err);
+    }
   };
 
   const currentOrg = organizations.find((o) => o.id === selectedOrgId) || organizations[0];
@@ -262,13 +279,26 @@ export default function Dashboard() {
                           </span>
                         </td>
                         <td className="px-5 py-4 text-right">
-                          <Link
-                            href={`/meetings/${m.id}`}
-                            className="inline-flex items-center gap-1 text-xs text-[#8B45D6] hover:text-[#7135C5] font-semibold transition"
-                          >
-                            <span>Open</span>
-                            <ChevronRight className="h-3.5 w-3.5" />
-                          </Link>
+                          <div className="inline-flex items-center gap-3">
+                            <Link
+                              href={`/meetings/${m.id}`}
+                              className="inline-flex items-center gap-1 text-xs text-[#8B45D6] hover:text-[#7135C5] font-semibold transition"
+                            >
+                              <span>Open</span>
+                              <ChevronRight className="h-3.5 w-3.5" />
+                            </Link>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteMeeting(m.id, m.title);
+                              }}
+                              className="p-1 text-[#77738A] hover:text-[#BE123C] hover:bg-[#FDF0F4] rounded-lg transition"
+                              title="Delete meeting"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -277,26 +307,6 @@ export default function Dashboard() {
               </table>
             </div>
           )}
-        </div>
-
-        {/* System Architecture Strip */}
-        <div className="p-4 rounded-2xl bg-white border border-[#E9E4F2] shadow-soft-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-[#77738A]">
-          <div className="flex items-center gap-3">
-            <div className="h-6 w-6 rounded-lg bg-[#EBF9F0] text-[#16A34A] flex items-center justify-center flex-shrink-0">
-              <ShieldCheck className="h-3.5 w-3.5" />
-            </div>
-            <div>
-              <span className="text-[#252238] font-semibold">Local-First Architecture: </span>
-              <span>All speech recognition, diarization, and QA vector retrieval run strictly on host hardware.</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2.5 font-medium text-[11px] text-[#8B45D6]">
-            <span>Faster-Whisper</span>
-            <span>•</span>
-            <span>Nemotron-3</span>
-            <span>•</span>
-            <span>Local RAG</span>
-          </div>
         </div>
 
       </div>
